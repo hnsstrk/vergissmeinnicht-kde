@@ -5,6 +5,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-07-17
+
+### Fixed
+
+- The settings, detail, and quick-capture dialogs did not scroll: with
+  more content than window height, the lower sections (sync fields,
+  maintenance, dependencies, notes) were simply unreachable — user
+  report with screenshot. The dialogs now use Kirigami.Dialog, which
+  caps its height at the window and shows a scrollbar.
+- Section headers in the rebuilt dialogs are left-aligned headings.
+
 ## [0.2.1] - 2026-07-17
 
 ### Fixed
@@ -117,7 +128,8 @@ feature-comparable for the daily-driver workflows.
 - Packaging: desktop file, scalable icon, AppStream metainfo,
   `scripts/install-local.sh`, CI and release workflows (Arch container).
 
-[Unreleased]: https://github.com/hnsstrk/vergissmeinnicht-kde/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/hnsstrk/vergissmeinnicht-kde/compare/v0.2.2...HEAD
+[0.2.2]: https://github.com/hnsstrk/vergissmeinnicht-kde/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/hnsstrk/vergissmeinnicht-kde/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/hnsstrk/vergissmeinnicht-kde/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/hnsstrk/vergissmeinnicht-kde/compare/v0.1.0...v0.1.1

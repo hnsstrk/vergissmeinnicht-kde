@@ -122,6 +122,9 @@ Kirigami.ApplicationWindow {
             step++
             switch (step) {
             case 1:
+                // Hohes Testfenster: alle Formularzeilen sichtbar, damit die
+                // synthetischen Klicks ihre Ziele treffen (der Dialog scrollt).
+                root.height = 1600
                 settingsDialog.openSettings()
                 break
             case 2: {
