@@ -6,18 +6,25 @@ import org.kde.kirigami as Kirigami
 // Eigenständiges Formular-Fenster (statt In-Fenster-Modal): echte Titelzeile
 // des Fenstermanagers, frei beweg- und skalierbar, scrollender Inhalt,
 // Aktionsleiste unten. Öffnen über openWindow(), Schließen über close().
-Window {
+//
+// Bewusst QQC2.ApplicationWindow statt plain Window: die FormCard-Delegates
+// (z. B. FormDateTimeDelegate) verankern ihre Popups über
+// `QQC2.ApplicationWindow.window` + dessen `overlay` — in einem plain Window
+// ist das null und der Kalender-Popup öffnet nie (User-Report v0.3.0).
+QQC2.ApplicationWindow {
     id: win
 
     flags: Qt.Dialog
     transientParent: root
     minimumWidth: Kirigami.Units.gridUnit * 20
     minimumHeight: Kirigami.Units.gridUnit * 14
-    color: bgRect.color
 
     // Formularzeilen (default) und Fußleisten-Buttons.
     default property alias formContent: contentColumn.data
-    property alias footer: footerRow.data
+    property alias buttons: buttonRow.data
+
+    // Overlay dieses Fensters (für Tests: sind Popups offen?).
+    readonly property var overlayItem: QQC2.Overlay.overlay
 
     function openWindow() {
         show()
@@ -30,9 +37,7 @@ Window {
         onActivated: win.close()
     }
 
-    Rectangle {
-        id: bgRect
-        anchors.fill: parent
+    background: Rectangle {
         Kirigami.Theme.inherit: false
         Kirigami.Theme.colorSet: Kirigami.Theme.Window
         color: Kirigami.Theme.backgroundColor
@@ -60,7 +65,7 @@ Window {
         Kirigami.Separator { Layout.fillWidth: true }
 
         RowLayout {
-            id: footerRow
+            id: buttonRow
             Layout.fillWidth: true
             Layout.margins: Kirigami.Units.smallSpacing
             spacing: Kirigami.Units.smallSpacing

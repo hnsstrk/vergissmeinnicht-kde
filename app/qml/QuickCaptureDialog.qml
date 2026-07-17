@@ -71,7 +71,7 @@ FormWindow {
             dialog.close()
     }
 
-    footer: [
+    buttons: [
         QQC2.Button {
             text: i18n("Hinzufügen")
             icon.name: "list-add"

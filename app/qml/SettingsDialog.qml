@@ -57,7 +57,7 @@ FormWindow {
         }
     }
 
-    footer: QQC2.Button {
+    buttons: QQC2.Button {
         text: i18n("Schließen")
         icon.name: "dialog-close"
         onClicked: dialog.close()

@@ -5,6 +5,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-07-17
+
+### Fixed
+
+- Date fields in the form windows could not open their calendar popup
+  (user report): FormCard's FormDateTimeDelegate anchors its popups via
+  `ApplicationWindow.window`, which is null inside a plain `Window`. The
+  form windows are now `QQC2.ApplicationWindow`s; the interaction test
+  clicks the due-date row and asserts the popup opens.
+
 ## [0.3.0] - 2026-07-17
 
 Team-built release ("full Taskwarrior manager"): a CLI capability
@@ -207,7 +217,8 @@ feature-comparable for the daily-driver workflows.
 - Packaging: desktop file, scalable icon, AppStream metainfo,
   `scripts/install-local.sh`, CI and release workflows (Arch container).
 
-[Unreleased]: https://github.com/hnsstrk/vergissmeinnicht-kde/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/hnsstrk/vergissmeinnicht-kde/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/hnsstrk/vergissmeinnicht-kde/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/hnsstrk/vergissmeinnicht-kde/compare/v0.2.4...v0.3.0
 [0.2.4]: https://github.com/hnsstrk/vergissmeinnicht-kde/compare/v0.2.3...v0.2.4
 [0.2.3]: https://github.com/hnsstrk/vergissmeinnicht-kde/compare/v0.2.2...v0.2.3

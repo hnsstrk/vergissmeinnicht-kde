@@ -129,6 +129,10 @@ Kirigami.ApplicationWindow {
                 settingsDialog.openSettings()
                 break
             case 2: {
+                // Erzwingt einen synchronen Render: das frisch geöffnete
+                // ApplicationWindow layoutet asynchron, sonst treffen die
+                // ersten Klicks ein noch unfertiges Layout (Race).
+                app.grabWindowTo("/tmp/settings-ui-layout-sync.png")
                 const p = settingsDialog.testPoints().url
                 app.testClick(p.x, p.y, Qt.LeftButton, 0, false)
                 typeText(url)

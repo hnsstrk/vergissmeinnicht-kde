@@ -45,6 +45,21 @@ FormWindow {
         openWindow()
     }
 
+    // Zielpunkt der Fällig-Datums-Zeile + Popup-Check (--test-input): belegt,
+    // dass FormDateTimeDelegate-Popups im eigenständigen Fenster öffnen.
+    function testDuePoint() {
+        return dueDate.mapToItem(null, dueDate.width * 0.25, dueDate.height / 2)
+    }
+    function popupOpen() {
+        if (!dialog.overlayItem)
+            return false
+        for (let i = 0; i < dialog.overlayItem.children.length; i++) {
+            if (dialog.overlayItem.children[i].visible)
+                return true
+        }
+        return false
+    }
+
     function accept() {
         const priorities = ["", "H", "M", "L"]
         const recurs = ["", "daily", "weekly", "monthly", "yearly", null]
@@ -66,7 +81,7 @@ FormWindow {
             dialog.close() // Bei Fehler bleibt das Fenster mit Meldung offen.
     }
 
-    footer: [
+    buttons: [
         QQC2.Button {
             text: i18n("Speichern")
             icon.name: "document-save"

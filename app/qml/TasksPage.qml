@@ -670,34 +670,47 @@ Kirigami.ScrollablePage {
             }
             case 8: {
                 check(detailDialog.visible, "Doppelklick: Detail-Dialog offen")
-                detailDialog.close()
+                // Klick auf die Fällig-Datums-Zeile → Kalender-Popup muss im
+                // Dialogfenster öffnen (Regression v0.3.0: plain Window hatte
+                // kein ApplicationWindow.overlay).
+                const p = detailDialog.testDuePoint()
+                app.testClick(p.x, p.y, Qt.LeftButton, 0, false)
                 break
             }
             case 9: {
+                check(detailDialog.popupOpen(), "Datums-Popup öffnet im Dialogfenster")
+                app.testKey(Qt.Key_Escape, 0, "")
+                break
+            }
+            case 10: {
+                detailDialog.close()
+                break
+            }
+            case 11: {
                 // Rechtsklick auf Zeile 0 → Kontextmenü.
                 const p = rowPoint(0, 0.5)
                 app.testClick(p.x, p.y, Qt.RightButton, 0, false)
                 break
             }
-            case 10: {
+            case 12: {
                 check(contextMenu.visible, "Rechtsklick: Kontextmenü offen")
                 contextMenu.close()
                 break
             }
-            case 11: {
+            case 13: {
                 // Schnelleingabe: echte Texteingabe + Enter.
                 quickCaptureDialog.openCapture()
                 break
             }
-            case 12: {
+            case 14: {
                 typeText("Input-Testaufgabe +inputflow")
                 break
             }
-            case 13: {
+            case 15: {
                 app.testKey(Qt.Key_Return, 0, "\r")
                 break
             }
-            case 14: {
+            case 16: {
                 check(!quickCaptureDialog.visible, "Enter: Schnelleingabe committet und geschlossen")
                 app.applySearch("tag:inputflow")
                 const treffer = Array.from(app.visibleUuids(0, 99))
