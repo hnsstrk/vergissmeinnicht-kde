@@ -9,6 +9,7 @@ fn main() {
             "qml/Sidebar.qml",
             "qml/TasksPage.qml",
             "qml/TaskDelegate.qml",
+            "qml/FormWindow.qml",
             "qml/DetailDialog.qml",
             "qml/QuickCaptureDialog.qml",
             "qml/SettingsDialog.qml",

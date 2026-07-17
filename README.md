@@ -26,7 +26,8 @@ platform.
   Scheduled · Waiting · All, plus per-project and per-tag rows. Live counts,
   drop targets, context menus for rename/remove. Dotted projects
   (`Work.Sub`) form a collapsible tree; selecting a parent includes its
-  subprojects (Taskwarrior prefix semantics).
+  subprojects (Taskwarrior prefix semantics). Resizable via a drag handle;
+  the width is persisted.
 - **Full-text search with operators** (Ctrl+F) — covers title, project, tags,
   and annotations across the entire store (pending, completed, recurring).
   Supports AND terms, quoted phrases, and `project:`, `tag:`, `status:`
@@ -34,9 +35,11 @@ platform.
   sidebar filter is ignored.
 - **Saved searches** (Ctrl+Shift+D) — name a search and pin it to the sidebar
   between system filters and projects. Right-click to rename or delete.
-- **Quick capture** (Ctrl+N) — capture dialog with title, notes, project,
+- **Quick capture** (Ctrl+N) — capture window with title, notes, project,
   tags, due, priority, recurrence. The title field understands terminal-style
   tokens (`+tag project:foo due:tomorrow priority:H`) with a live preview.
+  Like the detail editor and the settings, it opens as a separate dialog
+  window (movable and resizable), not as a modal inside the main window.
 
   ![Vergissmeinnicht — quick capture](docs/screenshots/quick-capture.png)
 - **Detail editor** — title, project, tags, due, scheduled, wait, priority,
@@ -61,7 +64,8 @@ platform.
 - **Sync** against any [taskchampion-sync-server](https://github.com/GothenburgBitFactory/taskchampion-sync-server)
   you point it at. Credentials live in the system Secret Service (KWallet).
   Auto-sync modes: manual, every 5/15/60 minutes, or immediately after
-  changes.
+  changes. The toolbar button indicates unsynchronized local changes with
+  a blue dot.
 - **Automatic backups** — `VACUUM INTO` snapshot before every sync, rotated
   to the last 10. Manual backup and restore from settings. See
   [`docs/backup-and-restore.md`](docs/backup-and-restore.md).

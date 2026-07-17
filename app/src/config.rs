@@ -38,6 +38,8 @@ pub struct Settings {
     pub saved_searches: Vec<SavedSearch>,
     /// Letzter gemeldeter Überfällig-Zähler (Anti-Spam für die Start-Notification).
     pub last_overdue_count: i64,
+    /// Sidebar-Breite in Pixeln; 0 = Standardbreite des Themes.
+    pub sidebar_width: i64,
 }
 
 impl Default for Settings {
@@ -54,6 +56,7 @@ impl Default for Settings {
             sync_server_url: String::new(),
             saved_searches: Vec::new(),
             last_overdue_count: 0,
+            sidebar_width: 0,
         }
     }
 }
@@ -95,5 +98,28 @@ impl Settings {
         }
         let raw = serde_json::to_string_pretty(self).map_err(std::io::Error::other)?;
         std::fs::write(path, raw)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn sidebar_width_roundtrip() {
+        let mut s = Settings::default();
+        assert_eq!(s.sidebar_width, 0);
+        s.sidebar_width = 247;
+        let raw = serde_json::to_string(&s).unwrap();
+        let wieder: Settings = serde_json::from_str(&raw).unwrap();
+        assert_eq!(wieder.sidebar_width, 247);
+    }
+
+    #[test]
+    fn old_config_without_sidebar_width_defaults_to_zero() {
+        // Config aus einer Version vor 0.2.3 — Feld fehlt, Default muss greifen.
+        let wieder: Settings = serde_json::from_str(r#"{"default_filter":"todo"}"#).unwrap();
+        assert_eq!(wieder.sidebar_width, 0);
+        assert_eq!(wieder.default_filter, "todo");
     }
 }

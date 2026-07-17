@@ -51,6 +51,8 @@ Kirigami.Dialog {
             QQC2.Label { text: i18n("Aktualisieren") }
             QQC2.Label { text: "Strg+Umschalt+," ; font.family: "monospace" }
             QQC2.Label { text: i18n("Einstellungen") }
+            QQC2.Label { text: "Esc" ; font.family: "monospace" }
+            QQC2.Label { text: i18n("Dialogfenster schließen / Auswahl aufheben") }
             QQC2.Label { text: i18n("Doppelklick") ; font.family: "monospace" }
             QQC2.Label { text: i18n("Details öffnen") }
             QQC2.Label { text: i18n("Strg/Umschalt+Klick") ; font.family: "monospace" }

@@ -24,7 +24,8 @@ Oberfläche auf jeder Plattform.
   Live-Zählern, Drop-Zielen und Kontextmenüs (Umbenennen/Entfernen).
   Gepunktete Projekte (`Arbeit.Teilprojekt`) bilden einen klappbaren Baum;
   die Auswahl eines Elternprojekts schließt Subprojekte ein
-  (Taskwarrior-Präfix-Semantik).
+  (Taskwarrior-Präfix-Semantik). Die Breite lässt sich per Zieh-Griff
+  anpassen und bleibt gespeichert.
 - **Volltextsuche mit Operatoren** (Strg+F) — durchsucht Titel, Projekt, Tags
   und Notizen über den gesamten Bestand (offen, erledigt, wiederkehrend).
   UND-Verknüpfung, Phrasen in Anführungszeichen sowie `projekt:`, `tag:`,
@@ -32,10 +33,12 @@ Oberfläche auf jeder Plattform.
   Seitenleisten-Filter ignoriert.
 - **Gespeicherte Suchen** (Strg+Umschalt+D) — Suche benennen und in der
   Seitenleiste anheften. Rechtsklick zum Umbenennen oder Löschen.
-- **Schnelleingabe** (Strg+N) — Dialog mit Titel, Notizen, Projekt, Tags,
+- **Schnelleingabe** (Strg+N) — Fenster mit Titel, Notizen, Projekt, Tags,
   Fälligkeit, Priorität, Wiederholung. Das Titelfeld versteht
   Terminal-Syntax (`+tag project:foo due:tomorrow priority:H`) mit
-  Live-Vorschau.
+  Live-Vorschau. Wie Detail-Editor und Einstellungen öffnet sie sich als
+  eigenständiges Dialogfenster (frei beweg- und skalierbar), nicht als
+  Modal im Hauptfenster.
 - **Detail-Editor** — Titel, Projekt, Tags, Fällig, Geplant ab, Warten bis,
   Priorität, Wiederholung, Notizen, Abhängigkeits-Editor, Reaktivieren
   erledigter Aufgaben.
@@ -59,6 +62,8 @@ Oberfläche auf jeder Plattform.
   [taskchampion-sync-server](https://github.com/GothenburgBitFactory/taskchampion-sync-server).
   Zugangsdaten liegen im Secret Service des Systems (KWallet).
   Auto-Sync: manuell, alle 5/15/60 Minuten oder sofort nach Änderungen.
+  Der Werkzeugleisten-Knopf zeigt unsynchronisierte lokale Änderungen mit
+  einem blauen Punkt an.
 - **Automatische Backups** — `VACUUM INTO`-Snapshot vor jedem Sync,
   rotierend die letzten 10. Manuelles Backup und Wiederherstellung in den
   Einstellungen. Siehe [`docs/backup-and-restore.md`](docs/backup-and-restore.md).

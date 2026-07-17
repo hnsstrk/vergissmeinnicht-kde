@@ -114,6 +114,7 @@ mod qobject {
         #[qproperty(QString, sync_server_url, cxx_name = "syncServerUrl")]
         #[qproperty(QString, auto_sync_mode, cxx_name = "autoSyncMode")]
         #[qproperty(bool, notify_overdue, cxx_name = "notifyOverdue")]
+        #[qproperty(i32, sidebar_width, cxx_name = "sidebarWidth")]
         type AppContainer = super::AppContainerRust;
 
         // ── Modell-Overrides ────────────────────────────────────────────────
@@ -159,6 +160,8 @@ mod qobject {
         fn set_language_setting(self: Pin<&mut AppContainer>, language: &QString);
         #[qinvokable]
         fn language_setting(self: &AppContainer) -> QString;
+        #[qinvokable]
+        fn set_sidebar_width_setting(self: Pin<&mut AppContainer>, width: i32);
 
         // ── Task-Detail ─────────────────────────────────────────────────────
         #[qinvokable]
@@ -334,6 +337,7 @@ pub struct AppContainerRust {
     sync_server_url: QString,
     auto_sync_mode: QString,
     notify_overdue: bool,
+    sidebar_width: i32,
 }
 
 impl Default for AppContainerRust {
@@ -360,6 +364,7 @@ impl Default for AppContainerRust {
             sync_server_url: QString::from(state.settings.sync_server_url.as_str()),
             auto_sync_mode: QString::from(state.settings.auto_sync.as_str()),
             notify_overdue: state.settings.notify_overdue,
+            sidebar_width: state.settings.sidebar_width as i32,
             state,
         }
     }
@@ -660,6 +665,15 @@ impl qobject::AppContainer {
 
     fn language_setting(&self) -> QString {
         QString::from(self.state.settings.language.as_str())
+    }
+
+    /// Vom Resize-Griff der Sidebar persistierte Breite (px); 0 = Theme-Standard.
+    fn set_sidebar_width_setting(mut self: Pin<&mut Self>, width: i32) {
+        let width = width.max(0);
+        self.as_mut().set_sidebar_width(width);
+        let state = &mut self.as_mut().rust_mut().state;
+        state.settings.sidebar_width = width as i64;
+        let _ = state.settings.save();
     }
 
     // ─── Detail / Anlegen ───────────────────────────────────────────────────

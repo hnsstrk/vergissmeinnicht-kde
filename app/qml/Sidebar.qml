@@ -12,7 +12,7 @@ Kirigami.OverlayDrawer {
     edge: Qt.application.layoutDirection === Qt.RightToLeft ? Qt.RightEdge : Qt.LeftEdge
     modal: false
     closePolicy: QQC2.Popup.NoAutoClose
-    width: Kirigami.Units.gridUnit * 13
+    width: app.sidebarWidth > 0 ? app.sidebarWidth : Kirigami.Units.gridUnit * 13
     leftPadding: 0
     rightPadding: 0
     topPadding: 0
@@ -43,109 +43,138 @@ Kirigami.OverlayDrawer {
         { key: "all", label: i18n("Alle"), icon: "view-list-details" }
     ]
 
-    contentItem: QQC2.ScrollView {
-        QQC2.ScrollBar.horizontal.policy: QQC2.ScrollBar.AlwaysOff
+    contentItem: Item {
+        QQC2.ScrollView {
+            anchors.fill: parent
+            QQC2.ScrollBar.horizontal.policy: QQC2.ScrollBar.AlwaysOff
 
-        ColumnLayout {
-            width: drawer.width
-            spacing: 0
+            ColumnLayout {
+                width: drawer.width
+                spacing: 0
 
-            Repeater {
-                model: drawer.systemFilters
-                delegate: SidebarRow {
-                    required property var modelData
-                    filterKey: modelData.key
-                    label: modelData.label
-                    iconName: modelData.icon
-                    count: root.counts[modelData.key] ?? 0
-                    visible: modelData.key !== "waiting" || count > 0
-                    acceptsDrop: modelData.key === "inbox"
-                    onDropped: uuids => app.dropOnInbox(uuids)
-                }
-            }
-
-            Kirigami.ListSectionHeader {
-                Layout.fillWidth: true
-                text: i18n("Gespeicherte Suchen")
-                visible: root.savedSearches.length > 0
-            }
-
-            Repeater {
-                model: root.savedSearches
-                delegate: SidebarRow {
-                    required property var modelData
-                    filterKey: "saved:" + modelData.id
-                    label: modelData.name
-                    iconName: "bookmarks"
-                    count: -1
-                    contextMenu: savedMenu
-                    onOpenContextMenu: {
-                        savedMenu.searchId = modelData.id
-                        savedMenu.searchName = modelData.name
-                        savedMenu.popup()
+                Repeater {
+                    model: drawer.systemFilters
+                    delegate: SidebarRow {
+                        required property var modelData
+                        filterKey: modelData.key
+                        label: modelData.label
+                        iconName: modelData.icon
+                        count: root.counts[modelData.key] ?? 0
+                        visible: modelData.key !== "waiting" || count > 0
+                        acceptsDrop: modelData.key === "inbox"
+                        onDropped: uuids => app.dropOnInbox(uuids)
                     }
                 }
-            }
 
-            Kirigami.ListSectionHeader {
-                Layout.fillWidth: true
-                text: i18n("Projekte")
-                visible: root.projects.length > 0
-            }
+                Kirigami.ListSectionHeader {
+                    Layout.fillWidth: true
+                    text: i18n("Gespeicherte Suchen")
+                    visible: root.savedSearches.length > 0
+                }
 
-            Repeater {
-                model: root.projects
-                delegate: SidebarRow {
-                    required property var modelData
-                    filterKey: "project:" + modelData.name
-                    label: modelData.label ?? modelData.name
-                    iconName: "folder"
-                    count: modelData.count
-                    depth: modelData.depth ?? 0
-                    hasChildren: modelData.hasChildren ?? false
-                    expanded: !drawer.collapsedProjects[modelData.name]
-                    visible: drawer.projectVisible(modelData.name)
-                    acceptsDrop: true
-                    onDropped: uuids => app.dropOnProject(uuids, modelData.name)
-                    onToggleExpanded: {
-                        const c = Object.assign({}, drawer.collapsedProjects)
-                        if (c[modelData.name])
-                            delete c[modelData.name]
-                        else
-                            c[modelData.name] = true
-                        drawer.collapsedProjects = c
-                    }
-                    onOpenContextMenu: {
-                        projectMenu.projectName = modelData.name
-                        projectMenu.popup()
+                Repeater {
+                    model: root.savedSearches
+                    delegate: SidebarRow {
+                        required property var modelData
+                        filterKey: "saved:" + modelData.id
+                        label: modelData.name
+                        iconName: "bookmarks"
+                        count: -1
+                        contextMenu: savedMenu
+                        onOpenContextMenu: {
+                            savedMenu.searchId = modelData.id
+                            savedMenu.searchName = modelData.name
+                            savedMenu.popup()
+                        }
                     }
                 }
-            }
 
-            Kirigami.ListSectionHeader {
-                Layout.fillWidth: true
-                text: i18n("Tags")
-                visible: root.tagList.length > 0
-            }
+                Kirigami.ListSectionHeader {
+                    Layout.fillWidth: true
+                    text: i18n("Projekte")
+                    visible: root.projects.length > 0
+                }
 
-            Repeater {
-                model: root.tagList
-                delegate: SidebarRow {
-                    required property var modelData
-                    filterKey: "tag:" + modelData.name
-                    label: modelData.name
-                    iconName: "tag"
-                    count: modelData.count
-                    acceptsDrop: true
-                    onDropped: uuids => app.dropOnTag(uuids, modelData.name)
-                    onOpenContextMenu: {
-                        tagMenu.tagName = modelData.name
-                        tagMenu.popup()
+                Repeater {
+                    model: root.projects
+                    delegate: SidebarRow {
+                        required property var modelData
+                        filterKey: "project:" + modelData.name
+                        label: modelData.label ?? modelData.name
+                        iconName: "folder"
+                        count: modelData.count
+                        depth: modelData.depth ?? 0
+                        hasChildren: modelData.hasChildren ?? false
+                        expanded: !drawer.collapsedProjects[modelData.name]
+                        visible: drawer.projectVisible(modelData.name)
+                        acceptsDrop: true
+                        onDropped: uuids => app.dropOnProject(uuids, modelData.name)
+                        onToggleExpanded: {
+                            const c = Object.assign({}, drawer.collapsedProjects)
+                            if (c[modelData.name])
+                                delete c[modelData.name]
+                            else
+                                c[modelData.name] = true
+                            drawer.collapsedProjects = c
+                        }
+                        onOpenContextMenu: {
+                            projectMenu.projectName = modelData.name
+                            projectMenu.popup()
+                        }
                     }
                 }
-            }
 
-            Item { Layout.fillHeight: true }
+                Kirigami.ListSectionHeader {
+                    Layout.fillWidth: true
+                    text: i18n("Tags")
+                    visible: root.tagList.length > 0
+                }
+
+                Repeater {
+                    model: root.tagList
+                    delegate: SidebarRow {
+                        required property var modelData
+                        filterKey: "tag:" + modelData.name
+                        label: modelData.name
+                        iconName: "tag"
+                        count: modelData.count
+                        acceptsDrop: true
+                        onDropped: uuids => app.dropOnTag(uuids, modelData.name)
+                        onOpenContextMenu: {
+                            tagMenu.tagName = modelData.name
+                            tagMenu.popup()
+                        }
+                    }
+                }
+
+                Item { Layout.fillHeight: true }
+            }
+        }
+
+        // Zieh-Griff am Rand: Sidebar-Breite anpassen, Wert wird persistiert.
+        // Die imperative width-Zuweisung beim Ziehen ersetzt das deklarative
+        // Binding von oben dauerhaft — gewollt: ab dann gilt der Nutzerwert,
+        // beim nächsten Start greift das Binding mit dem persistierten Wert.
+        MouseArea {
+            width: Kirigami.Units.smallSpacing * 2
+            anchors.top: parent.top
+            anchors.bottom: parent.bottom
+            x: drawer.edge === Qt.RightEdge ? 0 : parent.width - width
+            cursorShape: Qt.SplitHCursor
+            acceptedButtons: Qt.LeftButton
+            preventStealing: true
+            property real pressX: 0
+            onPressed: mouse => pressX = mouse.x
+            onPositionChanged: mouse => {
+                if (!pressed)
+                    return
+                const delta = mouse.x - pressX
+                const target = drawer.edge === Qt.RightEdge ? drawer.width - delta : drawer.width + delta
+                const min = Kirigami.Units.gridUnit * 8
+                const max = Math.min(Kirigami.Units.gridUnit * 30, root.width / 2)
+                drawer.width = Math.max(min, Math.min(max, target))
+            }
+            onReleased: app.setSidebarWidthSetting(Math.round(drawer.width))
         }
     }
 

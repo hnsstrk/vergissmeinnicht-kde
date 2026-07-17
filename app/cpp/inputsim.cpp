@@ -6,15 +6,22 @@
 #include <QMouseEvent>
 #include <QQuickWindow>
 
-static QQuickWindow *firstQuickWindow()
+// Zielfenster der synthetischen Events: das zuletzt erzeugte sichtbare
+// QQuickWindow. Die Formular-Fenster (Detail/Schnelleingabe/Einstellungen)
+// entstehen nach dem Hauptfenster — ist eines geöffnet, gewinnt es; sonst
+// bleibt das Hauptfenster das Ziel.
+static QQuickWindow *targetQuickWindow()
 {
+    QQuickWindow *target = nullptr;
     const auto windows = QGuiApplication::topLevelWindows();
     for (QWindow *w : windows) {
         if (auto *quickWindow = qobject_cast<QQuickWindow *>(w)) {
-            return quickWindow;
+            if (quickWindow->isVisible()) {
+                target = quickWindow;
+            }
         }
     }
-    return nullptr;
+    return target;
 }
 
 // Monoton steigender Fake-Timestamp — ohne ihn verwirft/fehlinterpretiert die
@@ -28,7 +35,7 @@ static ulong vmnNextTimestamp()
 
 void vmnSendClick(double x, double y, int button, int modifiers, bool doubleClick)
 {
-    QQuickWindow *w = firstQuickWindow();
+    QQuickWindow *w = targetQuickWindow();
     if (!w) {
         return;
     }
@@ -55,7 +62,7 @@ void vmnSendClick(double x, double y, int button, int modifiers, bool doubleClic
 
 void vmnSendKey(int key, int modifiers, const QString &text)
 {
-    QQuickWindow *w = firstQuickWindow();
+    QQuickWindow *w = targetQuickWindow();
     if (!w) {
         return;
     }

@@ -5,6 +5,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.2.3] - 2026-07-17
+
+### Changed
+
+- **Edit, quick-capture and settings are real dialog windows** now instead
+  of modals overlaying the main window — movable, resizable, with a proper
+  title bar (user feedback). The edit and quick-capture windows gained an
+  inline error banner; settings keeps its existing sync status line, and
+  the repair action now reports its error inline instead of pointing at
+  the (hidden) main-view banner.
+- The sync toolbar button only shows the blue activity dot when there
+  actually are unsynchronized local changes; otherwise it shows a plain
+  cloud. The dot was baked into the `state-sync` icon and appeared
+  permanently before.
+
+### Added
+
+- The sidebar is resizable via a drag handle on its edge; the width is
+  persisted across restarts (user report: counts were cut off).
+
 ## [0.2.2] - 2026-07-17
 
 ### Fixed

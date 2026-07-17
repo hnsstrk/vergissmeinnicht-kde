@@ -230,7 +230,9 @@ Kirigami.ScrollablePage {
         },
         Kirigami.Action {
             text: app.isSyncing ? i18n("Synchronisiere …") : i18n("Synchronisieren")
-            icon.name: "state-sync"
+            // state-sync trägt den blauen Punkt fest im Icon — nur zeigen, wenn
+            // wirklich unsynchronisierte Änderungen vorliegen.
+            icon.name: app.hasLocalChanges ? "state-sync" : "cloudstatus"
             enabled: !app.isSyncing
             shortcut: "Ctrl+Shift+S"
             onTriggered: app.startSync()
