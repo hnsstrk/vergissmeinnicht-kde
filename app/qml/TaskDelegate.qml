@@ -96,12 +96,14 @@ QQC2.ItemDelegate {
                          || delegate.isBlocked || delegate.isBlocking
                          || delegate.annotationCount > 0
 
+                // Rot ist für Überfällig reserviert — Priorität signalisiert
+                // über die Akzentfarbe (H) bzw. neutral (M/L), mit Klartext.
                 MetaChip {
                     visible: delegate.priority.length > 0
                     iconName: "emblem-important"
-                    label: delegate.priority
-                    chipColor: delegate.priority === "H" ? Kirigami.Theme.negativeTextColor
-                              : delegate.priority === "M" ? Kirigami.Theme.neutralTextColor
+                    label: delegate.priority === "H" ? i18n("Hoch")
+                          : delegate.priority === "M" ? i18n("Mittel") : i18n("Niedrig")
+                    chipColor: delegate.priority === "H" ? Kirigami.Theme.highlightColor
                               : Kirigami.Theme.textColor
                 }
                 MetaChip {
@@ -110,12 +112,18 @@ QQC2.ItemDelegate {
                     label: delegate.project
                 }
                 Repeater {
-                    model: delegate.tags
+                    model: delegate.tags.slice(0, 2)
                     MetaChip {
                         required property var modelData
                         iconName: "tag"
                         label: modelData
                     }
+                }
+                // Mehr als zwei Tags: bündeln, Details stehen im Editor.
+                MetaChip {
+                    visible: delegate.tags.length > 2
+                    iconName: "tag"
+                    label: i18n("+%1", delegate.tags.length - 2)
                 }
                 MetaChip {
                     visible: delegate.due > 0

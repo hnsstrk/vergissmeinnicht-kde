@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: vergissmeinnicht 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-17 15:42+0200\n"
+"POT-Creation-Date: 2026-07-17 15:45+0200\n"
 "Language: en\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -45,7 +45,7 @@ msgstr "Cancel"
 msgid "Titel"
 msgstr "Title"
 
-#: app/qml/DetailDialog.qml:102 app/qml/QuickCaptureDialog.qml:136
+#: app/qml/DetailDialog.qml:102 app/qml/QuickCaptureDialog.qml:128
 #: app/qml/TasksPage.qml:226
 msgid "Projekt"
 msgstr "Project"
@@ -58,11 +58,11 @@ msgstr "Tags (separated by spaces)"
 msgid "z. B. arbeit dringend"
 msgstr "e.g. work urgent"
 
-#: app/qml/DetailDialog.qml:119 app/qml/QuickCaptureDialog.qml:151
+#: app/qml/DetailDialog.qml:119 app/qml/QuickCaptureDialog.qml:143
 msgid "Fällig"
 msgstr "Due"
 
-#: app/qml/DetailDialog.qml:125 app/qml/QuickCaptureDialog.qml:159
+#: app/qml/DetailDialog.qml:125 app/qml/QuickCaptureDialog.qml:151
 msgid "Fällig am"
 msgstr "Due on"
 
@@ -86,52 +86,53 @@ msgstr "Expires (until)"
 msgid ""
 "Nach diesem Datum wird die Aufgabe automatisch gelöscht (Taskwarrior-"
 "Semantik)."
-msgstr "After this date the task is deleted automatically (Taskwarrior semantics)."
+msgstr ""
+"After this date the task is deleted automatically (Taskwarrior semantics)."
 
 #: app/qml/DetailDialog.qml:162
 msgid "Ablaufdatum"
 msgstr "Expiry date"
 
-#: app/qml/DetailDialog.qml:170 app/qml/QuickCaptureDialog.qml:166
+#: app/qml/DetailDialog.qml:170 app/qml/QuickCaptureDialog.qml:158
 #: app/qml/TasksPage.qml:468
 msgid "Priorität"
 msgstr "Priority"
 
 #: app/qml/DetailDialog.qml:171 app/qml/DetailDialog.qml:178
-#: app/qml/QuickCaptureDialog.qml:167 app/qml/QuickCaptureDialog.qml:174
+#: app/qml/QuickCaptureDialog.qml:159 app/qml/QuickCaptureDialog.qml:166
 #: app/qml/TasksPage.qml:474 app/qml/TasksPage.qml:484
 msgid "Keine"
 msgstr "None"
 
-#: app/qml/DetailDialog.qml:171 app/qml/QuickCaptureDialog.qml:167
+#: app/qml/DetailDialog.qml:171 app/qml/QuickCaptureDialog.qml:159
 msgid "Hoch (H)"
 msgstr "High (H)"
 
-#: app/qml/DetailDialog.qml:171 app/qml/QuickCaptureDialog.qml:167
+#: app/qml/DetailDialog.qml:171 app/qml/QuickCaptureDialog.qml:159
 msgid "Mittel (M)"
 msgstr "Medium (M)"
 
-#: app/qml/DetailDialog.qml:171 app/qml/QuickCaptureDialog.qml:167
+#: app/qml/DetailDialog.qml:171 app/qml/QuickCaptureDialog.qml:159
 msgid "Niedrig (L)"
 msgstr "Low (L)"
 
-#: app/qml/DetailDialog.qml:177 app/qml/QuickCaptureDialog.qml:173
+#: app/qml/DetailDialog.qml:177 app/qml/QuickCaptureDialog.qml:165
 msgid "Wiederholung"
 msgstr "Recurrence"
 
-#: app/qml/DetailDialog.qml:178 app/qml/QuickCaptureDialog.qml:174
+#: app/qml/DetailDialog.qml:178 app/qml/QuickCaptureDialog.qml:166
 msgid "Täglich"
 msgstr "Daily"
 
-#: app/qml/DetailDialog.qml:178 app/qml/QuickCaptureDialog.qml:174
+#: app/qml/DetailDialog.qml:178 app/qml/QuickCaptureDialog.qml:166
 msgid "Wöchentlich"
 msgstr "Weekly"
 
-#: app/qml/DetailDialog.qml:178 app/qml/QuickCaptureDialog.qml:174
+#: app/qml/DetailDialog.qml:178 app/qml/QuickCaptureDialog.qml:166
 msgid "Monatlich"
 msgstr "Monthly"
 
-#: app/qml/DetailDialog.qml:178 app/qml/QuickCaptureDialog.qml:174
+#: app/qml/DetailDialog.qml:178 app/qml/QuickCaptureDialog.qml:166
 msgid "Jährlich"
 msgstr "Yearly"
 
@@ -210,7 +211,7 @@ msgstr "Add dependency"
 msgid "Aufgabe wählen …"
 msgstr "Pick a task …"
 
-#: app/qml/DetailDialog.qml:288 app/qml/QuickCaptureDialog.qml:128
+#: app/qml/DetailDialog.qml:288 app/qml/QuickCaptureDialog.qml:174
 msgid "Notizen"
 msgstr "Notes"
 
@@ -359,20 +360,22 @@ msgstr "Filter by tag"
 msgid "offen · erledigt · wiederkehrend"
 msgstr "pending · completed · recurring"
 
-#: app/qml/HelpDialog.qml:105
+#: app/qml/HelpDialog.qml:106
 msgid ""
 "Virtuelle Tags (GROSS): OVERDUE, ACTIVE, BLOCKED, DUE, TODAY, WEEK, TAGGED …"
-msgstr "Virtual tags (UPPERCASE): OVERDUE, ACTIVE, BLOCKED, DUE, TODAY, WEEK, TAGGED …"
+msgstr ""
+"Virtual tags (UPPERCASE): OVERDUE, ACTIVE, BLOCKED, DUE, TODAY, WEEK, TAGGED "
+"…"
 
-#: app/qml/HelpDialog.qml:109
+#: app/qml/HelpDialog.qml:113
 msgid "Fälligkeit vor/nach Datum (auch eow, friday, 23rd …)"
 msgstr "Due before/after a date (also eow, friday, 23rd …)"
 
-#: app/qml/HelpDialog.qml:113
+#: app/qml/HelpDialog.qml:117
 msgid "Projekt ausschließen"
 msgstr "Exclude project"
 
-#: app/qml/HelpDialog.qml:123
+#: app/qml/HelpDialog.qml:127
 msgid ""
 "Tipp: Eine aktive Suche lässt sich über das Lesezeichen-Symbol (oder "
 "Strg+Umschalt+D) als „Gespeicherte Suche“ in die Seitenleiste legen."
@@ -380,7 +383,7 @@ msgstr ""
 "Tip: An active search can be pinned to the sidebar as a saved search via the "
 "bookmark icon (or Ctrl+Shift+D)."
 
-#: app/qml/HelpDialog.qml:130
+#: app/qml/HelpDialog.qml:134
 msgid "Schnelleingabe-Syntax"
 msgstr "Quick capture syntax"
 
@@ -392,7 +395,7 @@ msgstr "Saved search"
 msgid "Alle"
 msgstr "All"
 
-#: app/qml/Main.qml:42 app/qml/QuickCaptureDialog.qml:152
+#: app/qml/Main.qml:42 app/qml/QuickCaptureDialog.qml:144
 #: app/qml/SettingsDialog.qml:80 app/qml/Sidebar.qml:58
 #: app/qml/TasksPage.qml:479
 msgid "Heute"
@@ -418,15 +421,15 @@ msgstr "Scheduled"
 msgid "Wartend"
 msgstr "Waiting"
 
-#: app/qml/Main.qml:48 app/qml/Sidebar.qml:63 app/qml/TaskDelegate.qml:152
+#: app/qml/Main.qml:48 app/qml/Sidebar.qml:63 app/qml/TaskDelegate.qml:160
 msgid "Aktiv"
 msgstr "Active"
 
-#: app/qml/Main.qml:49 app/qml/TaskDelegate.qml:158 app/qml/TasksPage.qml:267
+#: app/qml/Main.qml:49 app/qml/TaskDelegate.qml:166 app/qml/TasksPage.qml:267
 msgid "Blockiert"
 msgstr "Blocked"
 
-#: app/qml/Main.qml:50 app/qml/TaskDelegate.qml:164 app/qml/TasksPage.qml:271
+#: app/qml/Main.qml:50 app/qml/TaskDelegate.qml:172 app/qml/TasksPage.qml:271
 msgid "Blockierend"
 msgstr "Blocking"
 
@@ -466,29 +469,29 @@ msgstr "Due (not recognized): %1"
 msgid "Priorität: %1"
 msgstr "Priority: %1"
 
-#: app/qml/QuickCaptureDialog.qml:144 app/qml/Sidebar.qml:156
+#: app/qml/QuickCaptureDialog.qml:136 app/qml/Sidebar.qml:156
 msgid "Tags"
 msgstr "Tags"
 
-#: app/qml/QuickCaptureDialog.qml:145
+#: app/qml/QuickCaptureDialog.qml:137
 msgid "durch Leerzeichen getrennt"
 msgstr "separated by spaces"
 
-#: app/qml/QuickCaptureDialog.qml:152
+#: app/qml/QuickCaptureDialog.qml:144
 msgid "Keine Angabe"
 msgstr "Not set"
 
-#: app/qml/QuickCaptureDialog.qml:152 app/qml/TasksPage.qml:412
+#: app/qml/QuickCaptureDialog.qml:144 app/qml/TasksPage.qml:412
 #: app/qml/TasksPage.qml:480
 msgid "Morgen"
 msgstr "Tomorrow"
 
-#: app/qml/QuickCaptureDialog.qml:152 app/qml/TasksPage.qml:420
+#: app/qml/QuickCaptureDialog.qml:144 app/qml/TasksPage.qml:420
 #: app/qml/TasksPage.qml:482
 msgid "+1 Woche"
 msgstr "+1 week"
 
-#: app/qml/QuickCaptureDialog.qml:152
+#: app/qml/QuickCaptureDialog.qml:144
 msgid "Datum wählen …"
 msgstr "Pick a date …"
 
@@ -730,15 +733,31 @@ msgstr "Rename search"
 msgid "Löschen"
 msgstr "Delete"
 
-#: app/qml/TaskDelegate.qml:129
+#: app/qml/TaskDelegate.qml:104 app/qml/TasksPage.qml:470
+msgid "Hoch"
+msgstr "High"
+
+#: app/qml/TaskDelegate.qml:105 app/qml/TasksPage.qml:471
+msgid "Mittel"
+msgstr "Medium"
+
+#: app/qml/TaskDelegate.qml:105 app/qml/TasksPage.qml:472
+msgid "Niedrig"
+msgstr "Low"
+
+#: app/qml/TaskDelegate.qml:126
+msgid "+%1"
+msgstr "+%1"
+
+#: app/qml/TaskDelegate.qml:137
 msgid "Geplant ab %1"
 msgstr "Scheduled from %1"
 
-#: app/qml/TaskDelegate.qml:134
+#: app/qml/TaskDelegate.qml:142
 msgid "Wartet bis %1"
 msgstr "Waiting until %1"
 
-#: app/qml/TaskDelegate.qml:146
+#: app/qml/TaskDelegate.qml:154
 msgid "Vorlage (CLI-verwaltet)"
 msgstr "Template (CLI-managed)"
 
@@ -894,18 +913,6 @@ msgstr "Add tag"
 #: app/qml/TasksPage.qml:463
 msgid "Neuer Tag …"
 msgstr "New tag …"
-
-#: app/qml/TasksPage.qml:470
-msgid "Hoch"
-msgstr "High"
-
-#: app/qml/TasksPage.qml:471
-msgid "Mittel"
-msgstr "Medium"
-
-#: app/qml/TasksPage.qml:472
-msgid "Niedrig"
-msgstr "Low"
 
 #: app/qml/TasksPage.qml:477
 msgid "Fälligkeit setzen"

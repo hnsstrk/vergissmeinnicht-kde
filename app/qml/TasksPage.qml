@@ -746,4 +746,39 @@ Kirigami.ScrollablePage {
         enabled: page.selection.length > 0
         onActivated: page.clearSelection()
     }
+    // Pfeiltasten: Auswahl bewegen (Umschalt erweitert den Bereich).
+    function moveSelection(delta, extend) {
+        if (taskList.count === 0)
+            return
+        const next = Math.max(0, Math.min(taskList.count - 1,
+                              (selectionAnchor < 0 ? (delta > 0 ? -1 : taskList.count) : selectionAnchor) + delta))
+        const uuid = Array.from(app.visibleUuids(next, next))[0]
+        if (!uuid)
+            return
+        if (extend)
+            selectRange(next)
+        else
+            selectSingle(uuid, next)
+        taskList.positionViewAtIndex(next, ListView.Contain)
+    }
+    Shortcut {
+        sequence: "Down"
+        enabled: !searchField.activeFocus
+        onActivated: page.moveSelection(1, false)
+    }
+    Shortcut {
+        sequence: "Up"
+        enabled: !searchField.activeFocus
+        onActivated: page.moveSelection(-1, false)
+    }
+    Shortcut {
+        sequence: "Shift+Down"
+        enabled: !searchField.activeFocus
+        onActivated: page.moveSelection(1, true)
+    }
+    Shortcut {
+        sequence: "Shift+Up"
+        enabled: !searchField.activeFocus
+        onActivated: page.moveSelection(-1, true)
+    }
 }

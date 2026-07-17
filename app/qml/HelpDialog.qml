@@ -102,7 +102,11 @@ Kirigami.Dialog {
             QQC2.Label { text: "status:erledigt" ; font.family: "monospace" }
 
             QQC2.Label { text: "+TAG" ; font.family: "monospace" }
-            QQC2.Label { text: i18n("Virtuelle Tags (GROSS): OVERDUE, ACTIVE, BLOCKED, DUE, TODAY, WEEK, TAGGED …") }
+            QQC2.Label {
+                text: i18n("Virtuelle Tags (GROSS): OVERDUE, ACTIVE, BLOCKED, DUE, TODAY, WEEK, TAGGED …")
+                wrapMode: Text.WordWrap
+                Layout.maximumWidth: Kirigami.Units.gridUnit * 12
+            }
             QQC2.Label { text: "+OVERDUE" ; font.family: "monospace" }
 
             QQC2.Label { text: "due.before: / due.after:" ; font.family: "monospace" }

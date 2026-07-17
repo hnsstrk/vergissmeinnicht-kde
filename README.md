@@ -69,6 +69,14 @@ platform.
 - **Automatic backups** — `VACUUM INTO` snapshot before every sync, rotated
   to the last 10. Manual backup and restore from settings. See
   [`docs/backup-and-restore.md`](docs/backup-and-restore.md).
+- **Taskwarrior parity** — urgency (exact CLI formula) as sort order,
+  start/stop (active task), undo (Ctrl+Z), `until` expiry, duplicate,
+  JSON export incl. UDAs, virtual tags and `due.before:`/`due.after:`/
+  `project.not:` in search, CLI date synonyms (`eow`, `friday`, `23rd`, …)
+  and recur synonyms (`weekdays`, `quarterly`, …). CLI recurrence
+  templates are respected, never duplicated — coexistence with the
+  `task` CLI on a shared sync server is verified end-to-end
+  (see `docs/architecture.md`).
 - **Legacy repair** — a maintenance action converts token syntax left in
   task titles (`+tag project:x`) into real properties.
 

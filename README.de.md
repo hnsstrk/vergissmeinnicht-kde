@@ -68,6 +68,15 @@ Oberfläche auf jeder Plattform.
 - **Automatische Backups** — `VACUUM INTO`-Snapshot vor jedem Sync,
   rotierend die letzten 10. Manuelles Backup und Wiederherstellung in den
   Einstellungen. Siehe [`docs/backup-and-restore.md`](docs/backup-and-restore.md).
+- **Taskwarrior-Parität** — Dringlichkeit (exakte CLI-Formel) als
+  Sortierung, Start/Stopp (aktive Aufgabe), Rückgängig (Strg+Z),
+  `until`-Ablaufdatum, Duplizieren, JSON-Export inkl. UDAs, virtuelle
+  Tags und `due.before:`/`due.after:`/`project.not:` in der Suche,
+  CLI-Datums-Synonyme (`eow`, `friday`, `23rd`, …) und
+  recur-Synonyme (`weekdays`, `quarterly`, …). CLI-Recurrence-Vorlagen
+  werden respektiert, nie dupliziert — die Koexistenz mit der
+  `task`-CLI am gemeinsamen Sync-Server ist Ende-zu-Ende verifiziert
+  (siehe `docs/architecture.md`).
 - **Legacy-Reparatur** — eine Wartungsaktion überführt Token-Syntax in
   Aufgabentiteln (`+tag project:x`) in echte Eigenschaften.
 

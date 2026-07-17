@@ -122,14 +122,6 @@ FormWindow {
         }
     }
 
-    FormCard.FormTextAreaDelegate {
-        Layout.fillWidth: true
-        id: notesArea
-        label: i18n("Notizen")
-    }
-
-    FormCard.FormDelegateSeparator { Layout.fillWidth: true }
-
     FormCard.FormComboBoxDelegate {
         Layout.fillWidth: true
         id: projectField
@@ -172,5 +164,13 @@ FormWindow {
         id: recurCombo
         text: i18n("Wiederholung")
         model: [i18n("Keine"), i18n("Täglich"), i18n("Wöchentlich"), i18n("Monatlich"), i18n("Jährlich")]
+    }
+
+    FormCard.FormDelegateSeparator { Layout.fillWidth: true }
+
+    FormCard.FormTextAreaDelegate {
+        Layout.fillWidth: true
+        id: notesArea
+        label: i18n("Notizen")
     }
 }

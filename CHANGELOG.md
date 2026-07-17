@@ -5,6 +5,51 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-07-17
+
+Team-built release ("full Taskwarrior manager"): a CLI capability
+inventory, a taskchampion gap analysis and a UI/UX expert review were
+produced by dedicated agents, then implemented in three waves.
+
+### Added
+
+- **Urgency** — the exact CLI formula (3.4.2 defaults) as sort order and
+  in the detail window.
+- **Start/stop** (active task) with context-menu action, "Active" chip,
+  sidebar filter and `+ACTIVE` search.
+- **Undo** (Ctrl+Z) — every mutation batch is one undoable step; like
+  the CLI, undo cannot cross a sync.
+- **until** expiry date in the detail window (CLI auto-delete semantics).
+- **duplicate** context-menu action; "last modified" display; read-only
+  UDA/foreign-attribute section in the detail window.
+- **Search**: virtual tags (`+OVERDUE`, `+ACTIVE`, `+BLOCKED`, `+DUE`,
+  `+TODAY`, `+WEEK`, `+TAGGED`, `+INSTANCE`, …), `due.before:`/
+  `due.after:`, `project.not:`.
+- **Date synonyms**: `sod`/`eod`/`sow`/`eow`/`soww`/`eoww`/`som`/`eom`/
+  `soq`/`eoq`/`soy`/`eoy`, English weekday names, ordinals (`23rd`),
+  `yesterday`, `now`, `later`/`someday`.
+- **recur synonyms**: `weekdays`, `biweekly`/`fortnight`, `quarterly`,
+  `semiannual`, `annual`/`biannual`, `Nwks`/`Nmo`/`Nqtr`/`Nyrs`.
+- **JSON export** (task-export format incl. UDAs) from settings.
+- **CLI coexistence guarantees**, verified end-to-end against the real
+  `task` CLI on a shared sync server (`core/tests/cli_coexistence.rs`):
+  UDAs survive app edits, CLI recurrence templates/instances are
+  respected (no duplicate follow-ups), app-owned recur tasks are
+  harmless for the CLI. See docs/architecture.md.
+
+### Changed
+
+- Priority chips use the accent color and localized labels — red is now
+  reserved for overdue. Tags collapse to "+n" beyond two. Form windows
+  gained breathing room; quick-capture moves notes below the structured
+  fields. Arrow keys move the list selection (Shift extends).
+
+### Known gaps (tracked as issues)
+
+- CLI hooks never fire for app edits (library-level mutation).
+- Month calendar/forecast (#1), detail column (#2), JSON import,
+  contexts, further UI polish — see the issue tracker.
+
 ## [0.2.4] - 2026-07-17
 
 ### Fixed
@@ -162,7 +207,8 @@ feature-comparable for the daily-driver workflows.
 - Packaging: desktop file, scalable icon, AppStream metainfo,
   `scripts/install-local.sh`, CI and release workflows (Arch container).
 
-[Unreleased]: https://github.com/hnsstrk/vergissmeinnicht-kde/compare/v0.2.4...HEAD
+[Unreleased]: https://github.com/hnsstrk/vergissmeinnicht-kde/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/hnsstrk/vergissmeinnicht-kde/compare/v0.2.4...v0.3.0
 [0.2.4]: https://github.com/hnsstrk/vergissmeinnicht-kde/compare/v0.2.3...v0.2.4
 [0.2.3]: https://github.com/hnsstrk/vergissmeinnicht-kde/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/hnsstrk/vergissmeinnicht-kde/compare/v0.2.1...v0.2.2

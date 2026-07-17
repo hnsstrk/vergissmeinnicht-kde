@@ -50,7 +50,9 @@ Window {
 
             ColumnLayout {
                 id: contentColumn
-                width: scroll.availableWidth
+                // Luft zur Fensterkante — Formularzeilen kleben sonst randlos.
+                width: scroll.availableWidth - Kirigami.Units.largeSpacing * 2
+                x: Kirigami.Units.largeSpacing
                 spacing: 0
             }
         }
