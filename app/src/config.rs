@@ -40,6 +40,8 @@ pub struct Settings {
     pub last_overdue_count: i64,
     /// Sidebar-Breite in Pixeln; 0 = Standardbreite des Themes.
     pub sidebar_width: i64,
+    /// Eingeklappte Sidebar-Sektionen ("saved" | "projects" | "tags").
+    pub collapsed_sections: Vec<String>,
 }
 
 impl Default for Settings {
@@ -57,6 +59,7 @@ impl Default for Settings {
             saved_searches: Vec::new(),
             last_overdue_count: 0,
             sidebar_width: 0,
+            collapsed_sections: Vec::new(),
         }
     }
 }
@@ -106,20 +109,23 @@ mod tests {
     use super::*;
 
     #[test]
-    fn sidebar_width_roundtrip() {
+    fn sidebar_settings_roundtrip() {
         let mut s = Settings::default();
         assert_eq!(s.sidebar_width, 0);
         s.sidebar_width = 247;
+        s.collapsed_sections = vec!["tags".into()];
         let raw = serde_json::to_string(&s).unwrap();
         let wieder: Settings = serde_json::from_str(&raw).unwrap();
         assert_eq!(wieder.sidebar_width, 247);
+        assert_eq!(wieder.collapsed_sections, vec!["tags".to_string()]);
     }
 
     #[test]
     fn old_config_without_sidebar_width_defaults_to_zero() {
-        // Config aus einer Version vor 0.2.3 — Feld fehlt, Default muss greifen.
+        // Config aus einer Version vor 0.2.3 — Felder fehlen, Defaults greifen.
         let wieder: Settings = serde_json::from_str(r#"{"default_filter":"todo"}"#).unwrap();
         assert_eq!(wieder.sidebar_width, 0);
+        assert!(wieder.collapsed_sections.is_empty());
         assert_eq!(wieder.default_filter, "todo");
     }
 }

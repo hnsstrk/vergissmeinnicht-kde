@@ -26,8 +26,8 @@ platform.
   Scheduled · Waiting · All, plus per-project and per-tag rows. Live counts,
   drop targets, context menus for rename/remove. Dotted projects
   (`Work.Sub`) form a collapsible tree; selecting a parent includes its
-  subprojects (Taskwarrior prefix semantics). Resizable via a drag handle;
-  the width is persisted.
+  subprojects (Taskwarrior prefix semantics). Resizable via a drag handle,
+  sections collapse by clicking their headers; both are persisted.
 - **Full-text search with operators** (Ctrl+F) — covers title, project, tags,
   and annotations across the entire store (pending, completed, recurring).
   Supports AND terms, quoted phrases, and `project:`, `tag:`, `status:`

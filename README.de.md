@@ -25,7 +25,8 @@ Oberfläche auf jeder Plattform.
   Gepunktete Projekte (`Arbeit.Teilprojekt`) bilden einen klappbaren Baum;
   die Auswahl eines Elternprojekts schließt Subprojekte ein
   (Taskwarrior-Präfix-Semantik). Die Breite lässt sich per Zieh-Griff
-  anpassen und bleibt gespeichert.
+  anpassen, Sektionen klappen per Klick auf ihre Überschrift ein und aus;
+  beides bleibt gespeichert.
 - **Volltextsuche mit Operatoren** (Strg+F) — durchsucht Titel, Projekt, Tags
   und Notizen über den gesamten Bestand (offen, erledigt, wiederkehrend).
   UND-Verknüpfung, Phrasen in Anführungszeichen sowie `projekt:`, `tag:`,

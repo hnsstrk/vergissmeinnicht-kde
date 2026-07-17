@@ -115,6 +115,7 @@ mod qobject {
         #[qproperty(QString, auto_sync_mode, cxx_name = "autoSyncMode")]
         #[qproperty(bool, notify_overdue, cxx_name = "notifyOverdue")]
         #[qproperty(i32, sidebar_width, cxx_name = "sidebarWidth")]
+        #[qproperty(QString, collapsed_sections_json, cxx_name = "collapsedSectionsJson")]
         type AppContainer = super::AppContainerRust;
 
         // ── Modell-Overrides ────────────────────────────────────────────────
@@ -162,6 +163,8 @@ mod qobject {
         fn language_setting(self: &AppContainer) -> QString;
         #[qinvokable]
         fn set_sidebar_width_setting(self: Pin<&mut AppContainer>, width: i32);
+        #[qinvokable]
+        fn set_collapsed_sections_setting(self: Pin<&mut AppContainer>, json: &QString);
 
         // ── Task-Detail ─────────────────────────────────────────────────────
         #[qinvokable]
@@ -338,6 +341,7 @@ pub struct AppContainerRust {
     auto_sync_mode: QString,
     notify_overdue: bool,
     sidebar_width: i32,
+    collapsed_sections_json: QString,
 }
 
 impl Default for AppContainerRust {
@@ -365,6 +369,11 @@ impl Default for AppContainerRust {
             auto_sync_mode: QString::from(state.settings.auto_sync.as_str()),
             notify_overdue: state.settings.notify_overdue,
             sidebar_width: state.settings.sidebar_width as i32,
+            collapsed_sections_json: QString::from(
+                serde_json::to_string(&state.settings.collapsed_sections)
+                    .unwrap_or_else(|_| "[]".into())
+                    .as_str(),
+            ),
             state,
         }
     }
@@ -673,6 +682,17 @@ impl qobject::AppContainer {
         self.as_mut().set_sidebar_width(width);
         let state = &mut self.as_mut().rust_mut().state;
         state.settings.sidebar_width = width as i64;
+        let _ = state.settings.save();
+    }
+
+    /// Eingeklappte Sidebar-Sektionen persistieren (JSON-Array von Keys).
+    fn set_collapsed_sections_setting(mut self: Pin<&mut Self>, json: &QString) {
+        let parsed: Vec<String> = serde_json::from_str(&json.to_string()).unwrap_or_default();
+        let normalized = serde_json::to_string(&parsed).unwrap_or_else(|_| "[]".into());
+        self.as_mut()
+            .set_collapsed_sections_json(QString::from(normalized.as_str()));
+        let state = &mut self.as_mut().rust_mut().state;
+        state.settings.collapsed_sections = parsed;
         let _ = state.settings.save();
     }
 

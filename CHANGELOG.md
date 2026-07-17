@@ -5,6 +5,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.2.4] - 2026-07-17
+
+### Fixed
+
+- The sidebar scrollbar overlaid the count numbers: the sidebar content
+  claimed the full drawer width instead of the scroll view's available
+  width (user report with screenshot).
+
+### Added
+
+- The sidebar sections (Saved searches, Projects, Tags) collapse and
+  expand by clicking their headers; the state is persisted. Project
+  subtrees were already collapsible via their arrows.
+
 ## [0.2.3] - 2026-07-17
 
 ### Changed
@@ -148,7 +162,9 @@ feature-comparable for the daily-driver workflows.
 - Packaging: desktop file, scalable icon, AppStream metainfo,
   `scripts/install-local.sh`, CI and release workflows (Arch container).
 
-[Unreleased]: https://github.com/hnsstrk/vergissmeinnicht-kde/compare/v0.2.2...HEAD
+[Unreleased]: https://github.com/hnsstrk/vergissmeinnicht-kde/compare/v0.2.4...HEAD
+[0.2.4]: https://github.com/hnsstrk/vergissmeinnicht-kde/compare/v0.2.3...v0.2.4
+[0.2.3]: https://github.com/hnsstrk/vergissmeinnicht-kde/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/hnsstrk/vergissmeinnicht-kde/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/hnsstrk/vergissmeinnicht-kde/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/hnsstrk/vergissmeinnicht-kde/compare/v0.1.1...v0.2.0

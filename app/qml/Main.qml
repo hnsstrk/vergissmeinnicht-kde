@@ -358,7 +358,13 @@ Kirigami.ApplicationWindow {
             app.renameProject("flowdemo", "flowdemo2")
             check(taskOf(folge.uuid).project === "flowdemo2", "renameProject")
 
-            // 10. Aufräumen: alle Flow-Aufgaben löschen
+            // 10. Sidebar-Sektionen: Toggle + Persistenz
+            root.globalDrawer.toggleSection("tags")
+            check(app.collapsedSectionsJson === '["tags"]', "Sektion eingeklappt persistiert")
+            root.globalDrawer.toggleSection("tags")
+            check(app.collapsedSectionsJson === "[]", "Sektion wieder ausgeklappt")
+
+            // 11. Aufräumen: alle Flow-Aufgaben löschen
             app.applyFilter("all")
             const opfer = uuids().filter(u => {
                 const x = taskOf(u)

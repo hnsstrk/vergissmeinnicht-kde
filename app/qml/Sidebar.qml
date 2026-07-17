@@ -22,6 +22,27 @@ Kirigami.OverlayDrawer {
     // werden ausgeblendet.
     property var collapsedProjects: ({})
 
+    // Eingeklappte Sektionen ("saved" | "projects" | "tags") — persistiert.
+    property var collapsedSections: ({})
+
+    Component.onCompleted: {
+        const keys = JSON.parse(app.collapsedSectionsJson || "[]")
+        const c = {}
+        for (const k of keys)
+            c[k] = true
+        collapsedSections = c
+    }
+
+    function toggleSection(key) {
+        const c = Object.assign({}, collapsedSections)
+        if (c[key])
+            delete c[key]
+        else
+            c[key] = true
+        collapsedSections = c
+        app.setCollapsedSectionsSetting(JSON.stringify(Object.keys(c)))
+    }
+
     function projectVisible(name) {
         const parts = name.split(".")
         for (let i = 1; i < parts.length; i++) {
@@ -45,11 +66,15 @@ Kirigami.OverlayDrawer {
 
     contentItem: Item {
         QQC2.ScrollView {
+            id: sidebarScroll
             anchors.fill: parent
             QQC2.ScrollBar.horizontal.policy: QQC2.ScrollBar.AlwaysOff
 
             ColumnLayout {
-                width: drawer.width
+                // availableWidth statt drawer.width: lässt dem (nicht
+                // transienten) Scrollbalken seinen Platz, statt die Zähler
+                // darunter zu begraben.
+                width: sidebarScroll.availableWidth
                 spacing: 0
 
                 Repeater {
@@ -66,8 +91,8 @@ Kirigami.OverlayDrawer {
                     }
                 }
 
-                Kirigami.ListSectionHeader {
-                    Layout.fillWidth: true
+                SectionHeader {
+                    sectionKey: "saved"
                     text: i18n("Gespeicherte Suchen")
                     visible: root.savedSearches.length > 0
                 }
@@ -80,6 +105,7 @@ Kirigami.OverlayDrawer {
                         label: modelData.name
                         iconName: "bookmarks"
                         count: -1
+                        visible: !drawer.collapsedSections["saved"]
                         contextMenu: savedMenu
                         onOpenContextMenu: {
                             savedMenu.searchId = modelData.id
@@ -89,8 +115,8 @@ Kirigami.OverlayDrawer {
                     }
                 }
 
-                Kirigami.ListSectionHeader {
-                    Layout.fillWidth: true
+                SectionHeader {
+                    sectionKey: "projects"
                     text: i18n("Projekte")
                     visible: root.projects.length > 0
                 }
@@ -106,7 +132,7 @@ Kirigami.OverlayDrawer {
                         depth: modelData.depth ?? 0
                         hasChildren: modelData.hasChildren ?? false
                         expanded: !drawer.collapsedProjects[modelData.name]
-                        visible: drawer.projectVisible(modelData.name)
+                        visible: !drawer.collapsedSections["projects"] && drawer.projectVisible(modelData.name)
                         acceptsDrop: true
                         onDropped: uuids => app.dropOnProject(uuids, modelData.name)
                         onToggleExpanded: {
@@ -124,8 +150,8 @@ Kirigami.OverlayDrawer {
                     }
                 }
 
-                Kirigami.ListSectionHeader {
-                    Layout.fillWidth: true
+                SectionHeader {
+                    sectionKey: "tags"
                     text: i18n("Tags")
                     visible: root.tagList.length > 0
                 }
@@ -138,6 +164,7 @@ Kirigami.OverlayDrawer {
                         label: modelData.name
                         iconName: "tag"
                         count: modelData.count
+                        visible: !drawer.collapsedSections["tags"]
                         acceptsDrop: true
                         onDropped: uuids => app.dropOnTag(uuids, modelData.name)
                         onOpenContextMenu: {
@@ -254,6 +281,28 @@ Kirigami.OverlayDrawer {
         }
     }
 
+    // ── Sektions-Überschrift (klickbar: Sektion ein-/ausklappen) ────────────
+
+    component SectionHeader: Kirigami.ListSectionHeader {
+        id: header
+
+        property string sectionKey: ""
+
+        Layout.fillWidth: true
+        // ListSectionHeader ist als reines Label gebaut — für die Klapp-
+        // Interaktion wieder hover- und tastaturbedienbar machen.
+        hoverEnabled: true
+        activeFocusOnTab: true
+        onClicked: drawer.toggleSection(sectionKey)
+
+        Kirigami.Icon {
+            source: drawer.collapsedSections[header.sectionKey] ? "arrow-right" : "arrow-down"
+            Layout.preferredWidth: Kirigami.Units.iconSizes.small
+            Layout.preferredHeight: Kirigami.Units.iconSizes.small
+            Layout.rightMargin: Kirigami.Units.largeSpacing
+        }
+    }
+
     // ── Zeilen-Komponente ───────────────────────────────────────────────────
 
     component SidebarRow: QQC2.ItemDelegate {
@@ -304,7 +353,7 @@ Kirigami.OverlayDrawer {
                 visible: row.count > 0
                 text: row.count
                 opacity: 0.6
-                // Platz für den überlagernden Scrollbalken.
+                // Abstand zum Rand und zum (unsichtbaren) Resize-Griff.
                 Layout.rightMargin: Kirigami.Units.largeSpacing
             }
         }

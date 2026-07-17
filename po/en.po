@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: vergissmeinnicht 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-17 13:52+0200\n"
+"POT-Creation-Date: 2026-07-17 14:32+0200\n"
 "Language: en\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -345,33 +345,33 @@ msgstr "Quick capture syntax"
 msgid "Gespeicherte Suche"
 msgstr "Saved search"
 
-#: app/qml/Main.qml:41 app/qml/SettingsDialog.qml:79 app/qml/Sidebar.qml:43
+#: app/qml/Main.qml:41 app/qml/SettingsDialog.qml:79 app/qml/Sidebar.qml:64
 msgid "Alle"
 msgstr "All"
 
 #: app/qml/Main.qml:42 app/qml/QuickCaptureDialog.qml:152
-#: app/qml/SettingsDialog.qml:79 app/qml/Sidebar.qml:37
+#: app/qml/SettingsDialog.qml:79 app/qml/Sidebar.qml:58
 #: app/qml/TasksPage.qml:446
 msgid "Heute"
 msgstr "Today"
 
-#: app/qml/Main.qml:43 app/qml/SettingsDialog.qml:79 app/qml/Sidebar.qml:38
+#: app/qml/Main.qml:43 app/qml/SettingsDialog.qml:79 app/qml/Sidebar.qml:59
 msgid "Zu erledigen"
 msgstr "To Do"
 
-#: app/qml/Main.qml:44 app/qml/SettingsDialog.qml:79 app/qml/Sidebar.qml:39
+#: app/qml/Main.qml:44 app/qml/SettingsDialog.qml:79 app/qml/Sidebar.qml:60
 msgid "Überfällig"
 msgstr "Overdue"
 
-#: app/qml/Main.qml:45 app/qml/SettingsDialog.qml:79 app/qml/Sidebar.qml:40
+#: app/qml/Main.qml:45 app/qml/SettingsDialog.qml:79 app/qml/Sidebar.qml:61
 msgid "Bald fällig"
 msgstr "Due Soon"
 
-#: app/qml/Main.qml:46 app/qml/SettingsDialog.qml:79 app/qml/Sidebar.qml:41
+#: app/qml/Main.qml:46 app/qml/SettingsDialog.qml:79 app/qml/Sidebar.qml:62
 msgid "Geplant"
 msgstr "Scheduled"
 
-#: app/qml/Main.qml:47 app/qml/Sidebar.qml:42
+#: app/qml/Main.qml:47 app/qml/Sidebar.qml:63
 msgid "Wartend"
 msgstr "Waiting"
 
@@ -387,7 +387,7 @@ msgstr "Blocking"
 msgid "Nicht blockiert"
 msgstr "Unblocked"
 
-#: app/qml/Main.qml:51 app/qml/SettingsDialog.qml:79 app/qml/Sidebar.qml:36
+#: app/qml/Main.qml:51 app/qml/SettingsDialog.qml:79 app/qml/Sidebar.qml:57
 msgid "Eingang"
 msgstr "Inbox"
 
@@ -419,7 +419,7 @@ msgstr "Due (not recognized): %1"
 msgid "Priorität: %1"
 msgstr "Priority: %1"
 
-#: app/qml/QuickCaptureDialog.qml:144 app/qml/Sidebar.qml:129
+#: app/qml/QuickCaptureDialog.qml:144 app/qml/Sidebar.qml:155
 msgid "Tags"
 msgstr "Tags"
 
@@ -635,35 +635,35 @@ msgstr ""
 msgid "Wiederherstellen"
 msgstr "Restore"
 
-#: app/qml/Sidebar.qml:71
+#: app/qml/Sidebar.qml:96
 msgid "Gespeicherte Suchen"
 msgstr "Saved Searches"
 
-#: app/qml/Sidebar.qml:94
+#: app/qml/Sidebar.qml:120
 msgid "Projekte"
 msgstr "Projects"
 
-#: app/qml/Sidebar.qml:187 app/qml/Sidebar.qml:203 app/qml/Sidebar.qml:220
+#: app/qml/Sidebar.qml:214 app/qml/Sidebar.qml:230 app/qml/Sidebar.qml:247
 msgid "Umbenennen …"
 msgstr "Rename …"
 
-#: app/qml/Sidebar.qml:189
+#: app/qml/Sidebar.qml:216
 msgid "Projekt umbenennen"
 msgstr "Rename project"
 
-#: app/qml/Sidebar.qml:193 app/qml/Sidebar.qml:209
+#: app/qml/Sidebar.qml:220 app/qml/Sidebar.qml:236
 msgid "Aus allen Aufgaben entfernen"
 msgstr "Remove from all tasks"
 
-#: app/qml/Sidebar.qml:205
+#: app/qml/Sidebar.qml:232
 msgid "Tag umbenennen"
 msgstr "Rename tag"
 
-#: app/qml/Sidebar.qml:222
+#: app/qml/Sidebar.qml:249
 msgid "Suche umbenennen"
 msgstr "Rename search"
 
-#: app/qml/Sidebar.qml:226 app/qml/TasksPage.qml:178 app/qml/TasksPage.qml:474
+#: app/qml/Sidebar.qml:253 app/qml/TasksPage.qml:178 app/qml/TasksPage.qml:474
 msgid "Löschen"
 msgstr "Delete"
 
