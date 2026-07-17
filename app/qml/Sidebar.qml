@@ -57,7 +57,7 @@ Kirigami.OverlayDrawer {
         { key: "inbox", label: i18n("Eingang"), icon: "mail-folder-inbox" },
         { key: "today", label: i18n("Heute"), icon: "go-jump-today" },
         { key: "todo", label: i18n("Zu erledigen"), icon: "view-task" },
-        { key: "overdue", label: i18n("Überfällig"), icon: "appointment-missed" },
+        { key: "overdue", label: i18n("Überfällig"), icon: "data-warning" },
         { key: "duesoon", label: i18n("Bald fällig"), icon: "view-calendar-upcoming-days" },
         { key: "upcoming", label: i18n("Geplant"), icon: "view-calendar" },
         { key: "active", label: i18n("Aktiv"), icon: "media-playback-start" },

@@ -5,6 +5,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- The Overdue sidebar row showed a generic placeholder icon:
+  `appointment-missed` only ships as a 16px symbolic in Breeze. It now
+  uses `data-warning` (user report).
+
 ## [0.3.1] - 2026-07-17
 
 ### Fixed
