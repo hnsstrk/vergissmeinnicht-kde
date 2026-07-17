@@ -5,6 +5,7 @@ mod filters;
 mod parsers;
 mod secrets;
 mod state;
+mod urgency;
 
 use cxx_qt::casting::Upcast;
 use cxx_qt_lib::{QGuiApplication, QQmlApplicationEngine, QQmlEngine, QQuickStyle, QString, QUrl};

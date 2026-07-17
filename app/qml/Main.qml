@@ -45,6 +45,7 @@ Kirigami.ApplicationWindow {
         case "duesoon": return i18n("Bald fällig")
         case "upcoming": return i18n("Geplant")
         case "waiting": return i18n("Wartend")
+        case "active": return i18n("Aktiv")
         case "blocked": return i18n("Blockiert")
         case "blocking": return i18n("Blockierend")
         case "unblocked": return i18n("Nicht blockiert")
@@ -274,7 +275,7 @@ Kirigami.ApplicationWindow {
             // 3. Detail-Speichern (atomar + Einzel-Setter)
             const morgen = app.parseDueToken("tomorrow")
             check(app.saveTaskDetail(u1, "Flow-Test umbenannt", "flowdemo", "flowtest",
-                                     morgen, 0, 0, "M", "weekly"),
+                                     morgen, 0, 0, "M", "weekly", 0),
                   "saveTaskDetail")
             t = taskOf(u1)
             check(t.description === "Flow-Test umbenannt" && t.priority === "M"
@@ -294,6 +295,33 @@ Kirigami.ApplicationWindow {
             check(taskOf(u1).wait > 0, "Snooze gesetzt")
             app.snoozeTask(u1, 0)
             check(taskOf(u1).wait === null, "Snooze aufgehoben")
+
+            // 5b. Start/Stop, Undo, Duplizieren, until, Urgency, virtuelle Tags
+            app.startTask(u1)
+            check(taskOf(u1).start > 0, "startTask setzt start")
+            app.applySearch("+ACTIVE")
+            check(uuids().indexOf(u1) !== -1, "+ACTIVE findet aktive Aufgabe")
+            app.applySearch("")
+            app.stopTask(u1)
+            check(taskOf(u1).start === null, "stopTask entfernt start")
+            app.bulkAddTag([u1], "undotest")
+            check(taskOf(u1).tags.indexOf("undotest") !== -1, "Tag für Undo-Test gesetzt")
+            app.undoLastChange()
+            check(taskOf(u1).tags.indexOf("undotest") === -1, "undo entfernt letzte Änderung")
+            check(app.saveTaskDetail(u1, taskOf(u1).description, "flowdemo", "flowtest",
+                                     morgen, 0, 0, "M", "weekly", morgen + 86400 * 30),
+                  "saveTaskDetail mit until")
+            check(taskOf(u1).until === morgen + 86400 * 30, "until persistiert")
+            check(taskOf(u1).urgency !== undefined && taskOf(u1).urgency > 0, "urgency berechnet")
+            app.duplicateTask(u1)
+            app.applyFilter("project:flowdemo")
+            check(uuids().filter(u => taskOf(u).description === taskOf(u1).description).length === 2,
+                  "duplicateTask erzeugt Kopie")
+            const kopie = uuids().find(u => u !== u1 && taskOf(u).description === taskOf(u1).description)
+            app.deleteTasks([kopie])
+            app.setSort("urgency", true)
+            check(app.sortKey === "urgency", "Urgency-Sortierung aktiv")
+            app.setSort("id", true)
 
             // 6. Recurring: Erledigen erzeugt Folge-Instanz
             app.applyFilter("project:flowdemo")

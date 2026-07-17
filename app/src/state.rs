@@ -124,6 +124,7 @@ impl AppState {
             "duesoon": count(&SidebarFilter::DueSoon),
             "upcoming": count(&SidebarFilter::Upcoming),
             "waiting": count(&SidebarFilter::Waiting),
+            "active": count(&SidebarFilter::Active),
             "all": self.tasks.len(),
             "blocked": count(&SidebarFilter::Blocked),
             "blocking": count(&SidebarFilter::Blocking),
@@ -235,6 +236,89 @@ impl AppState {
         };
         f(store).map_err(|e| e.to_string())?;
         self.refresh()
+    }
+
+    /// Dupliziert einen Task (Metadaten, ohne Status/Notizen/Abhängigkeiten —
+    /// wie `task duplicate` ohne Annotations-Übernahme).
+    pub fn duplicate_task(&mut self, uuid: &str) -> Result<(), String> {
+        let Some(t) = self.task_by_uuid(uuid).cloned() else {
+            return Err(format!("Task nicht gefunden: {uuid}"));
+        };
+        self.mutate(|store| {
+            let new_uuid = store.add_task_full(
+                t.description.clone(),
+                t.project.clone(),
+                t.tags.clone(),
+                t.due,
+            )?;
+            if t.priority.is_some() {
+                store.set_priority(new_uuid.clone(), t.priority.clone())?;
+            }
+            if t.recur.is_some() {
+                store.set_recur(new_uuid.clone(), t.recur.clone())?;
+            }
+            if t.scheduled.is_some() {
+                store.set_scheduled(new_uuid.clone(), t.scheduled)?;
+            }
+            Ok(())
+        })
+    }
+
+    /// Alle Tasks als Taskwarrior-Export-JSON (`task export`-Format): Rohdaten
+    /// inkl. UDAs/Recurrence-Buchhaltung; Datumsfelder als ISO-8601-Basic,
+    /// tag_*/dep_*/annotation_* zu tags/depends/annotations gebündelt.
+    pub fn export_json(&self) -> Result<String, String> {
+        let Some(store) = &self.store else {
+            return Err("Store nicht initialisiert".into());
+        };
+        let raw = store.all_raw_tasks().map_err(|e| e.to_string())?;
+        let iso = |secs_str: &str| -> serde_json::Value {
+            secs_str
+                .parse::<i64>()
+                .ok()
+                .and_then(|s| vergissmeinnicht_core::chrono::DateTime::from_timestamp(s, 0))
+                .map(|dt| json!(dt.format("%Y%m%dT%H%M%SZ").to_string()))
+                .unwrap_or_else(|| json!(secs_str))
+        };
+        let mut tasks: Vec<serde_json::Value> = Vec::with_capacity(raw.len());
+        for (uuid, props) in raw {
+            let mut obj = serde_json::Map::new();
+            obj.insert("uuid".into(), json!(uuid));
+            let mut tags: Vec<String> = Vec::new();
+            let mut depends: Vec<String> = Vec::new();
+            let mut annotations: Vec<serde_json::Value> = Vec::new();
+            for (k, v) in props {
+                if let Some(tag) = k.strip_prefix("tag_") {
+                    tags.push(tag.to_string());
+                } else if let Some(dep) = k.strip_prefix("dep_") {
+                    depends.push(dep.to_string());
+                } else if let Some(entry) = k.strip_prefix("annotation_") {
+                    annotations.push(json!({"entry": iso(entry), "description": v}));
+                } else if matches!(
+                    k.as_str(),
+                    "entry" | "modified" | "due" | "end" | "wait" | "scheduled" | "start" | "until"
+                ) {
+                    obj.insert(k, iso(&v));
+                } else if k == "tags" || k == "depends" {
+                    // Legacy-Mirror der CLI — die Einzelflags sind die Quelle.
+                } else {
+                    obj.insert(k, json!(v));
+                }
+            }
+            if !tags.is_empty() {
+                tags.sort();
+                obj.insert("tags".into(), json!(tags));
+            }
+            if !depends.is_empty() {
+                depends.sort();
+                obj.insert("depends".into(), json!(depends));
+            }
+            if !annotations.is_empty() {
+                obj.insert("annotations".into(), json!(annotations));
+            }
+            tasks.push(serde_json::Value::Object(obj));
+        }
+        serde_json::to_string_pretty(&tasks).map_err(|e| e.to_string())
     }
 
     /// Erledigt einen Task; bei gesetztem `recur` + `due` wird atomar die
@@ -554,6 +638,11 @@ pub fn task_to_json(t: &TaskInfo) -> serde_json::Value {
         "entry": t.entry,
         "workingSetId": t.working_set_id,
         "priority": t.priority,
+        "start": t.start,
+        "until": t.until,
+        "modified": t.modified,
+        "urgency": (crate::urgency::urgency(t, now_secs()) * 10.0).round() / 10.0,
+        "udas": t.udas.iter().map(|(k, v)| json!({"key": k, "value": v})).collect::<Vec<_>>(),
         "annotations": t.annotations.iter().map(|a| json!({
             "entry": a.entry,
             "description": a.description,
@@ -811,6 +900,10 @@ mod tests {
             is_blocked: false,
             is_blocking: false,
             is_recurring_child: false,
+            start: None,
+            until: None,
+            modified: None,
+            udas: vec![],
         };
         let mut b = a.clone();
         b.uuid = "b".into();

@@ -15,6 +15,7 @@ pub enum SidebarFilter {
     DueSoon,
     Upcoming,
     Waiting,
+    Active,
     /// Native Taskwarrior-Abhängigkeits-Reports (`+BLOCKED`/`+BLOCKING`/`+UNBLOCKED`).
     Blocked,
     Blocking,
@@ -39,6 +40,7 @@ impl SidebarFilter {
             Self::DueSoon => "duesoon".into(),
             Self::Upcoming => "upcoming".into(),
             Self::Waiting => "waiting".into(),
+            Self::Active => "active".into(),
             Self::Blocked => "blocked".into(),
             Self::Blocking => "blocking".into(),
             Self::Unblocked => "unblocked".into(),
@@ -65,6 +67,7 @@ impl SidebarFilter {
             "overdue" => Self::Overdue,
             "duesoon" => Self::DueSoon,
             "upcoming" => Self::Upcoming,
+            "active" => Self::Active,
             "waiting" => Self::Waiting,
             "blocked" => Self::Blocked,
             "blocking" => Self::Blocking,
@@ -128,6 +131,7 @@ impl SidebarFilter {
             }
             Self::Upcoming => task.status == TaskStatus::Pending && is_upcoming(task, now),
             Self::Waiting => task.status == TaskStatus::Pending && is_waiting(task, now),
+            Self::Active => task.status == TaskStatus::Pending && task.start.is_some(),
             Self::Blocked => task.status == TaskStatus::Pending && task.is_blocked,
             Self::Blocking => task.status == TaskStatus::Pending && task.is_blocking,
             Self::Unblocked => task.status == TaskStatus::Pending && !task.is_blocked,
@@ -192,6 +196,7 @@ pub enum SortOrder {
     Entry,
     Due,
     Project,
+    Urgency,
 }
 
 impl SortOrder {
@@ -201,6 +206,7 @@ impl SortOrder {
             "entry" => Self::Entry,
             "due" => Self::Due,
             "project" => Self::Project,
+            "urgency" => Self::Urgency,
             _ => Self::Id,
         }
     }
@@ -212,6 +218,7 @@ impl SortOrder {
             Self::Entry => "entry",
             Self::Due => "due",
             Self::Project => "project",
+            Self::Urgency => "urgency",
         }
     }
 }
@@ -224,8 +231,14 @@ fn ci_cmp(a: &str, b: &str) -> std::cmp::Ordering {
 /// Sekundärschlüssel Description (case-insensitive).
 pub fn sort_tasks(tasks: &mut [TaskInfo], order: SortOrder, ascending: bool) {
     use std::cmp::Ordering;
+    let now = vergissmeinnicht_core::chrono::Utc::now().timestamp();
     tasks.sort_by(|lhs, rhs| {
         let ord = match order {
+            // Dringendste zuerst (CLI-`next`-Semantik); Gleichstand alphabetisch.
+            SortOrder::Urgency => crate::urgency::urgency(rhs, now)
+                .partial_cmp(&crate::urgency::urgency(lhs, now))
+                .unwrap_or(Ordering::Equal)
+                .then_with(|| ci_cmp(&lhs.description, &rhs.description)),
             SortOrder::Id => match (lhs.working_set_id, rhs.working_set_id) {
                 (Some(l), Some(r)) => l.cmp(&r),
                 (Some(_), None) => Ordering::Less,
@@ -277,6 +290,13 @@ pub struct ParsedQuery {
     pub projects: Vec<String>,
     pub tags: Vec<String>,
     pub statuses: Vec<TaskStatus>,
+    /// Virtuelle Tags in Großschreibung (+OVERDUE, +ACTIVE, …).
+    pub virtual_tags: Vec<String>,
+    /// due.before:/due.after: als Unix-Sekunden.
+    pub due_before: Option<i64>,
+    pub due_after: Option<i64>,
+    /// project.not: — Ausschluss-Projekte.
+    pub not_projects: Vec<String>,
 }
 
 /// Parst die Suchanfrage in ein typisiertes Modell oder gibt `None` zurück, wenn
@@ -289,10 +309,29 @@ pub fn parse_search_query(input: &str) -> Option<ParsedQuery> {
         return None;
     }
     let mut result = ParsedQuery::default();
+    let now = vergissmeinnicht_core::chrono::Utc::now().timestamp();
     for token in tokenize_quoted(trimmed) {
+        // +TAG: Großschreibung = virtueller Tag (CLI-Notation), sonst User-Tag.
+        if let Some(tag) = token.strip_prefix('+').filter(|t| !t.is_empty()) {
+            if tag.chars().all(|c| c.is_ascii_uppercase()) {
+                result.virtual_tags.push(tag.to_string());
+            } else {
+                result.tags.push(tag.to_string());
+            }
+            continue;
+        }
         if let Some((key, value)) = split_operator(&token) {
             match key.to_lowercase().as_str() {
                 "project" | "projekt" => result.projects.push(value.to_string()),
+                "project.not" | "projekt.not" => result.not_projects.push(value.to_string()),
+                "due.before" => match crate::parsers::parse_due_date(value, now) {
+                    Some(ts) => result.due_before = Some(ts),
+                    None => result.free_terms.push(token.clone()),
+                },
+                "due.after" => match crate::parsers::parse_due_date(value, now) {
+                    Some(ts) => result.due_after = Some(ts),
+                    None => result.free_terms.push(token.clone()),
+                },
                 "tag" => result.tags.push(value.to_string()),
                 "status" => {
                     if let Some(status) = parse_status(value) {
@@ -361,6 +400,43 @@ fn ci_contains(haystack: &str, needle: &str) -> bool {
     haystack.to_lowercase().contains(&needle.to_lowercase())
 }
 
+/// Virtuelle Taskwarrior-Tags (Teilmenge, auf vorhandene Felder gemappt).
+fn matches_virtual_tag(task: &TaskInfo, tag: &str, now: i64) -> bool {
+    let day = 86400;
+    let local_midnight = now - now % day; // grob: UTC-Tagesgrenze
+    match tag {
+        "PENDING" => task.status == TaskStatus::Pending,
+        "COMPLETED" => task.status == TaskStatus::Completed,
+        "DELETED" => task.status == TaskStatus::Deleted,
+        "OVERDUE" => task.status == TaskStatus::Pending && task.due.is_some_and(|d| d < now),
+        "DUE" => task.status == TaskStatus::Pending && task.due.is_some_and(|d| d < now + 7 * day),
+        "TODAY" | "DUETODAY" => task
+            .due
+            .is_some_and(|d| d >= local_midnight && d < local_midnight + day),
+        "TOMORROW" => task
+            .due
+            .is_some_and(|d| d >= local_midnight + day && d < local_midnight + 2 * day),
+        "WEEK" => task.due.is_some_and(|d| d >= now && d < now + 7 * day),
+        "MONTH" => task.due.is_some_and(|d| d >= now && d < now + 30 * day),
+        "ACTIVE" => task.start.is_some(),
+        "WAITING" => task.status == TaskStatus::Pending && task.wait.is_some_and(|w| w > now),
+        "BLOCKED" => task.is_blocked,
+        "BLOCKING" => task.is_blocking,
+        "UNBLOCKED" => !task.is_blocked,
+        "TAGGED" => !task.tags.is_empty(),
+        "ANNOTATED" => !task.annotations.is_empty(),
+        "SCHEDULED" => task.scheduled.is_some(),
+        "UNTIL" => task.until.is_some(),
+        "RECURRING" => task.recur.is_some(),
+        "TEMPLATE" => task.status == TaskStatus::Recurring,
+        "INSTANCE" => task.is_recurring_child,
+        "UDA" => !task.udas.is_empty(),
+        // Unbekannter virtueller Tag: nichts matchen (sichtbares Signal statt
+        // stillem Ignorieren).
+        _ => false,
+    }
+}
+
 pub fn query_matches(task: &TaskInfo, query: &ParsedQuery) -> bool {
     if !query.statuses.is_empty() && !query.statuses.contains(&task.status) {
         return false;
@@ -374,6 +450,33 @@ pub fn query_matches(task: &TaskInfo, query: &ParsedQuery) -> bool {
     for tag in &query.tags {
         if !task.tags.iter().any(|t| t.to_lowercase() == tag.to_lowercase()) {
             return false;
+        }
+    }
+    for project in &query.not_projects {
+        if let Some(p) = task.project.as_deref() {
+            if p.to_lowercase() == project.to_lowercase() {
+                return false;
+            }
+        }
+    }
+    if let Some(before) = query.due_before {
+        match task.due {
+            Some(d) if d < before => {}
+            _ => return false,
+        }
+    }
+    if let Some(after) = query.due_after {
+        match task.due {
+            Some(d) if d > after => {}
+            _ => return false,
+        }
+    }
+    if !query.virtual_tags.is_empty() {
+        let now = vergissmeinnicht_core::chrono::Utc::now().timestamp();
+        for vt in &query.virtual_tags {
+            if !matches_virtual_tag(task, vt, now) {
+                return false;
+            }
         }
     }
     if query.free_terms.is_empty() {
@@ -462,6 +565,10 @@ mod tests {
             is_blocked: false,
             is_blocking: false,
             is_recurring_child: false,
+            start: None,
+            until: None,
+            modified: None,
+            udas: vec![],
         }
     }
 

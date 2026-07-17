@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import QtQuick.Controls as QQC2
 import org.kde.kirigami as Kirigami
 import org.kde.kirigamiaddons.formcard as FormCard
+import QtQuick.Dialogs as Dialogs
 
 // Einstellungen: Allgemein / Synchronisation / Wartung (Backups) —
 // Pendant zu den macOS-Settings-Tabs, als eigenständiges Formular-Fenster.
@@ -223,6 +224,26 @@ FormWindow {
         onClicked: {
             app.backupNow()
             dialog.refreshBackups()
+        }
+    }
+
+    FormCard.FormButtonDelegate {
+        Layout.fillWidth: true
+        text: i18n("Alle Aufgaben exportieren (JSON) …")
+        description: i18n("Taskwarrior-Exportformat, inklusive UDAs.")
+        icon.name: "document-export"
+        onClicked: exportFileDialog.open()
+    }
+
+    Dialogs.FileDialog {
+        id: exportFileDialog
+        title: i18n("Aufgaben exportieren")
+        fileMode: Dialogs.FileDialog.SaveFile
+        nameFilters: [i18n("JSON-Dateien (*.json)")]
+        defaultSuffix: "json"
+        onAccepted: {
+            if (app.exportTasksTo(selectedFile.toString()))
+                syncStatusLine.saved = false // Statuszeile nicht verwirren
         }
     }
 

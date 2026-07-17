@@ -182,8 +182,22 @@ Kirigami.ScrollablePage {
             onTriggered: deleteConfirm.open()
         },
         Kirigami.Action {
+            text: i18n("Rückgängig")
+            icon.name: "edit-undo"
+            shortcut: StandardKey.Undo
+            enabled: app.canUndo
+            displayHint: Kirigami.DisplayHint.IconOnly
+            onTriggered: app.undoLastChange()
+        },
+        Kirigami.Action {
             text: i18n("Sortierung")
             icon.name: "view-sort"
+            Kirigami.Action {
+                text: i18n("Dringlichkeit")
+                checkable: true
+                checked: app.sortKey === "urgency"
+                onTriggered: app.setSort("urgency", app.sortAscending)
+            }
             Kirigami.Action {
                 text: i18n("ID")
                 checkable: true
@@ -371,6 +385,25 @@ Kirigami.ScrollablePage {
             icon.name: "edit-undo"
             visible: contextMenu.anyCompleted && contextMenu.singleUuid !== ""
             onTriggered: app.reactivateTask(contextMenu.singleUuid)
+        }
+        QQC2.MenuItem {
+            readonly property var singleTask: contextMenu.singleUuid !== ""
+                                              ? JSON.parse(app.taskJson(contextMenu.singleUuid)) : null
+            text: singleTask && singleTask.start ? i18n("Stoppen") : i18n("Starten")
+            icon.name: singleTask && singleTask.start ? "media-playback-stop" : "media-playback-start"
+            visible: contextMenu.singleUuid !== "" && !contextMenu.anyCompleted
+            onTriggered: {
+                if (singleTask && singleTask.start)
+                    app.stopTask(contextMenu.singleUuid)
+                else
+                    app.startTask(contextMenu.singleUuid)
+            }
+        }
+        QQC2.MenuItem {
+            text: i18n("Duplizieren")
+            icon.name: "edit-copy"
+            visible: contextMenu.singleUuid !== ""
+            onTriggered: app.duplicateTask(contextMenu.singleUuid)
         }
         QQC2.Menu {
             title: i18n("Verschieben auf …")

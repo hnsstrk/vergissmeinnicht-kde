@@ -81,6 +81,7 @@ mod qobject {
         Due,
         Scheduled,
         Wait,
+        Start,
         Priority,
         Recur,
         StatusKey,
@@ -116,6 +117,7 @@ mod qobject {
         #[qproperty(bool, notify_overdue, cxx_name = "notifyOverdue")]
         #[qproperty(i32, sidebar_width, cxx_name = "sidebarWidth")]
         #[qproperty(QString, collapsed_sections_json, cxx_name = "collapsedSectionsJson")]
+        #[qproperty(bool, can_undo, cxx_name = "canUndo")]
         type AppContainer = super::AppContainerRust;
 
         // ── Modell-Overrides ────────────────────────────────────────────────
@@ -208,6 +210,7 @@ mod qobject {
             wait: i64,
             priority: &QString,
             recur: &QString,
+            until: i64,
         ) -> bool;
         #[qinvokable]
         fn add_task_annotation(self: Pin<&mut AppContainer>, uuid: &QString, text: &QString);
@@ -215,6 +218,17 @@ mod qobject {
         fn remove_task_annotation(self: Pin<&mut AppContainer>, uuid: &QString, entry: i64);
         #[qinvokable]
         fn snooze_task(self: Pin<&mut AppContainer>, uuid: &QString, until: i64);
+        #[qinvokable]
+        fn start_task(self: Pin<&mut AppContainer>, uuid: &QString);
+        #[qinvokable]
+        fn stop_task(self: Pin<&mut AppContainer>, uuid: &QString);
+        #[qinvokable]
+        fn duplicate_task(self: Pin<&mut AppContainer>, uuid: &QString);
+        #[qinvokable]
+        fn undo_last_change(self: Pin<&mut AppContainer>);
+        /// Exportiert alle Tasks als Taskwarrior-JSON in die angegebene Datei.
+        #[qinvokable]
+        fn export_tasks_to(self: Pin<&mut AppContainer>, path: &QString) -> bool;
         /// Auswahlquelle für den Abhängigkeits-Editor: alle offenen Aufgaben.
         #[qinvokable]
         fn pending_tasks_json(self: &AppContainer) -> QString;
@@ -342,6 +356,7 @@ pub struct AppContainerRust {
     notify_overdue: bool,
     sidebar_width: i32,
     collapsed_sections_json: QString,
+    can_undo: bool,
 }
 
 impl Default for AppContainerRust {
@@ -374,6 +389,7 @@ impl Default for AppContainerRust {
                     .unwrap_or_else(|_| "[]".into())
                     .as_str(),
             ),
+            can_undo: false,
             state,
         }
     }
@@ -451,6 +467,7 @@ impl qobject::AppContainer {
             TaskRoles::Due => QVariant::from(&task.due.unwrap_or(0)),
             TaskRoles::Scheduled => QVariant::from(&task.scheduled.unwrap_or(0)),
             TaskRoles::Wait => QVariant::from(&task.wait.unwrap_or(0)),
+            TaskRoles::Start => QVariant::from(&task.start.unwrap_or(0)),
             TaskRoles::Priority => {
                 QVariant::from(&QString::from(task.priority.clone().unwrap_or_default().as_str()))
             }
@@ -468,7 +485,7 @@ impl qobject::AppContainer {
 
     fn role_names(&self) -> QHash<QHashPair_i32_QByteArray> {
         let mut hash = QHash::<QHashPair_i32_QByteArray>::default();
-        let pairs: [(TaskRoles, &str); 15] = [
+        let pairs: [(TaskRoles, &str); 16] = [
             (TaskRoles::Uuid, "uuid"),
             (TaskRoles::WsId, "wsId"),
             (TaskRoles::Title, "title"),
@@ -477,6 +494,7 @@ impl qobject::AppContainer {
             (TaskRoles::Due, "due"),
             (TaskRoles::Scheduled, "scheduled"),
             (TaskRoles::Wait, "wait"),
+            (TaskRoles::Start, "start"),
             (TaskRoles::Priority, "priority"),
             (TaskRoles::Recur, "recur"),
             (TaskRoles::StatusKey, "statusKey"),
@@ -548,6 +566,14 @@ impl qobject::AppContainer {
         self.as_mut()
             .set_saved_searches_json(QString::from(saved.as_str()));
         self.as_mut().set_has_local_changes(local_changes);
+        let can_undo = self
+            .rust()
+            .state
+            .store
+            .as_ref()
+            .and_then(|s| s.num_undo_points().ok())
+            .is_some_and(|n| n > 0);
+        self.as_mut().set_can_undo(can_undo);
     }
 
     // ─── Ansicht ────────────────────────────────────────────────────────────
@@ -810,6 +836,7 @@ impl qobject::AppContainer {
         wait: i64,
         priority: &QString,
         recur: &QString,
+        until: i64,
     ) -> bool {
         let uuid = uuid.to_string();
         let description = description.to_string().trim().to_string();
@@ -820,6 +847,7 @@ impl qobject::AppContainer {
         let wait = opt_secs(wait);
         let priority = opt_string(priority);
         let recur = opt_string(recur);
+        let until = opt_secs(until);
         self.apply(
             move |s| {
                 if description.is_empty() {
@@ -839,6 +867,7 @@ impl qobject::AppContainer {
                     (store.set_wait(uuid.clone(), wait), "Warten"),
                     (store.set_priority(uuid.clone(), priority), "Priorität"),
                     (store.set_recur(uuid.clone(), recur), "Wiederholung"),
+                    (store.set_until(uuid.clone(), until), "Ablauf"),
                 ] {
                     if let Err(e) = result {
                         errors.push(format!("{label}: {e}"));
@@ -851,6 +880,50 @@ impl qobject::AppContainer {
                 refresh_result
             },
             true,
+        )
+    }
+
+    fn start_task(self: Pin<&mut Self>, uuid: &QString) {
+        let uuid = uuid.to_string();
+        self.apply(move |s| s.mutate(|store| store.start_task(uuid.clone())), true);
+    }
+
+    fn stop_task(self: Pin<&mut Self>, uuid: &QString) {
+        let uuid = uuid.to_string();
+        self.apply(move |s| s.mutate(|store| store.stop_task(uuid.clone())), true);
+    }
+
+    fn duplicate_task(self: Pin<&mut Self>, uuid: &QString) {
+        let uuid = uuid.to_string();
+        self.apply(move |s| s.duplicate_task(&uuid), true);
+    }
+
+    fn undo_last_change(self: Pin<&mut Self>) {
+        self.apply(
+            move |s| {
+                let Some(store) = &s.store else {
+                    return Err("Store nicht initialisiert".into());
+                };
+                match store.undo_last_change() {
+                    Ok(true) => s.refresh(),
+                    Ok(false) => Err("Nichts rückgängig zu machen.".into()),
+                    Err(e) => Err(e.to_string()),
+                }
+            },
+            false,
+        );
+    }
+
+    fn export_tasks_to(self: Pin<&mut Self>, path: &QString) -> bool {
+        let path = path.to_string();
+        // file://-Präfix des QML-FileDialogs abstreifen.
+        let path = path.strip_prefix("file://").unwrap_or(&path).to_string();
+        self.apply(
+            move |s| {
+                let json = s.export_json()?;
+                std::fs::write(&path, json).map_err(|e| format!("Export: {e}"))
+            },
+            false,
         )
     }
 

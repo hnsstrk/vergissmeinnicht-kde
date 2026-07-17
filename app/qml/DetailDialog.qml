@@ -34,6 +34,9 @@ FormWindow {
         waitSwitch.checked = task.wait !== null
         if (task.wait !== null)
             waitDate.value = new Date(task.wait * 1000)
+        untilSwitch.checked = task.until !== null
+        if (task.until !== null)
+            untilDate.value = new Date(task.until * 1000)
         priorityCombo.currentIndex = { "": 0, "H": 1, "M": 2, "L": 3 }[task.priority ?? ""] ?? 0
         const recurIdx = { "": 0, "daily": 1, "weekly": 2, "monthly": 3, "yearly": 4 }[task.recur ?? ""]
         recurCombo.currentIndex = recurIdx !== undefined ? recurIdx : 5
@@ -57,7 +60,8 @@ FormWindow {
             scheduledSwitch.checked ? Math.floor(scheduledDate.value.getTime() / 1000) : 0,
             waitSwitch.checked ? Math.floor(waitDate.value.getTime() / 1000) : 0,
             priorities[priorityCombo.currentIndex],
-            recur)
+            recur,
+            untilSwitch.checked ? Math.floor(untilDate.value.getTime() / 1000) : 0)
         if (ok)
             dialog.close() // Bei Fehler bleibt das Fenster mit Meldung offen.
     }
@@ -145,6 +149,19 @@ FormWindow {
         text: i18n("Warten bis")
     }
 
+    FormCard.FormSwitchDelegate {
+        Layout.fillWidth: true
+        id: untilSwitch
+        text: i18n("Läuft ab (until)")
+        description: i18n("Nach diesem Datum wird die Aufgabe automatisch gelöscht (Taskwarrior-Semantik).")
+    }
+    FormCard.FormDateTimeDelegate {
+        Layout.fillWidth: true
+        id: untilDate
+        visible: untilSwitch.checked
+        text: i18n("Ablaufdatum")
+    }
+
     FormCard.FormDelegateSeparator { Layout.fillWidth: true }
 
     FormCard.FormComboBoxDelegate {
@@ -194,6 +211,13 @@ FormWindow {
                 dialog.close()
             }
         }
+    }
+
+    FormCard.FormTextDelegate {
+        Layout.fillWidth: true
+        visible: dialog.task && dialog.task.urgency !== undefined && dialog.task.status === "pending"
+        text: i18n("Dringlichkeit")
+        description: dialog.task ? Number(dialog.task.urgency).toFixed(1) : ""
     }
 
     Kirigami.Heading {
@@ -298,12 +322,42 @@ FormWindow {
         }
     }
 
+    Kirigami.Heading {
+        Layout.fillWidth: true
+        Layout.topMargin: Kirigami.Units.largeSpacing
+        Layout.leftMargin: Kirigami.Units.smallSpacing
+        Layout.bottomMargin: Kirigami.Units.smallSpacing
+        level: 4
+        visible: dialog.task && (dialog.task.udas ?? []).length > 0
+        text: i18n("Weitere Attribute (CLI/UDAs)")
+    }
+
+    // Fremdattribute nur anzeigen — Bearbeitung gehört der CLI (uda.*-Konfig).
+    Repeater {
+        model: dialog.task ? (dialog.task.udas ?? []) : []
+        FormCard.FormTextDelegate {
+            Layout.fillWidth: true
+            required property var modelData
+            text: modelData.key
+            description: modelData.value
+        }
+    }
+
     FormCard.FormTextDelegate {
         Layout.fillWidth: true
         text: i18n("Angelegt")
         visible: dialog.task && dialog.task.entry
         description: dialog.task && dialog.task.entry
                      ? Qt.formatDateTime(new Date(dialog.task.entry * 1000), Locale.LongFormat)
+                     : ""
+    }
+
+    FormCard.FormTextDelegate {
+        Layout.fillWidth: true
+        text: i18n("Zuletzt geändert")
+        visible: dialog.task && dialog.task.modified
+        description: dialog.task && dialog.task.modified
+                     ? Qt.formatDateTime(new Date(dialog.task.modified * 1000), Locale.LongFormat)
                      : ""
     }
 }

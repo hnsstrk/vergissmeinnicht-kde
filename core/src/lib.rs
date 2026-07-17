@@ -156,6 +156,29 @@ fn build_task_info(
     // Folge-Instanzen erzeugen, sonst entstehen Duplikate neben der CLI-Engine.
     let is_recurring_child =
         task.get_value("parent").is_some() || task.get_value("imask").is_some();
+    let start = task.get_value("start").and_then(|s| s.parse::<i64>().ok());
+    let until = task.get_value("until").and_then(|s| s.parse::<i64>().ok());
+    let modified = task.get_modified().map(|ts| ts.timestamp());
+    // Fremd-/UDA-Properties für die read-only-Anzeige: alles, was weder ein
+    // typisiertes Attribut noch App-bekannt noch Recurrence-/Mirror-Buchhaltung
+    // ist. get_udas ist deprecated, aber die einzige öffentliche Roh-Iteration
+    // am Task (die Alternative wäre ein zweiter Storage-Zugriff via TaskData).
+    #[allow(deprecated)]
+    let udas: Vec<(String, String)> = task
+        .get_udas()
+        .filter(|((ns, key), _)| {
+            let flat = if ns.is_empty() { (*key).to_string() } else { format!("{ns}.{key}") };
+            !matches!(
+                flat.as_str(),
+                "project" | "recur" | "scheduled" | "until" | "rtype" | "mask" | "parent"
+                    | "imask" | "tags" | "depends"
+            )
+        })
+        .map(|((ns, key), v)| {
+            let flat = if ns.is_empty() { key.to_string() } else { format!("{ns}.{key}") };
+            (flat, v.to_string())
+        })
+        .collect();
     let status = match task.get_status() {
         Status::Pending => TaskStatus::Pending,
         Status::Completed => TaskStatus::Completed,
@@ -183,6 +206,10 @@ fn build_task_info(
         is_blocked,
         is_blocking,
         is_recurring_child,
+        start,
+        until,
+        modified,
+        udas,
     }
 }
 
@@ -251,7 +278,18 @@ pub struct TaskInfo {
     /// CLI-generierte Instanz eines Recurring-Templates (`parent`/`imask` gesetzt);
     /// die App erzeugt für solche Tasks keine eigenen Folge-Instanzen.
     pub is_recurring_child: bool,
+    /// `start`-Zeitpunkt (Unix-Sekunden); gesetzt = Task ist aktiv (`task start`).
+    pub start: Option<i64>,
+    /// `until`-Ablaufdatum; die CLI löscht den Task still, sobald es verstreicht.
+    pub until: Option<i64>,
+    /// Letzte Änderung (Unix-Sekunden).
+    pub modified: Option<i64>,
+    /// Fremd-/UDA-Properties (Key → Rohwert) für die read-only-Anzeige.
+    pub udas: Vec<(String, String)>,
 }
+
+/// Roh-Repräsentation eines Tasks: (uuid, Property-Paare).
+pub type RawTask = (String, Vec<(String, String)>);
 
 // ─── TaskStore ──────────────────────────────────────────────────────────────
 
@@ -829,6 +867,67 @@ impl TaskStore {
             task.set_value(key, value, &mut ops)?;
             replica.commit_operations(ops).await?;
             Ok::<_, VmError>(())
+        })
+    }
+
+    /// Startet die Task (`task start`): setzt `start` auf jetzt, falls nicht aktiv.
+    pub fn start_task(&self, uuid: String) -> Result<(), VmError> {
+        let task_uuid = parse_uuid(&uuid)?;
+        let mut guard = self.lock_replica()?;
+        let replica: &mut AppReplica = &mut guard;
+
+        self.rt.block_on(async {
+            let mut ops = mutation_ops();
+            let mut task = replica
+                .get_task(task_uuid)
+                .await?
+                .ok_or(VmError::NotFound { uuid: uuid.clone() })?;
+            task.start(&mut ops)?;
+            replica.commit_operations(ops).await?;
+            Ok::<_, VmError>(())
+        })
+    }
+
+    /// Stoppt die Task (`task stop`): entfernt `start`.
+    pub fn stop_task(&self, uuid: String) -> Result<(), VmError> {
+        let task_uuid = parse_uuid(&uuid)?;
+        let mut guard = self.lock_replica()?;
+        let replica: &mut AppReplica = &mut guard;
+
+        self.rt.block_on(async {
+            let mut ops = mutation_ops();
+            let mut task = replica
+                .get_task(task_uuid)
+                .await?
+                .ok_or(VmError::NotFound { uuid: uuid.clone() })?;
+            task.stop(&mut ops)?;
+            replica.commit_operations(ops).await?;
+            Ok::<_, VmError>(())
+        })
+    }
+
+    /// Setzt/entfernt das `until`-Ablaufdatum (Unix-Sekunden, CLI-Format).
+    pub fn set_until(&self, uuid: String, until: Option<i64>) -> Result<(), VmError> {
+        self.set_raw_property(uuid, "until".into(), until.map(|s| s.to_string()))
+    }
+
+    /// Roh-Dump aller Tasks (uuid → Property-Paare) für den JSON-Export der App.
+    /// Enthält ALLE Properties inkl. UDAs und Recurrence-Buchhaltung.
+    pub fn all_raw_tasks(&self) -> Result<Vec<RawTask>, VmError> {
+        let mut guard = self.lock_replica()?;
+        let replica: &mut AppReplica = &mut guard;
+
+        self.rt.block_on(async {
+            let all = replica.all_task_data().await?;
+            let mut result = Vec::with_capacity(all.len());
+            for (uuid, data) in all {
+                let props: Vec<(String, String)> = data
+                    .iter()
+                    .map(|(k, v)| (k.to_string(), v.to_string()))
+                    .collect();
+                result.push((uuid.to_string(), props));
+            }
+            Ok::<_, VmError>(result)
         })
     }
 

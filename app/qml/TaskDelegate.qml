@@ -19,6 +19,7 @@ QQC2.ItemDelegate {
     required property double due
     required property double scheduled
     required property double wait
+    required property double start
     required property string priority
     required property string recur
     required property string statusKey
@@ -144,6 +145,12 @@ QQC2.ItemDelegate {
                     iconName: "view-refresh"
                     label: i18n("Vorlage (CLI-verwaltet)")
                     chipColor: Kirigami.Theme.neutralTextColor
+                }
+                MetaChip {
+                    visible: delegate.start > 0
+                    iconName: "media-playback-start"
+                    label: i18n("Aktiv")
+                    chipColor: Kirigami.Theme.positiveTextColor
                 }
                 MetaChip {
                     visible: delegate.isBlocked

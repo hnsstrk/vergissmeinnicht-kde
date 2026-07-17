@@ -60,6 +60,7 @@ Kirigami.OverlayDrawer {
         { key: "overdue", label: i18n("Überfällig"), icon: "appointment-missed" },
         { key: "duesoon", label: i18n("Bald fällig"), icon: "view-calendar-upcoming-days" },
         { key: "upcoming", label: i18n("Geplant"), icon: "view-calendar" },
+        { key: "active", label: i18n("Aktiv"), icon: "media-playback-start" },
         { key: "waiting", label: i18n("Wartend"), icon: "clock" },
         { key: "all", label: i18n("Alle"), icon: "view-list-details" }
     ]
@@ -85,7 +86,7 @@ Kirigami.OverlayDrawer {
                         label: modelData.label
                         iconName: modelData.icon
                         count: root.counts[modelData.key] ?? 0
-                        visible: modelData.key !== "waiting" || count > 0
+                        visible: (modelData.key !== "waiting" && modelData.key !== "active") || count > 0
                         acceptsDrop: modelData.key === "inbox"
                         onDropped: uuids => app.dropOnInbox(uuids)
                     }

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-17 15:17+0200\n"
+"POT-Creation-Date: 2026-07-17 15:42+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
 
-#: app/qml/AboutDialog.qml:9 app/qml/TasksPage.qml:286
+#: app/qml/AboutDialog.qml:9 app/qml/TasksPage.qml:300
 msgid "Über Vergissmeinnicht"
 msgstr ""
 
@@ -40,179 +40,205 @@ msgstr ""
 msgid "Aufgabe bearbeiten"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:67
+#: app/qml/DetailDialog.qml:71
 msgid "Speichern"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:72 app/qml/QuickCaptureDialog.qml:82
+#: app/qml/DetailDialog.qml:76 app/qml/QuickCaptureDialog.qml:82
 msgid "Abbrechen"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:90 app/qml/QuickCaptureDialog.qml:100
+#: app/qml/DetailDialog.qml:94 app/qml/QuickCaptureDialog.qml:100
 msgid "Titel"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:98 app/qml/QuickCaptureDialog.qml:136
-#: app/qml/TasksPage.qml:212
+#: app/qml/DetailDialog.qml:102 app/qml/QuickCaptureDialog.qml:136
+#: app/qml/TasksPage.qml:226
 msgid "Projekt"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:106
+#: app/qml/DetailDialog.qml:110
 msgid "Tags (durch Leerzeichen getrennt)"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:107
+#: app/qml/DetailDialog.qml:111
 msgid "z. B. arbeit dringend"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:115 app/qml/QuickCaptureDialog.qml:151
+#: app/qml/DetailDialog.qml:119 app/qml/QuickCaptureDialog.qml:151
 msgid "Fällig"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:121 app/qml/QuickCaptureDialog.qml:159
+#: app/qml/DetailDialog.qml:125 app/qml/QuickCaptureDialog.qml:159
 msgid "Fällig am"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:127 app/qml/DetailDialog.qml:133
+#: app/qml/DetailDialog.qml:131 app/qml/DetailDialog.qml:137
 msgid "Geplant ab"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:139
+#: app/qml/DetailDialog.qml:143
 msgid "Zurückgestellt (warten bis)"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:145
+#: app/qml/DetailDialog.qml:149
 msgid "Warten bis"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:153 app/qml/QuickCaptureDialog.qml:166
-#: app/qml/TasksPage.qml:435
+#: app/qml/DetailDialog.qml:155
+msgid "Läuft ab (until)"
+msgstr ""
+
+#: app/qml/DetailDialog.qml:156
+msgid ""
+"Nach diesem Datum wird die Aufgabe automatisch gelöscht (Taskwarrior-"
+"Semantik)."
+msgstr ""
+
+#: app/qml/DetailDialog.qml:162
+msgid "Ablaufdatum"
+msgstr ""
+
+#: app/qml/DetailDialog.qml:170 app/qml/QuickCaptureDialog.qml:166
+#: app/qml/TasksPage.qml:468
 msgid "Priorität"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:154 app/qml/DetailDialog.qml:161
+#: app/qml/DetailDialog.qml:171 app/qml/DetailDialog.qml:178
 #: app/qml/QuickCaptureDialog.qml:167 app/qml/QuickCaptureDialog.qml:174
-#: app/qml/TasksPage.qml:441 app/qml/TasksPage.qml:451
+#: app/qml/TasksPage.qml:474 app/qml/TasksPage.qml:484
 msgid "Keine"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:154 app/qml/QuickCaptureDialog.qml:167
+#: app/qml/DetailDialog.qml:171 app/qml/QuickCaptureDialog.qml:167
 msgid "Hoch (H)"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:154 app/qml/QuickCaptureDialog.qml:167
+#: app/qml/DetailDialog.qml:171 app/qml/QuickCaptureDialog.qml:167
 msgid "Mittel (M)"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:154 app/qml/QuickCaptureDialog.qml:167
+#: app/qml/DetailDialog.qml:171 app/qml/QuickCaptureDialog.qml:167
 msgid "Niedrig (L)"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:160 app/qml/QuickCaptureDialog.qml:173
+#: app/qml/DetailDialog.qml:177 app/qml/QuickCaptureDialog.qml:173
 msgid "Wiederholung"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:161 app/qml/QuickCaptureDialog.qml:174
+#: app/qml/DetailDialog.qml:178 app/qml/QuickCaptureDialog.qml:174
 msgid "Täglich"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:161 app/qml/QuickCaptureDialog.qml:174
+#: app/qml/DetailDialog.qml:178 app/qml/QuickCaptureDialog.qml:174
 msgid "Wöchentlich"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:161 app/qml/QuickCaptureDialog.qml:174
+#: app/qml/DetailDialog.qml:178 app/qml/QuickCaptureDialog.qml:174
 msgid "Monatlich"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:161 app/qml/QuickCaptureDialog.qml:174
+#: app/qml/DetailDialog.qml:178 app/qml/QuickCaptureDialog.qml:174
 msgid "Jährlich"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:161
+#: app/qml/DetailDialog.qml:178
 msgid "Benutzerdefiniert …"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:167
+#: app/qml/DetailDialog.qml:184
 msgid "Intervall (Nd / Nw / Nm / Ny)"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:168
+#: app/qml/DetailDialog.qml:185
 msgid "z. B. 3d oder 2w"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:170
+#: app/qml/DetailDialog.qml:187
 msgid "Nicht erkanntes Intervall"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:178 app/qml/SettingsDialog.qml:183
+#: app/qml/DetailDialog.qml:195 app/qml/SettingsDialog.qml:184
 msgid "Status"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:182 app/qml/DetailDialog.qml:224
-#: app/qml/TaskDelegate.qml:58 app/qml/TasksPage.qml:171
-#: app/qml/TasksPage.qml:365
+#: app/qml/DetailDialog.qml:199 app/qml/DetailDialog.qml:248
+#: app/qml/TaskDelegate.qml:59 app/qml/TasksPage.qml:171
+#: app/qml/TasksPage.qml:379
 msgid "Erledigt"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:183
+#: app/qml/DetailDialog.qml:200
 msgid "Gelöscht"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:184
+#: app/qml/DetailDialog.qml:201
 msgid "Wiederkehrend (Vorlage)"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:185
+#: app/qml/DetailDialog.qml:202
 msgid "Ausstehend"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:190 app/qml/TaskDelegate.qml:58
-#: app/qml/TasksPage.qml:370
+#: app/qml/DetailDialog.qml:207 app/qml/TaskDelegate.qml:59
+#: app/qml/TasksPage.qml:384
 msgid "Reaktivieren"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:205
+#: app/qml/DetailDialog.qml:219 app/qml/TasksPage.qml:196
+msgid "Dringlichkeit"
+msgstr ""
+
+#: app/qml/DetailDialog.qml:229
 msgid "Abhängigkeiten"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:211
+#: app/qml/DetailDialog.qml:235
 msgid "Diese Aufgabe blockiert andere Aufgaben."
 msgstr ""
 
-#: app/qml/DetailDialog.qml:222
+#: app/qml/DetailDialog.qml:246
 msgid "Hängt ab von: %1"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:223
+#: app/qml/DetailDialog.qml:247
 msgid "Hängt ab von unbekannter Aufgabe (%1)"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:227
+#: app/qml/DetailDialog.qml:251
 msgid "Abhängigkeit entfernen"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:240
+#: app/qml/DetailDialog.qml:264
 msgid "Abhängigkeit hinzufügen"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:241
+#: app/qml/DetailDialog.qml:265
 msgid "Aufgabe wählen …"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:264 app/qml/QuickCaptureDialog.qml:128
+#: app/qml/DetailDialog.qml:288 app/qml/QuickCaptureDialog.qml:128
 msgid "Notizen"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:276
+#: app/qml/DetailDialog.qml:300
 msgid "Notiz entfernen"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:289
+#: app/qml/DetailDialog.qml:313
 msgid "Neue Notiz"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:303 app/qml/TasksPage.qml:200
+#: app/qml/DetailDialog.qml:332
+msgid "Weitere Attribute (CLI/UDAs)"
+msgstr ""
+
+#: app/qml/DetailDialog.qml:348 app/qml/TasksPage.qml:214
 msgid "Angelegt"
+msgstr ""
+
+#: app/qml/DetailDialog.qml:357
+msgid "Zuletzt geändert"
 msgstr ""
 
 #: app/qml/HelpDialog.qml:10
@@ -233,74 +259,78 @@ msgid "Suche fokussieren"
 msgstr ""
 
 #: app/qml/HelpDialog.qml:37
-msgid "Auswahl erledigen"
-msgstr ""
-
-#: app/qml/HelpDialog.qml:38
-msgid "Entf"
+msgid "Letzte Änderung rückgängig"
 msgstr ""
 
 #: app/qml/HelpDialog.qml:39
-msgid "Auswahl löschen (mit Rückfrage)"
+msgid "Auswahl erledigen"
 msgstr ""
 
 #: app/qml/HelpDialog.qml:40
-msgid "Eingabe"
+msgid "Entf"
 msgstr ""
 
 #: app/qml/HelpDialog.qml:41
-msgid "Details der ausgewählten Aufgabe"
+msgid "Auswahl löschen (mit Rückfrage)"
+msgstr ""
+
+#: app/qml/HelpDialog.qml:42
+msgid "Eingabe"
 msgstr ""
 
 #: app/qml/HelpDialog.qml:43
+msgid "Details der ausgewählten Aufgabe"
+msgstr ""
+
+#: app/qml/HelpDialog.qml:45
 msgid "Alle sichtbaren auswählen"
 msgstr ""
 
-#: app/qml/HelpDialog.qml:45 app/qml/TasksPage.qml:95 app/qml/TasksPage.qml:487
+#: app/qml/HelpDialog.qml:47 app/qml/TasksPage.qml:95 app/qml/TasksPage.qml:520
 msgid "Suche speichern"
 msgstr ""
 
-#: app/qml/HelpDialog.qml:47
+#: app/qml/HelpDialog.qml:49
 msgid "Erledigte ein-/ausblenden"
 msgstr ""
 
-#: app/qml/HelpDialog.qml:49 app/qml/TasksPage.qml:232
+#: app/qml/HelpDialog.qml:51 app/qml/TasksPage.qml:246
 msgid "Synchronisieren"
 msgstr ""
 
-#: app/qml/HelpDialog.qml:51 app/qml/TasksPage.qml:266
+#: app/qml/HelpDialog.qml:53 app/qml/TasksPage.qml:280
 msgid "Aktualisieren"
 msgstr ""
 
-#: app/qml/HelpDialog.qml:53 app/qml/SettingsDialog.qml:12
+#: app/qml/HelpDialog.qml:55 app/qml/SettingsDialog.qml:13
 msgid "Einstellungen"
 msgstr ""
 
-#: app/qml/HelpDialog.qml:55
+#: app/qml/HelpDialog.qml:57
 msgid "Dialogfenster schließen / Auswahl aufheben"
 msgstr ""
 
-#: app/qml/HelpDialog.qml:56
+#: app/qml/HelpDialog.qml:58
 msgid "Doppelklick"
 msgstr ""
 
-#: app/qml/HelpDialog.qml:57 app/qml/TasksPage.qml:359
+#: app/qml/HelpDialog.qml:59 app/qml/TasksPage.qml:373
 msgid "Details öffnen"
 msgstr ""
 
-#: app/qml/HelpDialog.qml:58
+#: app/qml/HelpDialog.qml:60
 msgid "Strg/Umschalt+Klick"
 msgstr ""
 
-#: app/qml/HelpDialog.qml:59
+#: app/qml/HelpDialog.qml:61
 msgid "Mehrfachauswahl (einzeln / Bereich)"
 msgstr ""
 
-#: app/qml/HelpDialog.qml:66
+#: app/qml/HelpDialog.qml:68
 msgid "Suchfunktion"
 msgstr ""
 
-#: app/qml/HelpDialog.qml:76
+#: app/qml/HelpDialog.qml:78
 msgid ""
 "Die Suche durchsucht Titel, Projekt, Tags und Notizen über den gesamten "
 "Bestand (auch Erledigte). Mehrere Begriffe sind UND-verknüpft; Phrasen in "
@@ -308,37 +338,50 @@ msgid ""
 "aktiver Suche wird der Seitenleisten-Filter ignoriert."
 msgstr ""
 
-#: app/qml/HelpDialog.qml:86
+#: app/qml/HelpDialog.qml:88
 msgid "Operator"
 msgstr ""
 
-#: app/qml/HelpDialog.qml:87
+#: app/qml/HelpDialog.qml:89
 msgid "Funktion"
 msgstr ""
 
-#: app/qml/HelpDialog.qml:88
+#: app/qml/HelpDialog.qml:90
 msgid "Beispiel"
 msgstr ""
 
-#: app/qml/HelpDialog.qml:91
+#: app/qml/HelpDialog.qml:93
 msgid "Nach Projekt filtern"
 msgstr ""
 
-#: app/qml/HelpDialog.qml:95
+#: app/qml/HelpDialog.qml:97
 msgid "Nach Tag filtern"
 msgstr ""
 
-#: app/qml/HelpDialog.qml:99
+#: app/qml/HelpDialog.qml:101
 msgid "offen · erledigt · wiederkehrend"
 msgstr ""
 
+#: app/qml/HelpDialog.qml:105
+msgid ""
+"Virtuelle Tags (GROSS): OVERDUE, ACTIVE, BLOCKED, DUE, TODAY, WEEK, TAGGED …"
+msgstr ""
+
 #: app/qml/HelpDialog.qml:109
+msgid "Fälligkeit vor/nach Datum (auch eow, friday, 23rd …)"
+msgstr ""
+
+#: app/qml/HelpDialog.qml:113
+msgid "Projekt ausschließen"
+msgstr ""
+
+#: app/qml/HelpDialog.qml:123
 msgid ""
 "Tipp: Eine aktive Suche lässt sich über das Lesezeichen-Symbol (oder "
 "Strg+Umschalt+D) als „Gespeicherte Suche“ in die Seitenleiste legen."
 msgstr ""
 
-#: app/qml/HelpDialog.qml:116
+#: app/qml/HelpDialog.qml:130
 msgid "Schnelleingabe-Syntax"
 msgstr ""
 
@@ -346,49 +389,53 @@ msgstr ""
 msgid "Gespeicherte Suche"
 msgstr ""
 
-#: app/qml/Main.qml:41 app/qml/SettingsDialog.qml:79 app/qml/Sidebar.qml:64
+#: app/qml/Main.qml:41 app/qml/SettingsDialog.qml:80 app/qml/Sidebar.qml:65
 msgid "Alle"
 msgstr ""
 
 #: app/qml/Main.qml:42 app/qml/QuickCaptureDialog.qml:152
-#: app/qml/SettingsDialog.qml:79 app/qml/Sidebar.qml:58
-#: app/qml/TasksPage.qml:446
+#: app/qml/SettingsDialog.qml:80 app/qml/Sidebar.qml:58
+#: app/qml/TasksPage.qml:479
 msgid "Heute"
 msgstr ""
 
-#: app/qml/Main.qml:43 app/qml/SettingsDialog.qml:79 app/qml/Sidebar.qml:59
+#: app/qml/Main.qml:43 app/qml/SettingsDialog.qml:80 app/qml/Sidebar.qml:59
 msgid "Zu erledigen"
 msgstr ""
 
-#: app/qml/Main.qml:44 app/qml/SettingsDialog.qml:79 app/qml/Sidebar.qml:60
+#: app/qml/Main.qml:44 app/qml/SettingsDialog.qml:80 app/qml/Sidebar.qml:60
 msgid "Überfällig"
 msgstr ""
 
-#: app/qml/Main.qml:45 app/qml/SettingsDialog.qml:79 app/qml/Sidebar.qml:61
+#: app/qml/Main.qml:45 app/qml/SettingsDialog.qml:80 app/qml/Sidebar.qml:61
 msgid "Bald fällig"
 msgstr ""
 
-#: app/qml/Main.qml:46 app/qml/SettingsDialog.qml:79 app/qml/Sidebar.qml:62
+#: app/qml/Main.qml:46 app/qml/SettingsDialog.qml:80 app/qml/Sidebar.qml:62
 msgid "Geplant"
 msgstr ""
 
-#: app/qml/Main.qml:47 app/qml/Sidebar.qml:63
+#: app/qml/Main.qml:47 app/qml/Sidebar.qml:64
 msgid "Wartend"
 msgstr ""
 
-#: app/qml/Main.qml:48 app/qml/TaskDelegate.qml:151 app/qml/TasksPage.qml:253
+#: app/qml/Main.qml:48 app/qml/Sidebar.qml:63 app/qml/TaskDelegate.qml:152
+msgid "Aktiv"
+msgstr ""
+
+#: app/qml/Main.qml:49 app/qml/TaskDelegate.qml:158 app/qml/TasksPage.qml:267
 msgid "Blockiert"
 msgstr ""
 
-#: app/qml/Main.qml:49 app/qml/TaskDelegate.qml:157 app/qml/TasksPage.qml:257
+#: app/qml/Main.qml:50 app/qml/TaskDelegate.qml:164 app/qml/TasksPage.qml:271
 msgid "Blockierend"
 msgstr ""
 
-#: app/qml/Main.qml:50 app/qml/TasksPage.qml:261
+#: app/qml/Main.qml:51 app/qml/TasksPage.qml:275
 msgid "Nicht blockiert"
 msgstr ""
 
-#: app/qml/Main.qml:51 app/qml/SettingsDialog.qml:79 app/qml/Sidebar.qml:57
+#: app/qml/Main.qml:52 app/qml/SettingsDialog.qml:80 app/qml/Sidebar.qml:57
 msgid "Eingang"
 msgstr ""
 
@@ -420,7 +467,7 @@ msgstr ""
 msgid "Priorität: %1"
 msgstr ""
 
-#: app/qml/QuickCaptureDialog.qml:144 app/qml/Sidebar.qml:155
+#: app/qml/QuickCaptureDialog.qml:144 app/qml/Sidebar.qml:156
 msgid "Tags"
 msgstr ""
 
@@ -432,13 +479,13 @@ msgstr ""
 msgid "Keine Angabe"
 msgstr ""
 
-#: app/qml/QuickCaptureDialog.qml:152 app/qml/TasksPage.qml:379
-#: app/qml/TasksPage.qml:447
+#: app/qml/QuickCaptureDialog.qml:152 app/qml/TasksPage.qml:412
+#: app/qml/TasksPage.qml:480
 msgid "Morgen"
 msgstr ""
 
-#: app/qml/QuickCaptureDialog.qml:152 app/qml/TasksPage.qml:387
-#: app/qml/TasksPage.qml:449
+#: app/qml/QuickCaptureDialog.qml:152 app/qml/TasksPage.qml:420
+#: app/qml/TasksPage.qml:482
 msgid "+1 Woche"
 msgstr ""
 
@@ -446,229 +493,245 @@ msgstr ""
 msgid "Datum wählen …"
 msgstr ""
 
-#: app/qml/SettingsDialog.qml:60
+#: app/qml/SettingsDialog.qml:61
 msgid "Schließen"
 msgstr ""
 
-#: app/qml/SettingsDialog.qml:71
+#: app/qml/SettingsDialog.qml:72
 msgid "Allgemein"
 msgstr ""
 
-#: app/qml/SettingsDialog.qml:77
+#: app/qml/SettingsDialog.qml:78
 msgid "Standardansicht beim Start"
 msgstr ""
 
-#: app/qml/SettingsDialog.qml:87
+#: app/qml/SettingsDialog.qml:88
 msgid "Sprache"
 msgstr ""
 
-#: app/qml/SettingsDialog.qml:88
+#: app/qml/SettingsDialog.qml:89
 msgid ""
 "Änderung wird nach einem Neustart wirksam. Standard-Dialogknöpfe (OK/"
 "Abbrechen) folgen der Systemsprache."
 msgstr ""
 
-#: app/qml/SettingsDialog.qml:90
+#: app/qml/SettingsDialog.qml:91
 msgid "Systemsprache"
 msgstr ""
 
-#: app/qml/SettingsDialog.qml:97
+#: app/qml/SettingsDialog.qml:98
 msgid "„Bald fällig“-Fenster (Tage)"
 msgstr ""
 
-#: app/qml/SettingsDialog.qml:109
+#: app/qml/SettingsDialog.qml:110
 msgid "Erledigte Aufgaben ausblenden"
 msgstr ""
 
-#: app/qml/SettingsDialog.qml:116
+#: app/qml/SettingsDialog.qml:117
 msgid "Benachrichtigung bei überfälligen Aufgaben"
 msgstr ""
 
-#: app/qml/SettingsDialog.qml:117
+#: app/qml/SettingsDialog.qml:118
 msgid ""
 "Zusammenfassung beim Programmstart, wenn überfällige Aufgaben vorliegen."
 msgstr ""
 
-#: app/qml/SettingsDialog.qml:128
+#: app/qml/SettingsDialog.qml:129
 msgid "Synchronisation"
 msgstr ""
 
-#: app/qml/SettingsDialog.qml:133
+#: app/qml/SettingsDialog.qml:134
 msgid "TaskChampion-Sync-Server"
 msgstr ""
 
-#: app/qml/SettingsDialog.qml:134
+#: app/qml/SettingsDialog.qml:135
 msgid ""
 "Client-ID und Verschlüsselungs-Secret werden im Passwortspeicher des Systems "
 "(KWallet/Secret Service) abgelegt."
 msgstr ""
 
-#: app/qml/SettingsDialog.qml:140
+#: app/qml/SettingsDialog.qml:141
 msgid "Server-URL"
 msgstr ""
 
-#: app/qml/SettingsDialog.qml:147
+#: app/qml/SettingsDialog.qml:148
 msgid "Client-ID (UUID)"
 msgstr ""
 
-#: app/qml/SettingsDialog.qml:154
+#: app/qml/SettingsDialog.qml:155
 msgid "Encryption-Secret"
 msgstr ""
 
-#: app/qml/SettingsDialog.qml:160
+#: app/qml/SettingsDialog.qml:161
 msgid "Automatisch synchronisieren"
 msgstr ""
 
-#: app/qml/SettingsDialog.qml:162
+#: app/qml/SettingsDialog.qml:163
 msgid "Manuell"
 msgstr ""
 
-#: app/qml/SettingsDialog.qml:162
+#: app/qml/SettingsDialog.qml:163
 msgid "Alle 5 Minuten"
 msgstr ""
 
-#: app/qml/SettingsDialog.qml:162
+#: app/qml/SettingsDialog.qml:163
 msgid "Alle 15 Minuten"
 msgstr ""
 
-#: app/qml/SettingsDialog.qml:162
+#: app/qml/SettingsDialog.qml:163
 msgid "Alle 60 Minuten"
 msgstr ""
 
-#: app/qml/SettingsDialog.qml:162
+#: app/qml/SettingsDialog.qml:163
 msgid "Sofort nach Änderungen"
 msgstr ""
 
-#: app/qml/SettingsDialog.qml:170
+#: app/qml/SettingsDialog.qml:171
 msgid "Speichern und Sync testen"
 msgstr ""
 
-#: app/qml/SettingsDialog.qml:188 app/qml/TasksPage.qml:152
-#: app/qml/TasksPage.qml:232
+#: app/qml/SettingsDialog.qml:189 app/qml/TasksPage.qml:152
+#: app/qml/TasksPage.qml:246
 msgid "Synchronisiere …"
 msgstr ""
 
-#: app/qml/SettingsDialog.qml:190
+#: app/qml/SettingsDialog.qml:191
 msgid "Gespeichert — zuletzt synchronisiert: %1"
 msgstr ""
 
-#: app/qml/SettingsDialog.qml:193
+#: app/qml/SettingsDialog.qml:194
 msgid "Gespeichert."
 msgstr ""
 
-#: app/qml/SettingsDialog.qml:195 app/qml/TasksPage.qml:154
+#: app/qml/SettingsDialog.qml:196 app/qml/TasksPage.qml:154
 msgid "Zuletzt synchronisiert: %1"
 msgstr ""
 
-#: app/qml/SettingsDialog.qml:210
+#: app/qml/SettingsDialog.qml:211
 msgid "Wartung — Datensicherung"
 msgstr ""
 
-#: app/qml/SettingsDialog.qml:215
+#: app/qml/SettingsDialog.qml:216
 msgid "Automatische Backups"
 msgstr ""
 
-#: app/qml/SettingsDialog.qml:216
+#: app/qml/SettingsDialog.qml:217
 msgid ""
 "Vor jeder Synchronisierung wird ein Backup erstellt; die letzten 10 werden "
 "aufbewahrt."
 msgstr ""
 
-#: app/qml/SettingsDialog.qml:221
+#: app/qml/SettingsDialog.qml:222
 msgid "Backup jetzt erstellen"
 msgstr ""
 
-#: app/qml/SettingsDialog.qml:231
+#: app/qml/SettingsDialog.qml:232
+msgid "Alle Aufgaben exportieren (JSON) …"
+msgstr ""
+
+#: app/qml/SettingsDialog.qml:233
+msgid "Taskwarrior-Exportformat, inklusive UDAs."
+msgstr ""
+
+#: app/qml/SettingsDialog.qml:240
+msgid "Aufgaben exportieren"
+msgstr ""
+
+#: app/qml/SettingsDialog.qml:242
+msgid "JSON-Dateien (*.json)"
+msgstr ""
+
+#: app/qml/SettingsDialog.qml:252
 msgid "Backup-Ordner öffnen"
 msgstr ""
 
-#: app/qml/SettingsDialog.qml:239 app/qml/SettingsDialog.qml:279
+#: app/qml/SettingsDialog.qml:260 app/qml/SettingsDialog.qml:300
 msgid "Backup wiederherstellen"
 msgstr ""
 
-#: app/qml/SettingsDialog.qml:247
+#: app/qml/SettingsDialog.qml:268
 msgid "Noch keine Backups vorhanden."
 msgstr ""
 
-#: app/qml/SettingsDialog.qml:256
+#: app/qml/SettingsDialog.qml:277
 msgid "Wartung — Reparatur"
 msgstr ""
 
-#: app/qml/SettingsDialog.qml:263
+#: app/qml/SettingsDialog.qml:284
 msgid "Legacy-Aufgaben reparieren"
 msgstr ""
 
-#: app/qml/SettingsDialog.qml:266
+#: app/qml/SettingsDialog.qml:287
 msgid ""
 "Überführt Token-Syntax in Titeln (+tag, project:, due:, priority:) in echte "
 "Eigenschaften."
 msgstr ""
 
-#: app/qml/SettingsDialog.qml:269
+#: app/qml/SettingsDialog.qml:290
 msgid "Reparatur fehlgeschlagen: %1"
 msgstr ""
 
-#: app/qml/SettingsDialog.qml:270
+#: app/qml/SettingsDialog.qml:291
 msgid "Reparatur fehlgeschlagen."
 msgstr ""
 
-#: app/qml/SettingsDialog.qml:271
+#: app/qml/SettingsDialog.qml:292
 msgid "1 Aufgabe repariert."
 msgid_plural "%1 Aufgaben repariert."
 msgstr[0] ""
 msgstr[1] ""
 
-#: app/qml/SettingsDialog.qml:281
+#: app/qml/SettingsDialog.qml:302
 msgid ""
 "Die aktuelle Replica wird durch „%1“ ersetzt. Vorher wird automatisch ein "
 "Sicherheits-Backup angelegt."
 msgstr ""
 
-#: app/qml/SettingsDialog.qml:286
+#: app/qml/SettingsDialog.qml:307
 msgid "Wiederherstellen"
 msgstr ""
 
-#: app/qml/Sidebar.qml:96
+#: app/qml/Sidebar.qml:97
 msgid "Gespeicherte Suchen"
 msgstr ""
 
-#: app/qml/Sidebar.qml:120
+#: app/qml/Sidebar.qml:121
 msgid "Projekte"
 msgstr ""
 
-#: app/qml/Sidebar.qml:214 app/qml/Sidebar.qml:230 app/qml/Sidebar.qml:247
+#: app/qml/Sidebar.qml:215 app/qml/Sidebar.qml:231 app/qml/Sidebar.qml:248
 msgid "Umbenennen …"
 msgstr ""
 
-#: app/qml/Sidebar.qml:216
+#: app/qml/Sidebar.qml:217
 msgid "Projekt umbenennen"
 msgstr ""
 
-#: app/qml/Sidebar.qml:220 app/qml/Sidebar.qml:236
+#: app/qml/Sidebar.qml:221 app/qml/Sidebar.qml:237
 msgid "Aus allen Aufgaben entfernen"
 msgstr ""
 
-#: app/qml/Sidebar.qml:232
+#: app/qml/Sidebar.qml:233
 msgid "Tag umbenennen"
 msgstr ""
 
-#: app/qml/Sidebar.qml:249
+#: app/qml/Sidebar.qml:250
 msgid "Suche umbenennen"
 msgstr ""
 
-#: app/qml/Sidebar.qml:253 app/qml/TasksPage.qml:178 app/qml/TasksPage.qml:474
+#: app/qml/Sidebar.qml:254 app/qml/TasksPage.qml:178 app/qml/TasksPage.qml:507
 msgid "Löschen"
 msgstr ""
 
-#: app/qml/TaskDelegate.qml:128
+#: app/qml/TaskDelegate.qml:129
 msgid "Geplant ab %1"
 msgstr ""
 
-#: app/qml/TaskDelegate.qml:133
+#: app/qml/TaskDelegate.qml:134
 msgid "Wartet bis %1"
 msgstr ""
 
-#: app/qml/TaskDelegate.qml:145
+#: app/qml/TaskDelegate.qml:146
 msgid "Vorlage (CLI-verwaltet)"
 msgstr ""
 
@@ -685,178 +748,194 @@ msgid "Lokale Änderungen noch nicht synchronisiert"
 msgstr ""
 
 #: app/qml/TasksPage.qml:185
+msgid "Rückgängig"
+msgstr ""
+
+#: app/qml/TasksPage.qml:193
 msgid "Sortierung"
 msgstr ""
 
-#: app/qml/TasksPage.qml:188
+#: app/qml/TasksPage.qml:202
 msgid "ID"
 msgstr ""
 
-#: app/qml/TasksPage.qml:194
+#: app/qml/TasksPage.qml:208
 msgid "Name"
 msgstr ""
 
-#: app/qml/TasksPage.qml:206
+#: app/qml/TasksPage.qml:220
 msgid "Fälligkeit"
 msgstr ""
 
-#: app/qml/TasksPage.qml:219
+#: app/qml/TasksPage.qml:233
 msgid "Aufsteigend"
 msgstr ""
 
-#: app/qml/TasksPage.qml:225
+#: app/qml/TasksPage.qml:239
 msgid "Absteigend"
 msgstr ""
 
-#: app/qml/TasksPage.qml:241
+#: app/qml/TasksPage.qml:255
 msgid "Erledigte ausblenden"
 msgstr ""
 
-#: app/qml/TasksPage.qml:250
+#: app/qml/TasksPage.qml:264
 msgid "Berichte"
 msgstr ""
 
-#: app/qml/TasksPage.qml:273
+#: app/qml/TasksPage.qml:287
 msgid "Einstellungen …"
 msgstr ""
 
-#: app/qml/TasksPage.qml:280
+#: app/qml/TasksPage.qml:294
 msgid "Hilfe (Tastenkürzel und Suche)"
 msgstr ""
 
-#: app/qml/TasksPage.qml:315
+#: app/qml/TasksPage.qml:329
 msgid "Replica konnte nicht geöffnet werden"
 msgstr ""
 
-#: app/qml/TasksPage.qml:316
+#: app/qml/TasksPage.qml:330
 msgid "Keine Treffer"
 msgstr ""
 
-#: app/qml/TasksPage.qml:318
+#: app/qml/TasksPage.qml:332
 msgid "Der Eingang ist leer"
 msgstr ""
 
-#: app/qml/TasksPage.qml:319
+#: app/qml/TasksPage.qml:333
 msgid "Heute ist nichts fällig"
 msgstr ""
 
-#: app/qml/TasksPage.qml:320
+#: app/qml/TasksPage.qml:334
 msgid "Alles erledigt!"
 msgstr ""
 
-#: app/qml/TasksPage.qml:321
+#: app/qml/TasksPage.qml:335
 msgid "Nichts überfällig"
 msgstr ""
 
-#: app/qml/TasksPage.qml:322
+#: app/qml/TasksPage.qml:336
 msgid "Nichts bald fällig"
 msgstr ""
 
-#: app/qml/TasksPage.qml:323
+#: app/qml/TasksPage.qml:337
 msgid "Nichts geplant"
 msgstr ""
 
-#: app/qml/TasksPage.qml:324
+#: app/qml/TasksPage.qml:338
 msgid "Keine wartenden Aufgaben"
 msgstr ""
 
-#: app/qml/TasksPage.qml:325
+#: app/qml/TasksPage.qml:339
 msgid "Keine Aufgaben"
 msgstr ""
 
-#: app/qml/TasksPage.qml:330
+#: app/qml/TasksPage.qml:344
 msgid ""
 "Suchbegriffe anpassen oder Operatoren wie projekt:, tag:, status: verwenden."
 msgstr ""
 
-#: app/qml/TasksPage.qml:331
+#: app/qml/TasksPage.qml:345
 msgid "Alle offenen Aufgaben haben ein Projekt oder Tags."
 msgstr ""
 
-#: app/qml/TasksPage.qml:340
+#: app/qml/TasksPage.qml:354
 msgid "Neue Aufgabe …"
 msgstr ""
 
-#: app/qml/TasksPage.qml:376
-msgid "Verschieben auf …"
-msgstr ""
-
-#: app/qml/TasksPage.qml:383 app/qml/TasksPage.qml:448
-msgid "+3 Tage"
+#: app/qml/TasksPage.qml:392
+msgid "Stoppen"
 msgstr ""
 
 #: app/qml/TasksPage.qml:392
-msgid "Zurückstellen aufheben"
+msgid "Starten"
 msgstr ""
 
-#: app/qml/TasksPage.qml:397
-msgid "Projekt setzen"
+#: app/qml/TasksPage.qml:403
+msgid "Duplizieren"
 msgstr ""
 
 #: app/qml/TasksPage.qml:409
-msgid "Neues Projekt …"
+msgid "Verschieben auf …"
 msgstr ""
 
-#: app/qml/TasksPage.qml:413
-msgid "Kein Projekt"
+#: app/qml/TasksPage.qml:416 app/qml/TasksPage.qml:481
+msgid "+3 Tage"
 msgstr ""
 
-#: app/qml/TasksPage.qml:418
-msgid "Tag hinzufügen"
+#: app/qml/TasksPage.qml:425
+msgid "Zurückstellen aufheben"
 msgstr ""
 
 #: app/qml/TasksPage.qml:430
+msgid "Projekt setzen"
+msgstr ""
+
+#: app/qml/TasksPage.qml:442
+msgid "Neues Projekt …"
+msgstr ""
+
+#: app/qml/TasksPage.qml:446
+msgid "Kein Projekt"
+msgstr ""
+
+#: app/qml/TasksPage.qml:451
+msgid "Tag hinzufügen"
+msgstr ""
+
+#: app/qml/TasksPage.qml:463
 msgid "Neuer Tag …"
 msgstr ""
 
-#: app/qml/TasksPage.qml:437
+#: app/qml/TasksPage.qml:470
 msgid "Hoch"
 msgstr ""
 
-#: app/qml/TasksPage.qml:438
+#: app/qml/TasksPage.qml:471
 msgid "Mittel"
 msgstr ""
 
-#: app/qml/TasksPage.qml:439
+#: app/qml/TasksPage.qml:472
 msgid "Niedrig"
 msgstr ""
 
-#: app/qml/TasksPage.qml:444
+#: app/qml/TasksPage.qml:477
 msgid "Fälligkeit setzen"
 msgstr ""
 
-#: app/qml/TasksPage.qml:455
+#: app/qml/TasksPage.qml:488
 msgid "Löschen …"
 msgstr ""
 
-#: app/qml/TasksPage.qml:467
+#: app/qml/TasksPage.qml:500
 msgid "Aufgaben löschen"
 msgstr ""
 
-#: app/qml/TasksPage.qml:469
+#: app/qml/TasksPage.qml:502
 msgid "Die ausgewählte Aufgabe wirklich löschen?"
 msgstr ""
 
-#: app/qml/TasksPage.qml:470
+#: app/qml/TasksPage.qml:503
 msgid "%1 Aufgaben wirklich löschen?"
 msgstr ""
 
-#: app/qml/TasksPage.qml:499
+#: app/qml/TasksPage.qml:532
 msgid "Name der Suche"
 msgstr ""
 
-#: app/qml/TasksPage.qml:508
+#: app/qml/TasksPage.qml:541
 msgid "Neues Projekt"
 msgstr ""
 
-#: app/qml/TasksPage.qml:522
+#: app/qml/TasksPage.qml:555
 msgid "Projektname"
 msgstr ""
 
-#: app/qml/TasksPage.qml:534
+#: app/qml/TasksPage.qml:567
 msgid "Neuer Tag"
 msgstr ""
 
-#: app/qml/TasksPage.qml:548
+#: app/qml/TasksPage.qml:581
 msgid "Tag (ohne Leerzeichen)"
 msgstr ""

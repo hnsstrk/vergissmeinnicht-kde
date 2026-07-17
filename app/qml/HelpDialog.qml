@@ -33,6 +33,8 @@ Kirigami.Dialog {
             QQC2.Label { text: i18n("Neue Aufgabe") }
             QQC2.Label { text: "Strg+F" ; font.family: "monospace" }
             QQC2.Label { text: i18n("Suche fokussieren") }
+            QQC2.Label { text: "Strg+Z" ; font.family: "monospace" }
+            QQC2.Label { text: i18n("Letzte Änderung rückgängig") }
             QQC2.Label { text: "Strg+D" ; font.family: "monospace" }
             QQC2.Label { text: i18n("Auswahl erledigen") }
             QQC2.Label { text: i18n("Entf") ; font.family: "monospace" }
@@ -98,6 +100,18 @@ Kirigami.Dialog {
             QQC2.Label { text: "status:" ; font.family: "monospace" }
             QQC2.Label { text: i18n("offen · erledigt · wiederkehrend") }
             QQC2.Label { text: "status:erledigt" ; font.family: "monospace" }
+
+            QQC2.Label { text: "+TAG" ; font.family: "monospace" }
+            QQC2.Label { text: i18n("Virtuelle Tags (GROSS): OVERDUE, ACTIVE, BLOCKED, DUE, TODAY, WEEK, TAGGED …") }
+            QQC2.Label { text: "+OVERDUE" ; font.family: "monospace" }
+
+            QQC2.Label { text: "due.before: / due.after:" ; font.family: "monospace" }
+            QQC2.Label { text: i18n("Fälligkeit vor/nach Datum (auch eow, friday, 23rd …)") }
+            QQC2.Label { text: "due.before:eom" ; font.family: "monospace" }
+
+            QQC2.Label { text: "project.not:" ; font.family: "monospace" }
+            QQC2.Label { text: i18n("Projekt ausschließen") }
+            QQC2.Label { text: "project.not:privat" ; font.family: "monospace" }
         }
 
         QQC2.Label {

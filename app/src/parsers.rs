@@ -111,11 +111,36 @@ pub fn parse_due_date(value: &str, now: i64) -> Option<i64> {
     let normalized = trimmed.to_lowercase();
     let today = local_date(now)?;
 
-    if normalized == "today" || normalized == "heute" {
+    if normalized == "today" || normalized == "heute" || normalized == "sod" {
         return end_of_day(today);
     }
     if normalized == "tomorrow" || normalized == "morgen" {
         return end_of_day(today.succ_opt()?);
+    }
+    if normalized == "yesterday" || normalized == "gestern" {
+        return end_of_day(today.pred_opt()?);
+    }
+    if normalized == "now" || normalized == "jetzt" {
+        return Some(now);
+    }
+    if normalized == "eod" {
+        return end_of_day(today);
+    }
+    // Taskwarrior-Sentinel für „irgendwann": 9999-12-30.
+    if normalized == "later" || normalized == "someday" {
+        return Some(253_402_124_400);
+    }
+    // Wochenanfang/-ende, Monats-/Quartals-/Jahresgrenzen (CLI-Synonyme).
+    if let Some(ts) = period_synonym(&normalized, today) {
+        return Some(ts);
+    }
+    // Wochentage (englisch, voll + 3-Buchstaben-Kürzel): nächstes Vorkommen.
+    if let Some(target) = weekday_synonym(&normalized, today) {
+        return end_of_day(target);
+    }
+    // Ordinale (1st, 2nd, 3rd, …): nächster Monatstag mit dieser Nummer.
+    if let Some(target) = ordinal_synonym(&normalized, today) {
+        return end_of_day(target);
     }
     if let Some(rest) = normalized.strip_prefix('+') {
         if rest.len() >= 2 {
@@ -141,6 +166,109 @@ pub fn parse_due_date(value: &str, now: i64) -> Option<i64> {
 
 fn local_date(now: i64) -> Option<NaiveDate> {
     Some(Local.timestamp_opt(now, 0).single()?.date_naive())
+}
+
+/// CLI-Periodengrenzen: sow/eow (Woche, Mo-basiert wie Taskwarrior-Default),
+/// soww/eoww (Arbeitswoche), som/eom (Monat), soq/eoq (Quartal), soy/eoy (Jahr).
+fn period_synonym(word: &str, today: NaiveDate) -> Option<i64> {
+    let monday = today - Duration::days(today.weekday().num_days_from_monday() as i64);
+    let (start, end) = match word {
+        "sow" | "soww" | "socw" => (Some(monday + Duration::weeks(1)), None),
+        "eow" | "eocw" => (None, Some(monday + Duration::days(6))),
+        "eoww" => (None, Some(monday + Duration::days(4))),
+        "som" => {
+            let next = if today.month() == 12 {
+                NaiveDate::from_ymd_opt(today.year() + 1, 1, 1)?
+            } else {
+                NaiveDate::from_ymd_opt(today.year(), today.month() + 1, 1)?
+            };
+            (Some(next), None)
+        }
+        "eom" => {
+            let next = if today.month() == 12 {
+                NaiveDate::from_ymd_opt(today.year() + 1, 1, 1)?
+            } else {
+                NaiveDate::from_ymd_opt(today.year(), today.month() + 1, 1)?
+            };
+            (None, Some(next.pred_opt()?))
+        }
+        "soq" => {
+            let q_month = ((today.month() - 1) / 3) * 3 + 1;
+            let next = if q_month + 3 > 12 {
+                NaiveDate::from_ymd_opt(today.year() + 1, 1, 1)?
+            } else {
+                NaiveDate::from_ymd_opt(today.year(), q_month + 3, 1)?
+            };
+            (Some(next), None)
+        }
+        "eoq" => {
+            let q_month = ((today.month() - 1) / 3) * 3 + 1;
+            let next = if q_month + 3 > 12 {
+                NaiveDate::from_ymd_opt(today.year() + 1, 1, 1)?
+            } else {
+                NaiveDate::from_ymd_opt(today.year(), q_month + 3, 1)?
+            };
+            (None, Some(next.pred_opt()?))
+        }
+        "soy" => (Some(NaiveDate::from_ymd_opt(today.year() + 1, 1, 1)?), None),
+        "eoy" => (None, Some(NaiveDate::from_ymd_opt(today.year(), 12, 31)?)),
+        _ => return None,
+    };
+    match (start, end) {
+        // Periodenanfang: Mitternacht (Start des Tages).
+        (Some(d), None) => Some(Local.from_local_datetime(&d.and_hms_opt(0, 0, 0)?).single()?.timestamp()),
+        (None, Some(d)) => end_of_day(d),
+        _ => None,
+    }
+}
+
+/// Nächstes Vorkommen des genannten Wochentags (heute zählt nicht, wie die CLI).
+fn weekday_synonym(word: &str, today: NaiveDate) -> Option<NaiveDate> {
+    let target = match word {
+        "monday" | "mon" => Weekday::Mon,
+        "tuesday" | "tue" => Weekday::Tue,
+        "wednesday" | "wed" => Weekday::Wed,
+        "thursday" | "thu" => Weekday::Thu,
+        "friday" | "fri" => Weekday::Fri,
+        "saturday" | "sat" => Weekday::Sat,
+        "sunday" | "sun" => Weekday::Sun,
+        _ => return None,
+    };
+    let mut d = today.succ_opt()?;
+    while d.weekday() != target {
+        d = d.succ_opt()?;
+    }
+    Some(d)
+}
+
+/// Ordinale wie "23rd": nächster Monatstag mit dieser Nummer (heute zählt nicht).
+fn ordinal_synonym(word: &str, today: NaiveDate) -> Option<NaiveDate> {
+    let digits: String = word.chars().take_while(|c| c.is_ascii_digit()).collect();
+    let suffix = &word[digits.len()..];
+    if digits.is_empty() || !matches!(suffix, "st" | "nd" | "rd" | "th") {
+        return None;
+    }
+    let day: u32 = digits.parse().ok()?;
+    if !(1..=31).contains(&day) {
+        return None;
+    }
+    // In diesem Monat, falls noch vor uns; sonst im nächsten Monat mit gültigem Tag.
+    let mut year = today.year();
+    let mut month = today.month();
+    for _ in 0..24 {
+        if let Some(candidate) = NaiveDate::from_ymd_opt(year, month, day) {
+            if candidate > today {
+                return Some(candidate);
+            }
+        }
+        if month == 12 {
+            year += 1;
+            month = 1;
+        } else {
+            month += 1;
+        }
+    }
+    None
 }
 
 /// Letzte Sekunde des übergebenen Tages (23:59:59 Ortszeit) als Unix-Sekunden.
@@ -358,6 +486,30 @@ mod tests {
         assert_eq!(next_due_after("", NOW), None);
         assert!(!is_valid_recur("quatsch"));
         assert!(is_valid_recur("weekly"));
+    }
+
+    #[test]
+    fn due_date_cli_synonyms() {
+        // Fixpunkt: 2026-07-17 (Freitag) 12:00 Ortszeit.
+        let now = Local.with_ymd_and_hms(2026, 7, 17, 12, 0, 0).unwrap().timestamp();
+        let d = |ts: i64| Local.timestamp_opt(ts, 0).unwrap().date_naive();
+
+        assert_eq!(d(parse_due_date("eow", now).unwrap()), NaiveDate::from_ymd_opt(2026, 7, 19).unwrap());
+        assert_eq!(d(parse_due_date("eoww", now).unwrap()), NaiveDate::from_ymd_opt(2026, 7, 17).unwrap());
+        assert_eq!(d(parse_due_date("sow", now).unwrap()), NaiveDate::from_ymd_opt(2026, 7, 20).unwrap());
+        assert_eq!(d(parse_due_date("eom", now).unwrap()), NaiveDate::from_ymd_opt(2026, 7, 31).unwrap());
+        assert_eq!(d(parse_due_date("som", now).unwrap()), NaiveDate::from_ymd_opt(2026, 8, 1).unwrap());
+        assert_eq!(d(parse_due_date("eoq", now).unwrap()), NaiveDate::from_ymd_opt(2026, 9, 30).unwrap());
+        assert_eq!(d(parse_due_date("eoy", now).unwrap()), NaiveDate::from_ymd_opt(2026, 12, 31).unwrap());
+        // Nächster Montag (heute Freitag) und 3-Buchstaben-Kürzel.
+        assert_eq!(d(parse_due_date("monday", now).unwrap()), NaiveDate::from_ymd_opt(2026, 7, 20).unwrap());
+        assert_eq!(d(parse_due_date("fri", now).unwrap()), NaiveDate::from_ymd_opt(2026, 7, 24).unwrap());
+        // Ordinal: 23rd liegt noch in diesem Monat; 17th erst im August.
+        assert_eq!(d(parse_due_date("23rd", now).unwrap()), NaiveDate::from_ymd_opt(2026, 7, 23).unwrap());
+        assert_eq!(d(parse_due_date("17th", now).unwrap()), NaiveDate::from_ymd_opt(2026, 8, 17).unwrap());
+        assert_eq!(d(parse_due_date("gestern", now).unwrap()), NaiveDate::from_ymd_opt(2026, 7, 16).unwrap());
+        assert_eq!(parse_due_date("someday", now), Some(253_402_124_400));
+        assert_eq!(parse_due_date("now", now), Some(now));
     }
 
     #[test]
