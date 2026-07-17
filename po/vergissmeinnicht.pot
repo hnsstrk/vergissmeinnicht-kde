@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-17 15:45+0200\n"
+"POT-Creation-Date: 2026-07-17 15:54+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -283,54 +283,66 @@ msgid "Details der ausgewählten Aufgabe"
 msgstr ""
 
 #: app/qml/HelpDialog.qml:45
-msgid "Alle sichtbaren auswählen"
+msgid "Auswahl bewegen"
 msgstr ""
 
-#: app/qml/HelpDialog.qml:47 app/qml/TasksPage.qml:95 app/qml/TasksPage.qml:520
-msgid "Suche speichern"
+#: app/qml/HelpDialog.qml:46
+msgid "Umschalt+↑/↓"
+msgstr ""
+
+#: app/qml/HelpDialog.qml:47
+msgid "Auswahlbereich erweitern"
 msgstr ""
 
 #: app/qml/HelpDialog.qml:49
+msgid "Alle sichtbaren auswählen"
+msgstr ""
+
+#: app/qml/HelpDialog.qml:51 app/qml/TasksPage.qml:95 app/qml/TasksPage.qml:520
+msgid "Suche speichern"
+msgstr ""
+
+#: app/qml/HelpDialog.qml:53
 msgid "Erledigte ein-/ausblenden"
 msgstr ""
 
-#: app/qml/HelpDialog.qml:51 app/qml/TasksPage.qml:246
+#: app/qml/HelpDialog.qml:55 app/qml/TasksPage.qml:246
 msgid "Synchronisieren"
 msgstr ""
 
-#: app/qml/HelpDialog.qml:53 app/qml/TasksPage.qml:280
+#: app/qml/HelpDialog.qml:57 app/qml/TasksPage.qml:280
 msgid "Aktualisieren"
 msgstr ""
 
-#: app/qml/HelpDialog.qml:55 app/qml/SettingsDialog.qml:13
+#: app/qml/HelpDialog.qml:59 app/qml/SettingsDialog.qml:13
 msgid "Einstellungen"
 msgstr ""
 
-#: app/qml/HelpDialog.qml:57
+#: app/qml/HelpDialog.qml:61
 msgid "Dialogfenster schließen / Auswahl aufheben"
 msgstr ""
 
-#: app/qml/HelpDialog.qml:58
+#: app/qml/HelpDialog.qml:62
 msgid "Doppelklick"
 msgstr ""
 
-#: app/qml/HelpDialog.qml:59 app/qml/TasksPage.qml:373
+#: app/qml/HelpDialog.qml:63 app/qml/TasksPage.qml:373
 msgid "Details öffnen"
 msgstr ""
 
-#: app/qml/HelpDialog.qml:60
+#: app/qml/HelpDialog.qml:64
 msgid "Strg/Umschalt+Klick"
 msgstr ""
 
-#: app/qml/HelpDialog.qml:61
+#: app/qml/HelpDialog.qml:65
 msgid "Mehrfachauswahl (einzeln / Bereich)"
 msgstr ""
 
-#: app/qml/HelpDialog.qml:68
+#: app/qml/HelpDialog.qml:72
 msgid "Suchfunktion"
 msgstr ""
 
-#: app/qml/HelpDialog.qml:78
+#: app/qml/HelpDialog.qml:82
 msgid ""
 "Die Suche durchsucht Titel, Projekt, Tags und Notizen über den gesamten "
 "Bestand (auch Erledigte). Mehrere Begriffe sind UND-verknüpft; Phrasen in "
@@ -338,50 +350,50 @@ msgid ""
 "aktiver Suche wird der Seitenleisten-Filter ignoriert."
 msgstr ""
 
-#: app/qml/HelpDialog.qml:88
+#: app/qml/HelpDialog.qml:92
 msgid "Operator"
 msgstr ""
 
-#: app/qml/HelpDialog.qml:89
+#: app/qml/HelpDialog.qml:93
 msgid "Funktion"
 msgstr ""
 
-#: app/qml/HelpDialog.qml:90
+#: app/qml/HelpDialog.qml:94
 msgid "Beispiel"
 msgstr ""
 
-#: app/qml/HelpDialog.qml:93
+#: app/qml/HelpDialog.qml:97
 msgid "Nach Projekt filtern"
 msgstr ""
 
-#: app/qml/HelpDialog.qml:97
+#: app/qml/HelpDialog.qml:101
 msgid "Nach Tag filtern"
 msgstr ""
 
-#: app/qml/HelpDialog.qml:101
+#: app/qml/HelpDialog.qml:105
 msgid "offen · erledigt · wiederkehrend"
 msgstr ""
 
-#: app/qml/HelpDialog.qml:106
+#: app/qml/HelpDialog.qml:110
 msgid ""
 "Virtuelle Tags (GROSS): OVERDUE, ACTIVE, BLOCKED, DUE, TODAY, WEEK, TAGGED …"
 msgstr ""
 
-#: app/qml/HelpDialog.qml:113
+#: app/qml/HelpDialog.qml:117
 msgid "Fälligkeit vor/nach Datum (auch eow, friday, 23rd …)"
 msgstr ""
 
-#: app/qml/HelpDialog.qml:117
+#: app/qml/HelpDialog.qml:121
 msgid "Projekt ausschließen"
 msgstr ""
 
-#: app/qml/HelpDialog.qml:127
+#: app/qml/HelpDialog.qml:131
 msgid ""
 "Tipp: Eine aktive Suche lässt sich über das Lesezeichen-Symbol (oder "
 "Strg+Umschalt+D) als „Gespeicherte Suche“ in die Seitenleiste legen."
 msgstr ""
 
-#: app/qml/HelpDialog.qml:134
+#: app/qml/HelpDialog.qml:138
 msgid "Schnelleingabe-Syntax"
 msgstr ""
 

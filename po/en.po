@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: vergissmeinnicht 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-17 15:45+0200\n"
+"POT-Creation-Date: 2026-07-17 15:54+0200\n"
 "Language: en\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -277,54 +277,66 @@ msgid "Details der ausgewählten Aufgabe"
 msgstr "Details of the selected task"
 
 #: app/qml/HelpDialog.qml:45
+msgid "Auswahl bewegen"
+msgstr "Move selection"
+
+#: app/qml/HelpDialog.qml:46
+msgid "Umschalt+↑/↓"
+msgstr "Shift+↑/↓"
+
+#: app/qml/HelpDialog.qml:47
+msgid "Auswahlbereich erweitern"
+msgstr "Extend selection range"
+
+#: app/qml/HelpDialog.qml:49
 msgid "Alle sichtbaren auswählen"
 msgstr "Select all visible"
 
-#: app/qml/HelpDialog.qml:47 app/qml/TasksPage.qml:95 app/qml/TasksPage.qml:520
+#: app/qml/HelpDialog.qml:51 app/qml/TasksPage.qml:95 app/qml/TasksPage.qml:520
 msgid "Suche speichern"
 msgstr "Save search"
 
-#: app/qml/HelpDialog.qml:49
+#: app/qml/HelpDialog.qml:53
 msgid "Erledigte ein-/ausblenden"
 msgstr "Show/hide completed"
 
-#: app/qml/HelpDialog.qml:51 app/qml/TasksPage.qml:246
+#: app/qml/HelpDialog.qml:55 app/qml/TasksPage.qml:246
 msgid "Synchronisieren"
 msgstr "Synchronize"
 
-#: app/qml/HelpDialog.qml:53 app/qml/TasksPage.qml:280
+#: app/qml/HelpDialog.qml:57 app/qml/TasksPage.qml:280
 msgid "Aktualisieren"
 msgstr "Refresh"
 
-#: app/qml/HelpDialog.qml:55 app/qml/SettingsDialog.qml:13
+#: app/qml/HelpDialog.qml:59 app/qml/SettingsDialog.qml:13
 msgid "Einstellungen"
 msgstr "Settings"
 
-#: app/qml/HelpDialog.qml:57
+#: app/qml/HelpDialog.qml:61
 msgid "Dialogfenster schließen / Auswahl aufheben"
 msgstr "Close dialog window / clear selection"
 
-#: app/qml/HelpDialog.qml:58
+#: app/qml/HelpDialog.qml:62
 msgid "Doppelklick"
 msgstr "Double click"
 
-#: app/qml/HelpDialog.qml:59 app/qml/TasksPage.qml:373
+#: app/qml/HelpDialog.qml:63 app/qml/TasksPage.qml:373
 msgid "Details öffnen"
 msgstr "Open details"
 
-#: app/qml/HelpDialog.qml:60
+#: app/qml/HelpDialog.qml:64
 msgid "Strg/Umschalt+Klick"
 msgstr "Ctrl/Shift+Click"
 
-#: app/qml/HelpDialog.qml:61
+#: app/qml/HelpDialog.qml:65
 msgid "Mehrfachauswahl (einzeln / Bereich)"
 msgstr "Multi-selection (single / range)"
 
-#: app/qml/HelpDialog.qml:68
+#: app/qml/HelpDialog.qml:72
 msgid "Suchfunktion"
 msgstr "Search"
 
-#: app/qml/HelpDialog.qml:78
+#: app/qml/HelpDialog.qml:82
 msgid ""
 "Die Suche durchsucht Titel, Projekt, Tags und Notizen über den gesamten "
 "Bestand (auch Erledigte). Mehrere Begriffe sind UND-verknüpft; Phrasen in "
@@ -336,46 +348,46 @@ msgstr ""
 "double quotes (\"two words\") are matched together. While a search is active "
 "the sidebar filter is ignored."
 
-#: app/qml/HelpDialog.qml:88
+#: app/qml/HelpDialog.qml:92
 msgid "Operator"
 msgstr "Operator"
 
-#: app/qml/HelpDialog.qml:89
+#: app/qml/HelpDialog.qml:93
 msgid "Funktion"
 msgstr "Function"
 
-#: app/qml/HelpDialog.qml:90
+#: app/qml/HelpDialog.qml:94
 msgid "Beispiel"
 msgstr "Example"
 
-#: app/qml/HelpDialog.qml:93
+#: app/qml/HelpDialog.qml:97
 msgid "Nach Projekt filtern"
 msgstr "Filter by project"
 
-#: app/qml/HelpDialog.qml:97
+#: app/qml/HelpDialog.qml:101
 msgid "Nach Tag filtern"
 msgstr "Filter by tag"
 
-#: app/qml/HelpDialog.qml:101
+#: app/qml/HelpDialog.qml:105
 msgid "offen · erledigt · wiederkehrend"
 msgstr "pending · completed · recurring"
 
-#: app/qml/HelpDialog.qml:106
+#: app/qml/HelpDialog.qml:110
 msgid ""
 "Virtuelle Tags (GROSS): OVERDUE, ACTIVE, BLOCKED, DUE, TODAY, WEEK, TAGGED …"
 msgstr ""
 "Virtual tags (UPPERCASE): OVERDUE, ACTIVE, BLOCKED, DUE, TODAY, WEEK, TAGGED "
 "…"
 
-#: app/qml/HelpDialog.qml:113
+#: app/qml/HelpDialog.qml:117
 msgid "Fälligkeit vor/nach Datum (auch eow, friday, 23rd …)"
 msgstr "Due before/after a date (also eow, friday, 23rd …)"
 
-#: app/qml/HelpDialog.qml:117
+#: app/qml/HelpDialog.qml:121
 msgid "Projekt ausschließen"
 msgstr "Exclude project"
 
-#: app/qml/HelpDialog.qml:127
+#: app/qml/HelpDialog.qml:131
 msgid ""
 "Tipp: Eine aktive Suche lässt sich über das Lesezeichen-Symbol (oder "
 "Strg+Umschalt+D) als „Gespeicherte Suche“ in die Seitenleiste legen."
@@ -383,7 +395,7 @@ msgstr ""
 "Tip: An active search can be pinned to the sidebar as a saved search via the "
 "bookmark icon (or Ctrl+Shift+D)."
 
-#: app/qml/HelpDialog.qml:134
+#: app/qml/HelpDialog.qml:138
 msgid "Schnelleingabe-Syntax"
 msgstr "Quick capture syntax"
 

@@ -402,8 +402,20 @@ fn ci_contains(haystack: &str, needle: &str) -> bool {
 
 /// Virtuelle Taskwarrior-Tags (Teilmenge, auf vorhandene Felder gemappt).
 fn matches_virtual_tag(task: &TaskInfo, tag: &str, now: i64) -> bool {
+    use vergissmeinnicht_core::chrono::TimeZone;
     let day = 86400;
-    let local_midnight = now - now % day; // grob: UTC-Tagesgrenze
+    // Lokale Mitternacht — konsistent mit parse_due_date und der CLI-Semantik.
+    let local_midnight = vergissmeinnicht_core::chrono::Local
+        .timestamp_opt(now, 0)
+        .single()
+        .and_then(|dt| dt.date_naive().and_hms_opt(0, 0, 0))
+        .and_then(|naive| {
+            vergissmeinnicht_core::chrono::Local
+                .from_local_datetime(&naive)
+                .single()
+        })
+        .map(|dt| dt.timestamp())
+        .unwrap_or(now - now % day);
     match tag {
         "PENDING" => task.status == TaskStatus::Pending,
         "COMPLETED" => task.status == TaskStatus::Completed,

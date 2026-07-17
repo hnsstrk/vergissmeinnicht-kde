@@ -41,6 +41,10 @@ Kirigami.Dialog {
             QQC2.Label { text: i18n("Auswahl löschen (mit Rückfrage)") }
             QQC2.Label { text: i18n("Eingabe") ; font.family: "monospace" }
             QQC2.Label { text: i18n("Details der ausgewählten Aufgabe") }
+            QQC2.Label { text: "↑ / ↓" ; font.family: "monospace" }
+            QQC2.Label { text: i18n("Auswahl bewegen") }
+            QQC2.Label { text: i18n("Umschalt+↑/↓") ; font.family: "monospace" }
+            QQC2.Label { text: i18n("Auswahlbereich erweitern") }
             QQC2.Label { text: "Strg+A" ; font.family: "monospace" }
             QQC2.Label { text: i18n("Alle sichtbaren auswählen") }
             QQC2.Label { text: "Strg+Umschalt+D" ; font.family: "monospace" }

@@ -264,9 +264,10 @@ impl AppState {
         })
     }
 
-    /// Alle Tasks als Taskwarrior-Export-JSON (`task export`-Format): Rohdaten
-    /// inkl. UDAs/Recurrence-Buchhaltung; Datumsfelder als ISO-8601-Basic,
-    /// tag_*/dep_*/annotation_* zu tags/depends/annotations gebündelt.
+    /// Alle Tasks als Taskwarrior-kompatibles Export-JSON (wie `task export`,
+    /// jedoch ohne die ephemere `id`): Rohdaten inkl. UDAs/Recurrence-
+    /// Buchhaltung; Datumsfelder als ISO-8601-Basic, tag_*/dep_*/annotation_*
+    /// zu tags/depends/annotations gebündelt.
     pub fn export_json(&self) -> Result<String, String> {
         let Some(store) = &self.store else {
             return Err("Store nicht initialisiert".into());
