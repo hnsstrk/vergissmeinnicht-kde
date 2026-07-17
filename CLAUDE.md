@@ -38,7 +38,9 @@ deliberately identical between the ports so fixes can travel.
   clean.
 - Functional changes: extend the `--test-flow` checks in `app/qml/Main.qml`
   when they touch bridge invokables, and run the flow against a disposable
-  `XDG_DATA_HOME`.
+  `XDG_DATA_HOME`. Grep the flow log for `I18N_ARGUMENT_MISSING` and
+  `kf.i18n:.*instead of` — ki18n reports missing `%1` arguments only at
+  runtime (`i18n("…%1…", x)`, never `.arg()` chaining!).
 - Visible window changes: refresh `docs/screenshots/` via
   `--test-dialog=… --test-grab=…` with the seeded demo dataset
   (`core/examples/seed_demo.rs`) and English locale.

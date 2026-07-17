@@ -43,7 +43,7 @@ FormCard.FormCardDialog {
     FormCard.FormComboBoxDelegate {
         id: languageCombo
         text: i18n("Sprache")
-        description: i18n("Änderung wird nach einem Neustart wirksam.")
+        description: i18n("Änderung wird nach einem Neustart wirksam. Standard-Dialogknöpfe (OK/Abbrechen) folgen der Systemsprache.")
         readonly property var keys: ["", "de", "en"]
         model: [i18n("Systemsprache"), "Deutsch", "English"]
         currentIndex: Math.max(0, keys.indexOf(app.languageSetting()))
@@ -166,7 +166,7 @@ FormCard.FormCardDialog {
         id: restoreConfirm
         title: i18n("Backup wiederherstellen")
         subtitle: dialog.backups[restoreCombo.currentIndex]
-                  ? i18n("Die aktuelle Replica wird durch „%1“ ersetzt. Vorher wird automatisch ein Sicherheits-Backup angelegt.").arg(dialog.backups[restoreCombo.currentIndex].filename)
+                  ? i18n("Die aktuelle Replica wird durch „%1“ ersetzt. Vorher wird automatisch ein Sicherheits-Backup angelegt.", dialog.backups[restoreCombo.currentIndex].filename)
                   : ""
         standardButtons: Kirigami.Dialog.Cancel
         customFooterActions: [

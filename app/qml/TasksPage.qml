@@ -151,7 +151,7 @@ Kirigami.ScrollablePage {
             text: app.isSyncing
                   ? i18n("Synchronisiere …")
                   : (app.lastSyncAt > 0
-                     ? i18n("Zuletzt synchronisiert: %1").arg(Qt.formatDateTime(new Date(app.lastSyncAt * 1000), "hh:mm"))
+                     ? i18n("Zuletzt synchronisiert: %1", Qt.formatDateTime(new Date(app.lastSyncAt * 1000), "hh:mm"))
                      : "")
             opacity: 0.7
             rightPadding: Kirigami.Units.largeSpacing
@@ -465,7 +465,7 @@ Kirigami.ScrollablePage {
         title: i18n("Aufgaben löschen")
         subtitle: page.selection.length === 1
                   ? i18n("Die ausgewählte Aufgabe wirklich löschen?")
-                  : i18n("%1 Aufgaben wirklich löschen?").arg(page.selection.length)
+                  : i18n("%1 Aufgaben wirklich löschen?", page.selection.length)
         standardButtons: Kirigami.Dialog.Cancel
         customFooterActions: [
             Kirigami.Action {

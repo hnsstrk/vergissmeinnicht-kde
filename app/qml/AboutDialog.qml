@@ -29,7 +29,7 @@ Kirigami.Dialog {
         }
 
         QQC2.Label {
-            text: i18n("Version %1").arg(Qt.application.version.length > 0 ? Qt.application.version : "0.1.0")
+            text: i18n("Version %1", Qt.application.version.length > 0 ? Qt.application.version : "0.1.0")
             opacity: 0.7
             Layout.alignment: Qt.AlignHCenter
         }

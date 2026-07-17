@@ -89,10 +89,10 @@ FormCard.FormCardDialog {
         description: {
             const p = dialog.preview
             const parts = []
-            if (p.project) parts.push(i18n("Projekt: %1").arg(p.project))
+            if (p.project) parts.push(i18n("Projekt: %1", p.project))
             for (const t of (p.tags ?? [])) parts.push("#" + t)
-            if (p.due) parts.push(p.dueParsed ? i18n("Fällig: %1").arg(p.due) : i18n("Fällig (nicht erkannt): %1").arg(p.due))
-            if (p.priority) parts.push(i18n("Priorität: %1").arg(p.priority))
+            if (p.due) parts.push(p.dueParsed ? i18n("Fällig: %1", p.due) : i18n("Fällig (nicht erkannt): %1", p.due))
+            if (p.priority) parts.push(i18n("Priorität: %1", p.priority))
             return parts.join(" · ")
         }
     }

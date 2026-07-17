@@ -412,8 +412,8 @@ msgid "Sprache"
 msgstr "Language"
 
 #: app/qml/SettingsDialog.qml:46
-msgid "Änderung wird nach einem Neustart wirksam."
-msgstr "Takes effect after a restart."
+msgid "Änderung wird nach einem Neustart wirksam. Standard-Dialogknöpfe (OK/Abbrechen) folgen der Systemsprache."
+msgstr "Takes effect after a restart. Standard dialog buttons (OK/Cancel) follow the system language."
 
 #: app/qml/SettingsDialog.qml:48
 msgid "Systemsprache"

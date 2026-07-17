@@ -119,12 +119,12 @@ QQC2.ItemDelegate {
                 MetaChip {
                     visible: delegate.scheduled > 0
                     iconName: "view-calendar"
-                    label: i18n("Geplant ab %1").arg(Qt.formatDate(new Date(delegate.scheduled * 1000), Locale.ShortFormat))
+                    label: i18n("Geplant ab %1", Qt.formatDate(new Date(delegate.scheduled * 1000), Locale.ShortFormat))
                 }
                 MetaChip {
                     visible: delegate.wait > 0 && delegate.wait > delegate.nowSecs
                     iconName: "clock"
-                    label: i18n("Wartet bis %1").arg(Qt.formatDate(new Date(delegate.wait * 1000), Locale.ShortFormat))
+                    label: i18n("Wartet bis %1", Qt.formatDate(new Date(delegate.wait * 1000), Locale.ShortFormat))
                 }
                 MetaChip {
                     visible: delegate.recur.length > 0

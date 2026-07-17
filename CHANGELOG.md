@@ -5,6 +5,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-07-17
+
+### Fixed
+
+- Placeholder arguments in localized strings rendered as
+  `(I18N_ARGUMENT_MISSING)` (e.g. "Version %1" in the About dialog, date
+  chips, bulk-delete confirmation, sync footer). ki18n substitutes `%1`
+  itself — arguments are now passed to `i18n(...)` directly instead of
+  `.arg()` chaining (10 call sites). Found by a fresh-context review; CI now
+  greps the `--test-flow` log for `I18N_ARGUMENT_MISSING`.
+- AppStream validation in CI no longer masked by `|| true`.
+
+### Changed
+
+- Settings note that standard dialog buttons (OK/Cancel) follow the system
+  language, not the in-app language override.
+
 ## [0.1.0] - 2026-07-17
 
 Initial release — KDE port of the [macOS app](https://github.com/hnsstrk/vergissmeinnicht),
@@ -47,5 +64,6 @@ feature-comparable for the daily-driver workflows.
 - Packaging: desktop file, scalable icon, AppStream metainfo,
   `scripts/install-local.sh`, CI and release workflows (Arch container).
 
-[Unreleased]: https://github.com/hnsstrk/vergissmeinnicht-kde/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/hnsstrk/vergissmeinnicht-kde/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/hnsstrk/vergissmeinnicht-kde/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/hnsstrk/vergissmeinnicht-kde/releases/tag/v0.1.0
