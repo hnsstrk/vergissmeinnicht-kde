@@ -39,9 +39,8 @@ jobs:
         run: cargo test --workspace
 
       - name: Clippy
-        run: |
-          rustup component add clippy 2>/dev/null || pacman -S --noconfirm rust-src || true
-          cargo clippy --workspace -- -D warnings
+        # Das Arch-rust-Paket bringt clippy bereits mit.
+        run: cargo clippy --workspace -- -D warnings
 
       - name: Übersetzungen validieren
         run: |
