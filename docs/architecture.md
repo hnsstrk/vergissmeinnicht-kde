@@ -139,3 +139,28 @@ locked and no input injection was possible):
   checkbox toggle, double click → detail dialog, right click → context
   menu, and real typing into quick capture. This substitutes for a human
   mouse when no interactive session is available and runs in CI.
+
+## Taskwarrior CLI coexistence
+
+The app and the Taskwarrior CLI (3.x) may sync against the same
+taskchampion-sync-server. The compatibility contract, verified end-to-end
+by `core/tests/cli_coexistence.rs`:
+
+- **Property-granular writes.** The app never rewrites whole tasks, so
+  UDAs and unknown attributes written by the CLI survive app edits.
+- **Recurrence.** The CLI models recurrence as `status:recurring`
+  templates plus generated instances (`parent`, `imask`, ledger `mask` on
+  the template). Exactly one sync client may run a recurrence engine
+  (`man task-sync`), and that client is the CLI: the app never generates
+  instances from templates, never writes `parent`/`imask`/`mask`/`rtype`,
+  never completes templates, and skips its own follow-up logic for tasks
+  carrying `parent`/`imask`. The app's simpler "complete → next instance"
+  model applies only to tasks created by the app itself (plain pending
+  tasks with a `recur` value and no `parent`); the CLI treats those as
+  ordinary pending tasks.
+- **Undo.** Every mutation batch starts with an `Operation::UndoPoint`;
+  undo rolls back to the latest one. Like the CLI, undo cannot cross a
+  sync: synchronized operations are final.
+- **Known gap: CLI hooks.** Users with `on-add`/`on-modify` hook scripts
+  should know the app mutates via the taskchampion library and never
+  triggers them.

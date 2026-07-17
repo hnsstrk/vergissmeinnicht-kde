@@ -9,7 +9,7 @@ license = "MIT"
 repository = "https://github.com/hnsstrk/vergissmeinnicht-kde"
 
 [workspace.dependencies]
-taskchampion = { version = "3.0.1", features = ["storage-sqlite"] }
+taskchampion = { version = "3.1.0", features = ["storage-sqlite"] }
 tokio = { version = "1", features = ["rt", "macros", "sync"] }
 uuid = { version = "1", features = ["v4"] }
 thiserror = "2.0"

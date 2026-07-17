@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-17 14:32+0200\n"
+"POT-Creation-Date: 2026-07-17 15:17+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -376,11 +376,11 @@ msgstr ""
 msgid "Wartend"
 msgstr ""
 
-#: app/qml/Main.qml:48 app/qml/TaskDelegate.qml:143 app/qml/TasksPage.qml:253
+#: app/qml/Main.qml:48 app/qml/TaskDelegate.qml:151 app/qml/TasksPage.qml:253
 msgid "Blockiert"
 msgstr ""
 
-#: app/qml/Main.qml:49 app/qml/TaskDelegate.qml:149 app/qml/TasksPage.qml:257
+#: app/qml/Main.qml:49 app/qml/TaskDelegate.qml:157 app/qml/TasksPage.qml:257
 msgid "Blockierend"
 msgstr ""
 
@@ -666,6 +666,10 @@ msgstr ""
 
 #: app/qml/TaskDelegate.qml:133
 msgid "Wartet bis %1"
+msgstr ""
+
+#: app/qml/TaskDelegate.qml:145
+msgid "Vorlage (CLI-verwaltet)"
 msgstr ""
 
 #: app/qml/TasksPage.qml:78

@@ -1,7 +1,7 @@
 //! Parser-Ports aus der macOS-Version: QuickCaptureParser, DueDateParser, RecurParser.
 //! Verhalten ist 1:1 übernommen, damit Eingaben auf beiden Plattformen gleich wirken.
 
-use vergissmeinnicht_core::chrono::{Datelike, Duration, Local, Months, NaiveDate, TimeZone};
+use vergissmeinnicht_core::chrono::{Datelike, Duration, Local, Months, NaiveDate, TimeZone, Weekday};
 
 // ─── QuickCaptureParser ─────────────────────────────────────────────────────
 
@@ -36,7 +36,15 @@ pub fn parse_quick_capture(input: &str) -> QuickCapturePreview {
         } else if let Some(value) = strip_prefix_nonempty("due:", &token) {
             preview.due = Some(value.to_string());
         } else if let Some(value) = strip_prefix_nonempty("priority:", &token) {
-            preview.priority = Some(value.to_string());
+            // Nur die Taskwarrior-Standardwerte H/M/L (case-insensitiv) — andere
+            // Werte bleiben Beschreibungstext, statt stumm eine für die CLI
+            // unbekannte Priorität zu schreiben.
+            let normalized = value.to_ascii_uppercase();
+            if matches!(normalized.as_str(), "H" | "M" | "L") {
+                preview.priority = Some(normalized);
+            } else {
+                description_tokens.push(token);
+            }
         } else if let Some(tag) = token.strip_prefix('+').filter(|t| !t.is_empty()) {
             preview.tags.push(tag.to_string());
         } else {
@@ -162,20 +170,32 @@ pub fn next_due_after(recur: &str, due: i64) -> Option<i64> {
         return None;
     }
 
+    // Taskwarrior-Frequenz-Synonyme (man task, „recur:"), plus Suffix-Formen
+    // wie 3wks/2mo/1qtr. Einheit 'q' = Quartal, 'b' = nächster Werktag.
     let (n, unit): (u32, char) = match trimmed.as_str() {
-        "daily" => (1, 'd'),
+        "daily" | "day" => (1, 'd'),
+        "weekdays" => (1, 'b'),
         "weekly" => (1, 'w'),
-        "monthly" => (1, 'm'),
-        "yearly" => (1, 'y'),
+        "biweekly" | "fortnight" => (2, 'w'),
+        "monthly" | "month" => (1, 'm'),
+        "quarterly" => (1, 'q'),
+        "semiannual" => (6, 'm'),
+        "annual" | "yearly" => (1, 'y'),
+        "biannual" | "biyearly" => (2, 'y'),
         other => {
-            if other.len() < 2 {
-                return None;
-            }
-            let unit = other.chars().last()?;
-            let n: u32 = other[..other.len() - 1].parse().ok()?;
+            let digits_end = other.find(|c: char| !c.is_ascii_digit())?;
+            let n: u32 = other[..digits_end].parse().ok()?;
             if n == 0 {
                 return None;
             }
+            let unit = match &other[digits_end..] {
+                "d" | "day" | "days" => 'd',
+                "w" | "wk" | "wks" | "week" | "weeks" => 'w',
+                "m" | "mo" | "mos" | "month" | "months" => 'm',
+                "q" | "qtr" | "qtrs" | "quarter" | "quarters" => 'q',
+                "y" | "yr" | "yrs" | "year" | "years" => 'y',
+                _ => return None,
+            };
             (n, unit)
         }
     };
@@ -183,8 +203,17 @@ pub fn next_due_after(recur: &str, due: i64) -> Option<i64> {
     let local = Local.timestamp_opt(due, 0).single()?;
     let shifted = match unit {
         'd' => local.checked_add_signed(Duration::days(n as i64))?,
+        'b' => {
+            // Nächster Werktag (Mo–Fr) nach dem Fälligkeitsdatum.
+            let mut next = local.checked_add_signed(Duration::days(1))?;
+            while matches!(next.weekday(), Weekday::Sat | Weekday::Sun) {
+                next = next.checked_add_signed(Duration::days(1))?;
+            }
+            next
+        }
         'w' => local.checked_add_signed(Duration::weeks(n as i64))?,
         'm' => local.checked_add_months(Months::new(n))?,
+        'q' => local.checked_add_months(Months::new(3 * n))?,
         'y' => local.with_year(local.year() + n as i32).or_else(|| {
             // 29. Februar + 1 Jahr → chrono liefert None; auf 28.2. ausweichen.
             local
@@ -226,6 +255,17 @@ mod tests {
         assert_eq!(p.project.as_deref(), Some("Büro"));
         assert_eq!(p.due.as_deref(), Some("tomorrow"));
         assert_eq!(p.priority.as_deref(), Some("H"));
+    }
+
+    #[test]
+    fn quick_capture_priority_normalized_and_validated() {
+        // Kleinschreibung wird normalisiert …
+        let p = parse_quick_capture("Aufgabe priority:m");
+        assert_eq!(p.priority.as_deref(), Some("M"));
+        // … unbekannte Werte bleiben Beschreibungstext.
+        let p = parse_quick_capture("Aufgabe priority:X");
+        assert_eq!(p.priority, None);
+        assert_eq!(p.description, "Aufgabe priority:X");
     }
 
     #[test]
@@ -318,5 +358,35 @@ mod tests {
         assert_eq!(next_due_after("", NOW), None);
         assert!(!is_valid_recur("quatsch"));
         assert!(is_valid_recur("weekly"));
+    }
+
+    #[test]
+    fn recur_taskwarrior_synonyms() {
+        let due = NOW;
+        assert_eq!(next_due_after("biweekly", due), next_due_after("2w", due));
+        assert_eq!(next_due_after("fortnight", due), next_due_after("2w", due));
+        assert_eq!(next_due_after("quarterly", due), next_due_after("3m", due));
+        assert_eq!(next_due_after("semiannual", due), next_due_after("6m", due));
+        assert_eq!(next_due_after("annual", due), next_due_after("yearly", due));
+        assert_eq!(next_due_after("biannual", due), next_due_after("2y", due));
+        assert_eq!(next_due_after("3wks", due), next_due_after("3w", due));
+        assert_eq!(next_due_after("2mo", due), next_due_after("2m", due));
+        assert_eq!(next_due_after("1qtr", due), next_due_after("3m", due));
+        assert_eq!(next_due_after("2yrs", due), next_due_after("2y", due));
+        assert!(is_valid_recur("weekdays"));
+        assert!(!is_valid_recur("9hrs")); // sub-täglich bewusst nicht unterstützt
+    }
+
+    #[test]
+    fn recur_weekdays_skips_weekend() {
+        // 2026-07-17 ist ein Freitag → nächster Werktag ist Montag, 2026-07-20.
+        let friday = Local.with_ymd_and_hms(2026, 7, 17, 12, 0, 0).unwrap().timestamp();
+        let next = next_due_after("weekdays", friday).unwrap();
+        let next_local = Local.timestamp_opt(next, 0).unwrap();
+        assert_eq!(next_local.weekday(), Weekday::Mon);
+        assert_eq!(next - friday, 3 * 24 * 3600);
+        // Mitten in der Woche: einfach +1 Tag.
+        let tuesday = Local.with_ymd_and_hms(2026, 7, 14, 12, 0, 0).unwrap().timestamp();
+        assert_eq!(next_due_after("weekdays", tuesday).unwrap() - tuesday, 24 * 3600);
     }
 }

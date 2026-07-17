@@ -3586,6 +3586,7 @@ dependencies = [
 name = "vergissmeinnicht-core"
 version = "0.2.4"
 dependencies = [
+ "serde_json",
  "taskchampion",
  "tempfile",
  "thiserror 2.0.18",

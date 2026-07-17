@@ -461,6 +461,7 @@ mod tests {
             depends: vec![],
             is_blocked: false,
             is_blocking: false,
+            is_recurring_child: false,
         }
     }
 

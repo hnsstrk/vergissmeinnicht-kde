@@ -137,6 +137,14 @@ QQC2.ItemDelegate {
                     iconName: "task-recurring"
                     label: delegate.recur
                 }
+                // CLI-verwaltete Recurrence-Vorlage: nicht direkt erledigbar,
+                // Instanzen erzeugt die Taskwarrior-CLI.
+                MetaChip {
+                    visible: delegate.recurringMaster
+                    iconName: "view-refresh"
+                    label: i18n("Vorlage (CLI-verwaltet)")
+                    chipColor: Kirigami.Theme.neutralTextColor
+                }
                 MetaChip {
                     visible: delegate.isBlocked
                     iconName: "media-playback-paused"

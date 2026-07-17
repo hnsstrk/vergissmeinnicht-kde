@@ -331,3 +331,44 @@ fn sync_with_invalid_client_id_is_conversion_error() {
     );
     assert!(matches!(result, Err(VmError::Conversion { .. })));
 }
+
+#[test]
+fn undo_reverts_last_batch() {
+    let (_dir, store) = fresh_store();
+    let uuid = store.add_task("Original".into()).expect("add");
+    store
+        .modify_description(uuid.clone(), "Geändert".into())
+        .expect("modify");
+    assert!(store.num_undo_points().unwrap() >= 2);
+
+    assert!(store.undo_last_change().unwrap(), "Undo muss greifen");
+    let tasks = store.list_tasks(true).unwrap();
+    let t = tasks.iter().find(|t| t.uuid == uuid).expect("Task existiert");
+    assert_eq!(t.description, "Original");
+
+    // Zweites Undo entfernt die Anlage selbst.
+    assert!(store.undo_last_change().unwrap());
+    assert!(store.list_tasks(true).unwrap().iter().all(|t| t.uuid != uuid));
+
+    // Nichts mehr rückgängig zu machen.
+    assert!(!store.undo_last_change().unwrap());
+}
+
+#[test]
+fn set_raw_property_roundtrip_preserves_unknown_attributes() {
+    let (_dir, store) = fresh_store();
+    let uuid = store.add_task("Mit UDA".into()).expect("add");
+    store
+        .set_raw_property(uuid.clone(), "estimate".into(), Some("3h".into()))
+        .expect("set uda");
+    // Normale App-Edits dürfen die fremde Property nicht anfassen.
+    store
+        .modify_description(uuid.clone(), "Umbenannt".into())
+        .expect("modify");
+    store.set_priority(uuid.clone(), Some("H".into())).expect("prio");
+
+    // Rohwert überlebt (Kontrolle über erneutes Setzen + Entfernen).
+    store
+        .set_raw_property(uuid.clone(), "estimate".into(), None)
+        .expect("clear uda");
+}

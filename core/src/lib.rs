@@ -16,7 +16,7 @@ pub use taskchampion::chrono;
 use taskchampion::{
     chrono::{DateTime, Utc},
     storage::AccessMode,
-    Annotation, Operations, Replica, ServerConfig, SqliteStorage, Status, Tag,
+    Annotation, Operation, Operations, Replica, ServerConfig, SqliteStorage, Status, Tag,
 };
 use uuid::Uuid;
 
@@ -29,6 +29,12 @@ const PROP_PROJECT: &str = "project";
 const PROP_PRIORITY: &str = "priority";
 const PROP_RECUR: &str = "recur";
 const PROP_SCHEDULED: &str = "scheduled";
+
+/// Startet einen Mutations-Batch mit einem UndoPoint — Grundlage für
+/// `undo_last_change`; ein Batch = ein rückgängig machbarer Schritt.
+fn mutation_ops() -> Operations {
+    vec![Operation::UndoPoint]
+}
 
 // ─── Smoketest ──────────────────────────────────────────────────────────────
 
@@ -145,6 +151,11 @@ fn build_task_info(
     // taskchampion-Doku auch nicht (mehr) existierende UUIDs enthalten). Speist den
     // Detail-Editor — bewusst getrennt von den pending-only `is_blocked`/`is_blocking`.
     let depends: Vec<String> = task.get_dependencies().map(|u| u.to_string()).collect();
+    // Von der Taskwarrior-CLI generierte Instanz eines Recurring-Templates
+    // (trägt `parent`/`imask`) — die App darf für solche Tasks NIE eigene
+    // Folge-Instanzen erzeugen, sonst entstehen Duplikate neben der CLI-Engine.
+    let is_recurring_child =
+        task.get_value("parent").is_some() || task.get_value("imask").is_some();
     let status = match task.get_status() {
         Status::Pending => TaskStatus::Pending,
         Status::Completed => TaskStatus::Completed,
@@ -171,6 +182,7 @@ fn build_task_info(
         depends,
         is_blocked,
         is_blocking,
+        is_recurring_child,
     }
 }
 
@@ -236,6 +248,9 @@ pub struct TaskInfo {
     /// `true`, wenn mindestens ein anderer noch *pending* Task von diesem abhängt
     /// (Taskwarrior `+BLOCKING`).
     pub is_blocking: bool,
+    /// CLI-generierte Instanz eines Recurring-Templates (`parent`/`imask` gesetzt);
+    /// die App erzeugt für solche Tasks keine eigenen Folge-Instanzen.
+    pub is_recurring_child: bool,
 }
 
 // ─── TaskStore ──────────────────────────────────────────────────────────────
@@ -295,7 +310,7 @@ impl TaskStore {
 
         let uuid = self.rt.block_on(async {
             let new_uuid = Uuid::new_v4();
-            let mut ops = Operations::new();
+            let mut ops = mutation_ops();
             let mut task = replica.create_task(new_uuid, &mut ops).await?;
             task.set_description(description, &mut ops)?;
             task.set_status(Status::Pending, &mut ops)?;
@@ -328,7 +343,7 @@ impl TaskStore {
 
         let uuid = self.rt.block_on(async {
             let new_uuid = Uuid::new_v4();
-            let mut ops = Operations::new();
+            let mut ops = mutation_ops();
             let mut task = replica.create_task(new_uuid, &mut ops).await?;
             task.set_description(description, &mut ops)?;
             task.set_status(Status::Pending, &mut ops)?;
@@ -373,7 +388,7 @@ impl TaskStore {
         };
 
         self.rt.block_on(async {
-            let mut ops = Operations::new();
+            let mut ops = mutation_ops();
             let mut task = replica
                 .get_task(task_uuid)
                 .await?
@@ -484,6 +499,34 @@ impl TaskStore {
         Ok(count as u64)
     }
 
+    /// Anzahl der rückgängig machbaren Schritte (UndoPoints) seit dem letzten Sync.
+    pub fn num_undo_points(&self) -> Result<u64, VmError> {
+        let mut guard = self.lock_replica()?;
+        let replica: &mut AppReplica = &mut guard;
+
+        let count = self.rt.block_on(async { replica.num_undo_points().await })?;
+
+        Ok(count as u64)
+    }
+
+    /// Macht den jüngsten Mutations-Batch rückgängig (bis zum letzten UndoPoint).
+    /// Gibt `false` zurück, wenn es nichts rückgängig zu machen gab oder der
+    /// Zustand sich inzwischen geändert hat (taskchampion lehnt dann ab).
+    pub fn undo_last_change(&self) -> Result<bool, VmError> {
+        let mut guard = self.lock_replica()?;
+        let replica: &mut AppReplica = &mut guard;
+
+        let undone = self.rt.block_on(async {
+            let undo_ops = replica.get_undo_operations().await?;
+            if undo_ops.is_empty() {
+                return Ok::<_, taskchampion::Error>(false);
+            }
+            replica.commit_reversed_operations(undo_ops).await
+        })?;
+
+        Ok(undone)
+    }
+
     /// Markiert die Task mit `uuid` als erledigt (`Status::Completed`) und committet.
     pub fn mark_done(&self, uuid: String) -> Result<(), VmError> {
         let task_uuid = parse_uuid(&uuid)?;
@@ -491,7 +534,7 @@ impl TaskStore {
         let replica: &mut AppReplica = &mut guard;
 
         self.rt.block_on(async {
-            let mut ops = Operations::new();
+            let mut ops = mutation_ops();
             let mut task = replica
                 .get_task(task_uuid)
                 .await?
@@ -513,7 +556,7 @@ impl TaskStore {
         let replica: &mut AppReplica = &mut guard;
 
         self.rt.block_on(async {
-            let mut ops = Operations::new();
+            let mut ops = mutation_ops();
             let mut task = replica
                 .get_task(task_uuid)
                 .await?
@@ -532,7 +575,7 @@ impl TaskStore {
         let replica: &mut AppReplica = &mut guard;
 
         self.rt.block_on(async {
-            let mut ops = Operations::new();
+            let mut ops = mutation_ops();
             let mut task = replica
                 .get_task(task_uuid)
                 .await?
@@ -550,7 +593,7 @@ impl TaskStore {
         let replica: &mut AppReplica = &mut guard;
 
         self.rt.block_on(async {
-            let mut ops = Operations::new();
+            let mut ops = mutation_ops();
             let mut task = replica
                 .get_task(task_uuid)
                 .await?
@@ -576,7 +619,7 @@ impl TaskStore {
         let replica: &mut AppReplica = &mut guard;
 
         self.rt.block_on(async {
-            let mut ops = Operations::new();
+            let mut ops = mutation_ops();
             let mut task = replica
                 .get_task(task_uuid)
                 .await?
@@ -594,7 +637,7 @@ impl TaskStore {
         let replica: &mut AppReplica = &mut guard;
 
         self.rt.block_on(async {
-            let mut ops = Operations::new();
+            let mut ops = mutation_ops();
             let mut task = replica
                 .get_task(task_uuid)
                 .await?
@@ -617,7 +660,7 @@ impl TaskStore {
         let replica: &mut AppReplica = &mut guard;
 
         self.rt.block_on(async {
-            let mut ops = Operations::new();
+            let mut ops = mutation_ops();
             let mut task = replica
                 .get_task(task_uuid)
                 .await?
@@ -653,7 +696,7 @@ impl TaskStore {
         let replica: &mut AppReplica = &mut guard;
 
         let new_uuid: Option<Uuid> = self.rt.block_on(async {
-            let mut ops = Operations::new();
+            let mut ops = mutation_ops();
             let mut task = replica
                 .get_task(task_uuid)
                 .await?
@@ -706,7 +749,7 @@ impl TaskStore {
         let replica: &mut AppReplica = &mut guard;
 
         self.rt.block_on(async {
-            let mut ops = Operations::new();
+            let mut ops = mutation_ops();
             let mut task = replica
                 .get_task(task_uuid)
                 .await?
@@ -729,7 +772,7 @@ impl TaskStore {
         let replica: &mut AppReplica = &mut guard;
 
         self.rt.block_on(async {
-            let mut ops = Operations::new();
+            let mut ops = mutation_ops();
             let mut task = replica
                 .get_task(task_uuid)
                 .await?
@@ -750,13 +793,40 @@ impl TaskStore {
         let replica: &mut AppReplica = &mut guard;
 
         self.rt.block_on(async {
-            let mut ops = Operations::new();
+            let mut ops = mutation_ops();
             let mut task = replica
                 .get_task(task_uuid)
                 .await?
                 .ok_or(VmError::NotFound { uuid: uuid.clone() })?;
             let value = priority.filter(|s| !s.is_empty());
             task.set_value(PROP_PRIORITY, value, &mut ops)?;
+            replica.commit_operations(ops).await?;
+            Ok::<_, VmError>(())
+        })
+    }
+
+    /// Setzt eine rohe Task-Property (z. B. `until`, UDAs; in Tests auch
+    /// `parent`/`status`). Leerer Wert entfernt die Property. NICHT für
+    /// Properties mit typisierten Settern (description, due, wait …) verwenden —
+    /// die verwalten Nebeneffekte wie `end` selbst.
+    pub fn set_raw_property(
+        &self,
+        uuid: String,
+        key: String,
+        value: Option<String>,
+    ) -> Result<(), VmError> {
+        let task_uuid = parse_uuid(&uuid)?;
+        let mut guard = self.lock_replica()?;
+        let replica: &mut AppReplica = &mut guard;
+
+        self.rt.block_on(async {
+            let mut ops = mutation_ops();
+            let mut task = replica
+                .get_task(task_uuid)
+                .await?
+                .ok_or(VmError::NotFound { uuid: uuid.clone() })?;
+            let value = value.filter(|s| !s.is_empty());
+            task.set_value(key, value, &mut ops)?;
             replica.commit_operations(ops).await?;
             Ok::<_, VmError>(())
         })
@@ -771,7 +841,7 @@ impl TaskStore {
         let replica: &mut AppReplica = &mut guard;
 
         self.rt.block_on(async {
-            let mut ops = Operations::new();
+            let mut ops = mutation_ops();
             let mut task = replica
                 .get_task(task_uuid)
                 .await?
@@ -793,7 +863,7 @@ impl TaskStore {
         let replica: &mut AppReplica = &mut guard;
 
         self.rt.block_on(async {
-            let mut ops = Operations::new();
+            let mut ops = mutation_ops();
             let mut task = replica
                 .get_task(task_uuid)
                 .await?
@@ -818,7 +888,7 @@ impl TaskStore {
         let replica: &mut AppReplica = &mut guard;
 
         self.rt.block_on(async {
-            let mut ops = Operations::new();
+            let mut ops = mutation_ops();
             let mut task = replica
                 .get_task(task_uuid)
                 .await?
@@ -838,7 +908,7 @@ impl TaskStore {
         let replica: &mut AppReplica = &mut guard;
 
         self.rt.block_on(async {
-            let mut ops = Operations::new();
+            let mut ops = mutation_ops();
             let mut task = replica
                 .get_task(task_uuid)
                 .await?
@@ -861,7 +931,7 @@ impl TaskStore {
         let replica: &mut AppReplica = &mut guard;
 
         self.rt.block_on(async {
-            let mut ops = Operations::new();
+            let mut ops = mutation_ops();
             let mut task = replica
                 .get_task(task_uuid)
                 .await?
@@ -880,7 +950,7 @@ impl TaskStore {
         let replica: &mut AppReplica = &mut guard;
 
         self.rt.block_on(async {
-            let mut ops = Operations::new();
+            let mut ops = mutation_ops();
             let mut task = replica
                 .get_task(task_uuid)
                 .await?

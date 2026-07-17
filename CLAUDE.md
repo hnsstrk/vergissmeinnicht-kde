@@ -61,6 +61,16 @@ deliberately identical between the ports so fixes can travel.
   point the app at the Taskwarrior CLI's data directory. Data exchange goes
   through the sync server exclusively.
 - Sync credentials live in the Secret Service, never in the config file.
+- **CLI recurrence is sacred**: never write `parent`/`imask`/`mask`/`rtype`,
+  never create follow-up instances for tasks that carry `parent`/`imask`
+  (`TaskInfo::is_recurring_child`), never complete `status:recurring`
+  templates. The app's own follow-up model applies only to app-created
+  recur tasks (plain pending + `recur`). Verified end-to-end by
+  `core/tests/cli_coexistence.rs` (run with a local sync server and the
+  `task` CLI: `cargo test -p vergissmeinnicht-core --test cli_coexistence
+  -- --ignored`).
+- Every core mutation batch starts with an `Operation::UndoPoint`
+  (`mutation_ops()`) — one batch = one undoable step.
 
 ## Verification without a desktop session
 

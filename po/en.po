@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: vergissmeinnicht 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-17 14:32+0200\n"
+"POT-Creation-Date: 2026-07-17 15:17+0200\n"
 "Language: en\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -375,11 +375,11 @@ msgstr "Scheduled"
 msgid "Wartend"
 msgstr "Waiting"
 
-#: app/qml/Main.qml:48 app/qml/TaskDelegate.qml:143 app/qml/TasksPage.qml:253
+#: app/qml/Main.qml:48 app/qml/TaskDelegate.qml:151 app/qml/TasksPage.qml:253
 msgid "Blockiert"
 msgstr "Blocked"
 
-#: app/qml/Main.qml:49 app/qml/TaskDelegate.qml:149 app/qml/TasksPage.qml:257
+#: app/qml/Main.qml:49 app/qml/TaskDelegate.qml:157 app/qml/TasksPage.qml:257
 msgid "Blockierend"
 msgstr "Blocking"
 
@@ -674,6 +674,10 @@ msgstr "Scheduled from %1"
 #: app/qml/TaskDelegate.qml:133
 msgid "Wartet bis %1"
 msgstr "Waiting until %1"
+
+#: app/qml/TaskDelegate.qml:145
+msgid "Vorlage (CLI-verwaltet)"
+msgstr "Template (CLI-managed)"
 
 #: app/qml/TasksPage.qml:78
 msgid "Suchen — auch projekt:, tag:, status: …"

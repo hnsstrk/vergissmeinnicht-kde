@@ -243,9 +243,22 @@ impl AppState {
         let Some(task) = self.task_by_uuid(uuid).cloned() else {
             return Err(format!("Task nicht gefunden: {uuid}"));
         };
-        let followup_due = match (&task.recur, task.due) {
-            (Some(recur), Some(due)) => parsers::next_due_after(recur, due),
-            _ => None,
+        // CLI-Recurrence respektieren: Templates (status:recurring) verwaltet
+        // ausschließlich die Taskwarrior-CLI; ihre Instanzen (parent/imask)
+        // erledigen wir normal, aber OHNE eigene Folge-Instanz — sonst
+        // entstehen Duplikate neben der CLI-Engine.
+        if task.status == TaskStatus::Recurring {
+            return Err(
+                "Wiederkehrende Vorlage (CLI-verwaltet) — bitte eine Instanz erledigen, nicht die Vorlage.".into(),
+            );
+        }
+        let followup_due = if task.is_recurring_child {
+            None
+        } else {
+            match (&task.recur, task.due) {
+                (Some(recur), Some(due)) => parsers::next_due_after(recur, due),
+                _ => None,
+            }
         };
         self.mutate(|store| {
             if let Some(new_due) = followup_due {
@@ -551,6 +564,7 @@ pub fn task_to_json(t: &TaskInfo) -> serde_json::Value {
         "depends": t.depends,
         "isBlocked": t.is_blocked,
         "isBlocking": t.is_blocking,
+        "isRecurringChild": t.is_recurring_child,
     })
 }
 
@@ -649,6 +663,76 @@ mod tests {
     }
 
     #[test]
+    fn mark_done_smart_skips_followup_for_cli_recurrence_child() {
+        let dir = tempfile::tempdir().unwrap();
+        let store = TaskStore::new(dir.path().to_string_lossy().into_owned()).unwrap();
+        let mut state = AppState {
+            store: Some(Arc::new(store)),
+            init_error: None,
+            tasks: vec![],
+            visible: vec![],
+            filter: SidebarFilter::Todo,
+            search_query: String::new(),
+            sort: SortOrder::Id,
+            sort_ascending: true,
+            settings: Settings::default(),
+        };
+        let store = state.store.clone().unwrap();
+        // CLI-generierte Instanz simulieren: recur + due + parent (wie von
+        // `task add … recur:daily` erzeugt und über den Sync-Server empfangen).
+        let uuid = store
+            .add_task_full("CLI-Instanz".into(), None, vec![], Some(1_800_000_000))
+            .unwrap();
+        store.set_recur(uuid.clone(), Some("daily".into())).unwrap();
+        store
+            .set_raw_property(
+                uuid.clone(),
+                "parent".into(),
+                Some("11111111-2222-3333-4444-555555555555".into()),
+            )
+            .unwrap();
+        state.refresh().unwrap();
+        assert!(state.tasks.iter().any(|t| t.uuid == uuid && t.is_recurring_child));
+
+        state.mark_done_smart(&uuid).unwrap();
+        // Erledigt, aber KEINE eigene Folge-Instanz — die erzeugt die CLI-Engine.
+        let pending = state
+            .tasks
+            .iter()
+            .filter(|t| t.status == TaskStatus::Pending)
+            .count();
+        assert_eq!(pending, 0);
+    }
+
+    #[test]
+    fn mark_done_smart_refuses_cli_recurring_template() {
+        let dir = tempfile::tempdir().unwrap();
+        let store = TaskStore::new(dir.path().to_string_lossy().into_owned()).unwrap();
+        let mut state = AppState {
+            store: Some(Arc::new(store)),
+            init_error: None,
+            tasks: vec![],
+            visible: vec![],
+            filter: SidebarFilter::All,
+            search_query: String::new(),
+            sort: SortOrder::Id,
+            sort_ascending: true,
+            settings: Settings::default(),
+        };
+        let store = state.store.clone().unwrap();
+        let uuid = store
+            .add_task_full("CLI-Vorlage".into(), None, vec![], None)
+            .unwrap();
+        store
+            .set_raw_property(uuid.clone(), "status".into(), Some("recurring".into()))
+            .unwrap();
+        state.refresh().unwrap();
+
+        let err = state.mark_done_smart(&uuid).unwrap_err();
+        assert!(err.contains("Vorlage"), "unerwartete Meldung: {err}");
+    }
+
+    #[test]
     fn rename_and_clear_tag_project() {
         let dir = tempfile::tempdir().unwrap();
         let store = TaskStore::new(dir.path().to_string_lossy().into_owned()).unwrap();
@@ -726,6 +810,7 @@ mod tests {
             depends: vec![],
             is_blocked: false,
             is_blocking: false,
+            is_recurring_child: false,
         };
         let mut b = a.clone();
         b.uuid = "b".into();
