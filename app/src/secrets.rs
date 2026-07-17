@@ -36,3 +36,24 @@ pub fn set(key: &str, value: &str) -> Result<(), String> {
 
 pub const KEY_CLIENT_ID: &str = "client-id";
 pub const KEY_SECRET: &str = "encryption-secret";
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Echter Secret-Service-Roundtrip — braucht eine entsperrte Session mit
+    /// laufendem org.freedesktop.secrets-Dienst, daher `#[ignore]`:
+    ///
+    ///     cargo test -p vergissmeinnicht-app -- --ignored secrets
+    #[test]
+    #[ignore]
+    fn roundtrip_against_live_secret_service() {
+        let key = "test-roundtrip";
+        set(key, "geheimer-testwert").expect("set");
+        assert_eq!(get(key).expect("get").as_deref(), Some("geheimer-testwert"));
+        // Leerer Wert löscht (idempotent).
+        set(key, "").expect("delete");
+        set(key, "").expect("delete idempotent");
+        assert_eq!(get(key).expect("get nach delete"), None);
+    }
+}

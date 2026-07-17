@@ -50,6 +50,9 @@ cargo test --workspace
 - `app` unit tests — sidebar filter semantics, sorting, search operators,
   quick-capture/due/recur parsers, backup create/rotate/restore, state
   pipeline (36 tests).
+- `cargo test -p vergissmeinnicht-app -- --ignored secrets` — real
+  Secret Service roundtrip (needs an unlocked session with a running
+  `org.freedesktop.secrets` provider).
 
 ### End-to-end hooks
 
