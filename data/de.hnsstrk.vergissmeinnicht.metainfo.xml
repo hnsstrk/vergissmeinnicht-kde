@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>de.hnsstrk.vergissmeinnicht</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <name>Vergissmeinnicht</name>
+  <summary>Taskwarrior client for KDE Plasma</summary>
+  <summary xml:lang="de">Taskwarrior-Client für KDE Plasma</summary>
+  <description>
+    <p>
+      Vergissmeinnicht is a native KDE client for Taskwarrior 3.x, built on
+      TaskChampion. It keeps its own replica and synchronizes with any
+      taskchampion-sync-server, so it works side by side with the task CLI
+      on other machines.
+    </p>
+    <p xml:lang="de">
+      Vergissmeinnicht ist ein nativer KDE-Client für Taskwarrior 3.x auf
+      Basis von TaskChampion. Die App führt eine eigene Replica und gleicht
+      über einen beliebigen taskchampion-sync-server ab — sie arbeitet damit
+      parallel zur task-CLI auf anderen Rechnern.
+    </p>
+    <p>
+      Features: sidebar perspectives (inbox, today, overdue, waiting, …),
+      full-text search with operators, saved searches, quick capture with
+      Taskwarrior token syntax, recurring tasks, snooze, bulk editing,
+      drag and drop, automatic backups, and German/English localization.
+    </p>
+  </description>
+  <launchable type="desktop-id">de.hnsstrk.vergissmeinnicht.desktop</launchable>
+  <url type="homepage">https://github.com/hnsstrk/vergissmeinnicht-kde</url>
+  <url type="bugtracker">https://github.com/hnsstrk/vergissmeinnicht-kde/issues</url>
+  <developer id="de.hnsstrk">
+    <name>hnsstrk</name>
+  </developer>
+  <content_rating type="oars-1.1"/>
+  <releases>
+    <release version="0.1.0" date="2026-07-17"/>
+  </releases>
+</component>

@@ -1,0 +1,58 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    container: archlinux:latest
+    steps:
+      - name: Systempakete installieren
+        run: |
+          pacman -Syu --noconfirm \
+            base-devel git rust clang \
+            qt6-base qt6-declarative \
+            kirigami kirigami-addons ki18n kiconthemes \
+            qqc2-desktop-style breeze-icons \
+            gettext
+
+      - uses: actions/checkout@v4
+
+      - name: Tests
+        run: cargo test --workspace
+
+      - name: Release-Build
+        run: cargo build --release
+
+      - name: Artefakt packen
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          mkdir -p dist/vergissmeinnicht-$VERSION
+          cp target/release/vergissmeinnicht dist/vergissmeinnicht-$VERSION/
+          cp -r data po scripts LICENSE README.md dist/vergissmeinnicht-$VERSION/
+          tar -C dist -czf vergissmeinnicht-$VERSION-linux-x86_64.tar.gz vergissmeinnicht-$VERSION
+          sha256sum vergissmeinnicht-$VERSION-linux-x86_64.tar.gz > vergissmeinnicht-$VERSION-linux-x86_64.tar.gz.sha256
+
+      - name: Release-Notes aus CHANGELOG extrahieren
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          awk -v ver="$VERSION" '
+            $0 ~ "^## \\[" ver "\\]" {grab=1; next}
+            grab && /^## \[/ {exit}
+            grab {print}
+          ' CHANGELOG.md > release-notes.md
+          cat .github/release-footer.md >> release-notes.md 2>/dev/null || true
+
+      - name: GitHub-Release erstellen
+        uses: softprops/action-gh-release@v2
+        with:
+          body_path: release-notes.md
+          files: |
+            vergissmeinnicht-*-linux-x86_64.tar.gz
+            vergissmeinnicht-*-linux-x86_64.tar.gz.sha256

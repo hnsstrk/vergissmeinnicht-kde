@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="38%" r="70%">
+      <stop offset="0%" stop-color="#F4F8FF"/>
+      <stop offset="55%" stop-color="#C9DEF7"/>
+      <stop offset="100%" stop-color="#8FB4E2"/>
+    </radialGradient>
+
+    <radialGradient id="petal" cx="50%" cy="32%" r="65%">
+      <stop offset="0%" stop-color="#9CBFEC"/>
+      <stop offset="55%" stop-color="#5183D6"/>
+      <stop offset="100%" stop-color="#2E5DAF"/>
+    </radialGradient>
+
+    <radialGradient id="center" cx="38%" cy="35%" r="70%">
+      <stop offset="0%" stop-color="#FFF6C2"/>
+      <stop offset="55%" stop-color="#FFCE3D"/>
+      <stop offset="100%" stop-color="#D89510"/>
+    </radialGradient>
+
+    <radialGradient id="highlight" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+
+    <filter id="petalShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="6"/>
+      <feOffset dx="0" dy="6" result="off"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.35"/></feComponentTransfer>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Squircle background (Apple corner radius ≈ 22.4% of width) -->
+  <rect x="0" y="0" width="1024" height="1024" rx="229" ry="229" fill="url(#bg)"/>
+
+  <!-- Flower group, centered slightly low to leave room for visual weight -->
+  <g transform="translate(512, 540)" filter="url(#petalShadow)">
+
+    <!-- 5 petals at 72° intervals.
+         Each petal: rounded almost-circular shape, slight taper toward center.
+         Stroke: thin dark blue rim for definition at small sizes. -->
+    <g>
+      <g transform="rotate(0)">
+        <ellipse cx="0" cy="-205" rx="155" ry="170" fill="url(#petal)"
+                 stroke="#1F4488" stroke-width="5" stroke-opacity="0.45"/>
+      </g>
+      <g transform="rotate(72)">
+        <ellipse cx="0" cy="-205" rx="155" ry="170" fill="url(#petal)"
+                 stroke="#1F4488" stroke-width="5" stroke-opacity="0.45"/>
+      </g>
+      <g transform="rotate(144)">
+        <ellipse cx="0" cy="-205" rx="155" ry="170" fill="url(#petal)"
+                 stroke="#1F4488" stroke-width="5" stroke-opacity="0.45"/>
+      </g>
+      <g transform="rotate(216)">
+        <ellipse cx="0" cy="-205" rx="155" ry="170" fill="url(#petal)"
+                 stroke="#1F4488" stroke-width="5" stroke-opacity="0.45"/>
+      </g>
+      <g transform="rotate(288)">
+        <ellipse cx="0" cy="-205" rx="155" ry="170" fill="url(#petal)"
+                 stroke="#1F4488" stroke-width="5" stroke-opacity="0.45"/>
+      </g>
+    </g>
+
+    <!-- White inner ring (botanically: Myosotis has a small white ring between petals and yellow center) -->
+    <circle cx="0" cy="0" r="115" fill="#FFFFFF"/>
+
+    <!-- Yellow center -->
+    <circle cx="0" cy="0" r="95" fill="url(#center)"
+            stroke="#A87708" stroke-width="3" stroke-opacity="0.4"/>
+
+    <!-- Small highlight on yellow center -->
+    <ellipse cx="-25" cy="-30" rx="38" ry="28" fill="url(#highlight)"/>
+  </g>
+</svg>

@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=Vergissmeinnicht
+GenericName=Task Manager
+GenericName[de]=Aufgabenverwaltung
+Comment=Taskwarrior client for KDE Plasma
+Comment[de]=Taskwarrior-Client für KDE Plasma
+Exec=vergissmeinnicht
+Icon=de.hnsstrk.vergissmeinnicht
+Terminal=false
+Categories=Office;ProjectManagement;Qt;KDE;
+Keywords=task;todo;taskwarrior;taskchampion;aufgaben;
+Keywords[de]=Aufgaben;Taskwarrior;Todo;Erinnerung;
+StartupNotify=true

@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    # Arch-Container: gleiche Qt/KF6-Versionen wie die Zielplattform (Rolling
+    # Release, aktuelles Kirigami). Ubuntu-LTS-Pakete sind für Kirigami 6 zu alt.
+    container: archlinux:latest
+    steps:
+      - name: Systempakete installieren
+        run: |
+          pacman -Syu --noconfirm \
+            base-devel git rust clang \
+            qt6-base qt6-declarative \
+            kirigami kirigami-addons ki18n kiconthemes \
+            qqc2-desktop-style breeze-icons \
+            gettext
+
+      - uses: actions/checkout@v4
+
+      - name: Cargo-Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: cargo-${{ runner.os }}-${{ hashFiles('Cargo.lock') }}
+
+      - name: Build
+        run: cargo build --workspace
+
+      - name: Tests
+        run: cargo test --workspace
+
+      - name: Clippy
+        run: |
+          rustup component add clippy 2>/dev/null || pacman -S --noconfirm rust-src || true
+          cargo clippy --workspace -- -D warnings
+
+      - name: Übersetzungen validieren
+        run: |
+          for po in po/*.po; do msgfmt --check -o /dev/null "$po"; done
+
+      - name: Desktop-Datei validieren
+        run: |
+          pacman -S --noconfirm desktop-file-utils appstream
+          desktop-file-validate data/de.hnsstrk.vergissmeinnicht.desktop
+          appstreamcli validate --no-net data/de.hnsstrk.vergissmeinnicht.metainfo.xml || true
