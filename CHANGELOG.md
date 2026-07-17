@@ -5,6 +5,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-07-17
+
+### Fixed
+
+- Saving sync settings gave no feedback inside the settings dialog: results
+  and errors were reported via the main view's banner, which is hidden
+  behind the modal dialog. The sync section now shows an inline status line
+  ("Saved — last synchronized: …", "Synchronizing …", or the concrete error
+  in red).
+- Duplicate-binding warning for the search shortcut (StandardKey.Find).
+
+### Added
+
+- `--test-secrets` (bridge-level) and `--test-settings-ui` (real synthetic
+  clicks + typing into the settings dialog, save button, persistence and
+  reopen checks) — both verified against a live local sync server.
+
 ## [0.2.0] - 2026-07-17
 
 ### Added
@@ -100,7 +117,8 @@ feature-comparable for the daily-driver workflows.
 - Packaging: desktop file, scalable icon, AppStream metainfo,
   `scripts/install-local.sh`, CI and release workflows (Arch container).
 
-[Unreleased]: https://github.com/hnsstrk/vergissmeinnicht-kde/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/hnsstrk/vergissmeinnicht-kde/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/hnsstrk/vergissmeinnicht-kde/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/hnsstrk/vergissmeinnicht-kde/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/hnsstrk/vergissmeinnicht-kde/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/hnsstrk/vergissmeinnicht-kde/releases/tag/v0.1.0

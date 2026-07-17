@@ -27,6 +27,35 @@ FormCard.FormCardDialog {
         backups = JSON.parse(app.backupsJson() || "[]")
     }
 
+    // Speichern-Sequenz des Sync-Bereichs — vom Button und vom UI-Test genutzt.
+    function saveSync() {
+        app.clearError()
+        syncStatusLine.saved = false
+        app.setSyncServerUrlSetting(serverUrlField.text)
+        if (app.setSyncCredentials(clientIdField.text, secretField.text)) {
+            syncStatusLine.saved = true
+            app.startSync()
+        }
+    }
+
+    // Aktuelle Feldwerte für den synthetischen UI-Test (--test-settings-ui).
+    function testValues() {
+        return { url: serverUrlField.text, clientId: clientIdField.text, secret: secretField.text }
+    }
+
+    // Zielpunkte für den synthetischen UI-Test (--test-settings-ui).
+    function testPoints() {
+        function center(item) {
+            return item.mapToItem(null, item.width / 2, item.height / 2)
+        }
+        return {
+            url: center(serverUrlField),
+            clientId: center(clientIdField),
+            secret: center(secretField),
+            save: center(saveSyncButton)
+        }
+    }
+
     FormCard.FormHeader {
         title: i18n("Allgemein")
     }
@@ -110,20 +139,38 @@ FormCard.FormCardDialog {
     }
 
     FormCard.FormButtonDelegate {
+        id: saveSyncButton
         text: i18n("Speichern und Sync testen")
         icon.name: "state-sync"
         enabled: !app.isSyncing
-        onClicked: {
-            app.setSyncServerUrlSetting(serverUrlField.text)
-            if (app.setSyncCredentials(clientIdField.text, secretField.text))
-                app.startSync()
-        }
+        onClicked: dialog.saveSync()
     }
 
+    // Direktes Feedback IM Dialog — das Fehlerbanner der Hauptansicht liegt
+    // hinter dem modalen Dialog und wäre unsichtbar.
     FormCard.FormTextDelegate {
-        visible: app.lastSyncAt > 0
-        text: i18n("Zuletzt synchronisiert")
-        description: Qt.formatDateTime(new Date(app.lastSyncAt * 1000), Locale.LongFormat)
+        id: syncStatusLine
+        property bool saved: false
+        visible: saved || app.isSyncing || app.errorMessage.length > 0 || app.lastSyncAt > 0
+        text: i18n("Status")
+        description: {
+            if (app.errorMessage.length > 0)
+                return app.errorMessage
+            if (app.isSyncing)
+                return i18n("Synchronisiere …")
+            if (saved && app.lastSyncAt > 0)
+                return i18n("Gespeichert — zuletzt synchronisiert: %1",
+                            Qt.formatDateTime(new Date(app.lastSyncAt * 1000), Locale.LongFormat))
+            if (saved)
+                return i18n("Gespeichert.")
+            if (app.lastSyncAt > 0)
+                return i18n("Zuletzt synchronisiert: %1",
+                            Qt.formatDateTime(new Date(app.lastSyncAt * 1000), Locale.LongFormat))
+            return ""
+        }
+        descriptionItem.color: app.errorMessage.length > 0
+                               ? Kirigami.Theme.negativeTextColor
+                               : Kirigami.Theme.positiveTextColor
     }
 
     FormCard.FormHeader {

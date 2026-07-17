@@ -688,7 +688,7 @@ Kirigami.ScrollablePage {
 
     // ── Seiten-Shortcuts ────────────────────────────────────────────────────
     Shortcut {
-        sequence: StandardKey.Find
+        sequences: [StandardKey.Find]
         onActivated: searchField.forceActiveFocus()
     }
     Shortcut {
@@ -702,7 +702,7 @@ Kirigami.ScrollablePage {
         onActivated: root.openDetail(page.selection[0])
     }
     Shortcut {
-        sequence: StandardKey.SelectAll
+        sequences: [StandardKey.SelectAll]
         enabled: !searchField.activeFocus
         onActivated: page.selection = Array.from(app.visibleUuids(0, taskList.count - 1))
     }

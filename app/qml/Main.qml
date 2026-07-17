@@ -84,7 +84,156 @@ Kirigami.ApplicationWindow {
                 testGrabTimer.start()
             } else if (arg === "--test-flow") {
                 testFlowTimer.start()
+            } else if (arg === "--test-secrets") {
+                testSecretsTimer.start()
+            } else if (arg === "--test-settings-ui") {
+                testSettingsUiTimer.start()
             }
+        }
+    }
+
+    // UI-Test des Einstellungsdialogs mit echten Klicks/Tastatur: Felder
+    // anklicken, Werte tippen, „Speichern und Sync testen“ klicken, Persistenz
+    // und Wiederöffnen prüfen. Braucht einen lokalen Sync-Server auf :18080.
+    Timer {
+        id: testSettingsUiTimer
+        property int step: 0
+        property int failures: 0
+        readonly property string url: "http://127.0.0.1:18080"
+        readonly property string cid: "550e8400-e29b-41d4-a716-446655440000"
+        readonly property string secret: "ui-test-geheimnis"
+        interval: 700
+        repeat: true
+
+        function check(cond, label) {
+            console.log((cond ? "SETTINGS-OK  " : "SETTINGS-FAIL ") + label
+                        + (app.errorMessage.length > 0 ? "  [Fehler: " + app.errorMessage + "]" : ""))
+            if (!cond) failures++
+        }
+        function typeText(text) {
+            for (const ch of text) {
+                const key = ch === " " ? Qt.Key_Space : ch.toUpperCase().charCodeAt(0)
+                app.testKey(key, ch === ch.toUpperCase() && ch !== ch.toLowerCase()
+                            ? Qt.ShiftModifier : 0, ch)
+            }
+        }
+
+        onTriggered: {
+            step++
+            switch (step) {
+            case 1:
+                settingsDialog.openSettings()
+                break
+            case 2: {
+                const p = settingsDialog.testPoints().url
+                app.testClick(p.x, p.y, Qt.LeftButton, 0, false)
+                typeText(url)
+                break
+            }
+            case 3: {
+                const p = settingsDialog.testPoints().clientId
+                app.testClick(p.x, p.y, Qt.LeftButton, 0, false)
+                typeText(cid)
+                break
+            }
+            case 4: {
+                const p = settingsDialog.testPoints().secret
+                app.testClick(p.x, p.y, Qt.LeftButton, 0, false)
+                typeText(secret)
+                const v = settingsDialog.testValues()
+                check(v.url === url && v.clientId === cid && v.secret === secret,
+                      "Getippte Werte stehen in den Feldern")
+                break
+            }
+            case 5: {
+                const p = settingsDialog.testPoints().save
+                app.testClick(p.x, p.y, Qt.LeftButton, 0, false)
+                break
+            }
+            case 6:
+            case 7:
+            case 8:
+            case 9:
+                // Sync-Abschluss abwarten.
+                if (app.isSyncing)
+                    return
+                step = 9
+                break
+            case 10: {
+                check(app.syncClientId() === cid, "Client-ID persistiert (Secret Service)")
+                check(app.syncSecret() === secret, "Secret persistiert (Secret Service)")
+                check(app.syncServerUrl === url, "Server-URL persistiert (Config)")
+                check(app.syncConfigured, "syncConfigured true")
+                check(app.errorMessage.length === 0, "kein Fehler")
+                check(app.lastSyncAt > 0, "Test-Sync erfolgreich")
+                app.grabWindowTo("/tmp/settings-ui-after-save.png")
+                settingsDialog.close()
+                break
+            }
+            case 11:
+                // Wiederöffnen: Felder müssen die gespeicherten Werte zeigen.
+                settingsDialog.openSettings()
+                break
+            case 12: {
+                const v = settingsDialog.testValues()
+                check(v.url === url && v.clientId === cid && v.secret === secret,
+                      "Wiederöffnen lädt gespeicherte Werte")
+                // Aufräumen.
+                app.setSyncCredentials("", "")
+                app.setSyncServerUrlSetting("")
+                console.log(failures === 0
+                            ? "SETTINGS-ENDE: alles grün"
+                            : `SETTINGS-ENDE: ${failures} Fehler`)
+                testSettingsUiTimer.running = false
+                Qt.quit()
+                break
+            }
+            }
+        }
+    }
+
+    // Repliziert exakt die „Speichern und Sync testen“-Sequenz des
+    // Einstellungsdialogs und protokolliert jeden Schritt (SECRETS-…).
+    Timer {
+        id: testSecretsTimer
+        interval: 1500
+        onTriggered: {
+            let failures = 0
+            function check(cond, label) {
+                console.log((cond ? "SECRETS-OK  " : "SECRETS-FAIL ") + label
+                            + (app.errorMessage.length > 0 ? "  [Fehler: " + app.errorMessage + "]" : ""))
+                if (!cond) failures++
+            }
+            const url = "http://127.0.0.1:18080"
+            const cid = "550e8400-e29b-41d4-a716-446655440000"
+            const secret = "test-geheimnis-123"
+
+            app.setSyncServerUrlSetting(url)
+            check(app.syncServerUrl === url, "Server-URL gesetzt")
+
+            const credsOk = app.setSyncCredentials(cid, secret)
+            check(credsOk, "setSyncCredentials meldet Erfolg")
+            check(app.syncClientId() === cid, "Client-ID zurückgelesen")
+            check(app.syncSecret() === secret, "Secret zurückgelesen")
+            check(app.syncConfigured, "syncConfigured ist true")
+
+            app.startSync()
+            console.log("SECRETS-INFO startSync ausgelöst, isSyncing=" + app.isSyncing)
+            syncWaiter.start()
+        }
+    }
+    Timer {
+        id: syncWaiter
+        interval: 8000
+        onTriggered: {
+            console.log("SECRETS-INFO nach Sync: isSyncing=" + app.isSyncing
+                        + " lastSyncAt=" + app.lastSyncAt
+                        + " Fehler=" + (app.errorMessage.length > 0 ? app.errorMessage : "(keiner)"))
+            // Aufräumen: Test-Credentials wieder entfernen.
+            app.setSyncCredentials("", "")
+            app.setSyncServerUrlSetting("")
+            console.log("SECRETS-ENDE")
+            Qt.quit()
         }
     }
 
