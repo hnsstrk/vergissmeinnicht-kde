@@ -161,15 +161,54 @@ FormCard.FormCardDialog {
         }
     }
 
+    FormCard.FormHeader {
+        title: i18n("Abhängigkeiten")
+    }
+
     FormCard.FormTextDelegate {
-        visible: dialog.task && (dialog.task.isBlocked || dialog.task.isBlocking)
-        text: i18n("Abhängigkeiten")
-        description: {
-            if (!dialog.task) return ""
-            const parts = []
-            if (dialog.task.isBlocked) parts.push(i18n("blockiert durch andere Aufgaben"))
-            if (dialog.task.isBlocking) parts.push(i18n("blockiert andere Aufgaben"))
-            return parts.join(" · ")
+        visible: dialog.task && dialog.task.isBlocking
+        description: i18n("Diese Aufgabe blockiert andere Aufgaben.")
+    }
+
+    // Bestehende Abhängigkeiten (hängt ab von …) mit Titel-Auflösung.
+    Repeater {
+        model: dialog.task ? dialog.task.depends : []
+        FormCard.FormTextDelegate {
+            required property var modelData
+            readonly property var depTask: JSON.parse(app.taskJson(modelData))
+            text: depTask
+                  ? i18n("Hängt ab von: %1", depTask.description)
+                  : i18n("Hängt ab von unbekannter Aufgabe (%1)", modelData.substring(0, 8))
+            description: depTask && depTask.status !== "pending" ? i18n("Erledigt") : ""
+            trailing: QQC2.ToolButton {
+                icon.name: "edit-delete-remove"
+                QQC2.ToolTip.text: i18n("Abhängigkeit entfernen")
+                QQC2.ToolTip.visible: hovered
+                onClicked: {
+                    app.removeTaskDependency(dialog.uuid, modelData)
+                    dialog.task = JSON.parse(app.taskJson(dialog.uuid))
+                }
+            }
+        }
+    }
+
+    FormCard.FormComboBoxDelegate {
+        id: addDependencyCombo
+        text: i18n("Abhängigkeit hinzufügen")
+        displayText: i18n("Aufgabe wählen …")
+        readonly property var candidates: {
+            if (!dialog.task) return []
+            const existing = dialog.task.depends ?? []
+            return JSON.parse(app.pendingTasksJson())
+                .filter(t => t.uuid !== dialog.uuid && existing.indexOf(t.uuid) === -1)
+        }
+        model: candidates.map(t => (t.wsId !== null ? "#" + t.wsId + " " : "") + t.title)
+        onActivated: index => {
+            const target = candidates[index]
+            if (target) {
+                app.addTaskDependency(dialog.uuid, target.uuid)
+                dialog.task = JSON.parse(app.taskJson(dialog.uuid))
+            }
         }
     }
 

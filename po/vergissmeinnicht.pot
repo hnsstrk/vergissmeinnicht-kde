@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: vergissmeinnicht 0.1.1\n"
+"Project-Id-Version: vergissmeinnicht 0.2.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-17 08:37+0200\n"
+"POT-Creation-Date: 2026-07-17 11:07+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,6 +16,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
 
 #: app/qml/AboutDialog.qml:9 app/qml/TasksPage.qml:284
 msgid "Über Vergissmeinnicht"
@@ -29,6 +30,10 @@ msgstr ""
 msgid ""
 "Nativer KDE-Client für Taskwarrior 3.x auf Basis von TaskChampion.\n"
 "Kirigami-Oberfläche, Rust-Kern via cxx-qt."
+msgstr ""
+
+#: app/qml/AboutDialog.qml:51
+msgid "MIT-Lizenz"
 msgstr ""
 
 #: app/qml/DetailDialog.qml:16
@@ -135,8 +140,9 @@ msgstr ""
 msgid "Status"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:147 app/qml/TaskDelegate.qml:52
-#: app/qml/TasksPage.qml:171 app/qml/TasksPage.qml:363
+#: app/qml/DetailDialog.qml:147 app/qml/DetailDialog.qml:182
+#: app/qml/TaskDelegate.qml:58 app/qml/TasksPage.qml:171
+#: app/qml/TasksPage.qml:363
 msgid "Erledigt"
 msgstr ""
 
@@ -152,36 +158,52 @@ msgstr ""
 msgid "Ausstehend"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:155 app/qml/TaskDelegate.qml:52
+#: app/qml/DetailDialog.qml:155 app/qml/TaskDelegate.qml:58
 #: app/qml/TasksPage.qml:368
 msgid "Reaktivieren"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:166
+#: app/qml/DetailDialog.qml:165
 msgid "Abhängigkeiten"
 msgstr ""
 
 #: app/qml/DetailDialog.qml:170
-msgid "blockiert durch andere Aufgaben"
+msgid "Diese Aufgabe blockiert andere Aufgaben."
 msgstr ""
 
-#: app/qml/DetailDialog.qml:171
-msgid "blockiert andere Aufgaben"
+#: app/qml/DetailDialog.qml:180
+msgid "Hängt ab von: %1"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:177 app/qml/QuickCaptureDialog.qml:102
+#: app/qml/DetailDialog.qml:181
+msgid "Hängt ab von unbekannter Aufgabe (%1)"
+msgstr ""
+
+#: app/qml/DetailDialog.qml:185
+msgid "Abhängigkeit entfernen"
+msgstr ""
+
+#: app/qml/DetailDialog.qml:197
+msgid "Abhängigkeit hinzufügen"
+msgstr ""
+
+#: app/qml/DetailDialog.qml:198
+msgid "Aufgabe wählen …"
+msgstr ""
+
+#: app/qml/DetailDialog.qml:216 app/qml/QuickCaptureDialog.qml:102
 msgid "Notizen"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:188
+#: app/qml/DetailDialog.qml:227
 msgid "Notiz entfernen"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:200
+#: app/qml/DetailDialog.qml:239
 msgid "Neue Notiz"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:213 app/qml/TasksPage.qml:200
+#: app/qml/DetailDialog.qml:252 app/qml/TasksPage.qml:200
 msgid "Angelegt"
 msgstr ""
 
@@ -312,41 +334,41 @@ msgstr ""
 msgid "Gespeicherte Suche"
 msgstr ""
 
-#: app/qml/Main.qml:41 app/qml/SettingsDialog.qml:38 app/qml/Sidebar.qml:30
+#: app/qml/Main.qml:41 app/qml/SettingsDialog.qml:38 app/qml/Sidebar.qml:43
 msgid "Alle"
 msgstr ""
 
 #: app/qml/Main.qml:42 app/qml/QuickCaptureDialog.qml:123
-#: app/qml/SettingsDialog.qml:38 app/qml/Sidebar.qml:24
+#: app/qml/SettingsDialog.qml:38 app/qml/Sidebar.qml:37
 #: app/qml/TasksPage.qml:444
 msgid "Heute"
 msgstr ""
 
-#: app/qml/Main.qml:43 app/qml/SettingsDialog.qml:38 app/qml/Sidebar.qml:25
+#: app/qml/Main.qml:43 app/qml/SettingsDialog.qml:38 app/qml/Sidebar.qml:38
 msgid "Zu erledigen"
 msgstr ""
 
-#: app/qml/Main.qml:44 app/qml/SettingsDialog.qml:38 app/qml/Sidebar.qml:26
+#: app/qml/Main.qml:44 app/qml/SettingsDialog.qml:38 app/qml/Sidebar.qml:39
 msgid "Überfällig"
 msgstr ""
 
-#: app/qml/Main.qml:45 app/qml/SettingsDialog.qml:38 app/qml/Sidebar.qml:27
+#: app/qml/Main.qml:45 app/qml/SettingsDialog.qml:38 app/qml/Sidebar.qml:40
 msgid "Bald fällig"
 msgstr ""
 
-#: app/qml/Main.qml:46 app/qml/SettingsDialog.qml:38 app/qml/Sidebar.qml:28
+#: app/qml/Main.qml:46 app/qml/SettingsDialog.qml:38 app/qml/Sidebar.qml:41
 msgid "Geplant"
 msgstr ""
 
-#: app/qml/Main.qml:47 app/qml/Sidebar.qml:29
+#: app/qml/Main.qml:47 app/qml/Sidebar.qml:42
 msgid "Wartend"
 msgstr ""
 
-#: app/qml/Main.qml:48 app/qml/TaskDelegate.qml:137 app/qml/TasksPage.qml:251
+#: app/qml/Main.qml:48 app/qml/TaskDelegate.qml:143 app/qml/TasksPage.qml:251
 msgid "Blockiert"
 msgstr ""
 
-#: app/qml/Main.qml:49 app/qml/TaskDelegate.qml:143 app/qml/TasksPage.qml:255
+#: app/qml/Main.qml:49 app/qml/TaskDelegate.qml:149 app/qml/TasksPage.qml:255
 msgid "Blockierend"
 msgstr ""
 
@@ -354,7 +376,7 @@ msgstr ""
 msgid "Nicht blockiert"
 msgstr ""
 
-#: app/qml/Main.qml:51 app/qml/SettingsDialog.qml:38 app/qml/Sidebar.qml:23
+#: app/qml/Main.qml:51 app/qml/SettingsDialog.qml:38 app/qml/Sidebar.qml:36
 msgid "Eingang"
 msgstr ""
 
@@ -382,7 +404,7 @@ msgstr ""
 msgid "Priorität: %1"
 msgstr ""
 
-#: app/qml/QuickCaptureDialog.qml:116 app/qml/Sidebar.qml:102
+#: app/qml/QuickCaptureDialog.qml:116 app/qml/Sidebar.qml:127
 msgid "Tags"
 msgstr ""
 
@@ -531,7 +553,7 @@ msgstr ""
 msgid "Backup-Ordner öffnen"
 msgstr ""
 
-#: app/qml/SettingsDialog.qml:155 app/qml/SettingsDialog.qml:167
+#: app/qml/SettingsDialog.qml:155 app/qml/SettingsDialog.qml:186
 msgid "Backup wiederherstellen"
 msgstr ""
 
@@ -539,53 +561,77 @@ msgstr ""
 msgid "Noch keine Backups vorhanden."
 msgstr ""
 
-#: app/qml/SettingsDialog.qml:169
+#: app/qml/SettingsDialog.qml:166
+msgid "Wartung — Reparatur"
+msgstr ""
+
+#: app/qml/SettingsDialog.qml:172
+msgid "Legacy-Aufgaben reparieren"
+msgstr ""
+
+#: app/qml/SettingsDialog.qml:175
+msgid ""
+"Überführt Token-Syntax in Titeln (+tag, project:, due:, priority:) in echte "
+"Eigenschaften."
+msgstr ""
+
+#: app/qml/SettingsDialog.qml:177
+msgid "Reparatur fehlgeschlagen — Details im Fehlerbanner."
+msgstr ""
+
+#: app/qml/SettingsDialog.qml:178
+msgid "1 Aufgabe repariert."
+msgid_plural "%1 Aufgaben repariert."
+msgstr[0] ""
+msgstr[1] ""
+
+#: app/qml/SettingsDialog.qml:188
 msgid ""
 "Die aktuelle Replica wird durch „%1“ ersetzt. Vorher wird automatisch ein "
 "Sicherheits-Backup angelegt."
 msgstr ""
 
-#: app/qml/SettingsDialog.qml:174
+#: app/qml/SettingsDialog.qml:193
 msgid "Wiederherstellen"
 msgstr ""
 
-#: app/qml/Sidebar.qml:56
+#: app/qml/Sidebar.qml:69
 msgid "Gespeicherte Suchen"
 msgstr ""
 
-#: app/qml/Sidebar.qml:79
+#: app/qml/Sidebar.qml:92
 msgid "Projekte"
 msgstr ""
 
-#: app/qml/Sidebar.qml:133 app/qml/Sidebar.qml:149 app/qml/Sidebar.qml:166
+#: app/qml/Sidebar.qml:158 app/qml/Sidebar.qml:174 app/qml/Sidebar.qml:191
 msgid "Umbenennen …"
 msgstr ""
 
-#: app/qml/Sidebar.qml:135
+#: app/qml/Sidebar.qml:160
 msgid "Projekt umbenennen"
 msgstr ""
 
-#: app/qml/Sidebar.qml:139 app/qml/Sidebar.qml:155
+#: app/qml/Sidebar.qml:164 app/qml/Sidebar.qml:180
 msgid "Aus allen Aufgaben entfernen"
 msgstr ""
 
-#: app/qml/Sidebar.qml:151
+#: app/qml/Sidebar.qml:176
 msgid "Tag umbenennen"
 msgstr ""
 
-#: app/qml/Sidebar.qml:168
+#: app/qml/Sidebar.qml:193
 msgid "Suche umbenennen"
 msgstr ""
 
-#: app/qml/Sidebar.qml:172 app/qml/TasksPage.qml:178 app/qml/TasksPage.qml:472
+#: app/qml/Sidebar.qml:197 app/qml/TasksPage.qml:178 app/qml/TasksPage.qml:472
 msgid "Löschen"
 msgstr ""
 
-#: app/qml/TaskDelegate.qml:122
+#: app/qml/TaskDelegate.qml:128
 msgid "Geplant ab %1"
 msgstr ""
 
-#: app/qml/TaskDelegate.qml:127
+#: app/qml/TaskDelegate.qml:133
 msgid "Wartet bis %1"
 msgstr ""
 

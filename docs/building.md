@@ -64,7 +64,16 @@ XDG_DATA_HOME=/tmp/vmn-test XDG_CONFIG_HOME=/tmp/vmn-test-cfg \
 
 # Render the window (optionally with a dialog) into a PNG and quit:
 ./target/debug/vergissmeinnicht --test-dialog=detail --test-grab=/tmp/shot.png
+
+# Interaction test: injects synthetic QMouseEvent/QKeyEvent into the window
+# (click selection, Ctrl/Shift multi-selection, checkbox, double click,
+# context menu, quick-capture typing). Needs the seeded demo dataset.
+./target/debug/vergissmeinnicht --test-input
 ```
+
+The synthetic events carry monotonically increasing fake timestamps — without
+them QtQuick's delivery (Flickable, double-click detection) misbehaves; QTest
+does the same internally.
 
 ### Sync end-to-end
 

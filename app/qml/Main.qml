@@ -172,6 +172,33 @@ Kirigami.ApplicationWindow {
             check(!JSON.parse(app.savedSearchesJson).some(s => s.name === "FlowSuche"),
                   "Saved Search gelöscht")
 
+            // 8b. Abhängigkeiten (Editor-Pfad)
+            check(app.quickCaptureCommit("Flow-Blocker +flowtest"), "Blocker angelegt")
+            app.applySearch("tag:flowtest status:offen")
+            const beide = uuids().map(taskOf)
+            const blockerTask = beide.find(x => x.description === "Flow-Blocker")
+            app.addTaskDependency(folge.uuid, blockerTask.uuid)
+            check(taskOf(folge.uuid).depends.indexOf(blockerTask.uuid) !== -1
+                  && taskOf(folge.uuid).isBlocked && taskOf(blockerTask.uuid).isBlocking,
+                  "Abhängigkeit gesetzt (blocked/blocking)")
+            check(JSON.parse(app.pendingTasksJson()).some(t => t.uuid === blockerTask.uuid),
+                  "pendingTasksJson enthält Blocker")
+            app.removeTaskDependency(folge.uuid, blockerTask.uuid)
+            check(taskOf(folge.uuid).depends.length === 0 && !taskOf(folge.uuid).isBlocked,
+                  "Abhängigkeit entfernt")
+            app.applySearch("")
+
+            // 8c. Legacy-Reparatur: Tokens im Titel → Properties
+            check(app.addTaskDetailed("Legacy-Aufgabe +flowtest project:flowlegacy priority:H", "", "", 0, "", "", ""),
+                  "Legacy-Aufgabe angelegt")
+            const repariert = app.repairLegacyTasks()
+            check(repariert >= 1, "repairLegacyTasks meldet Reparatur")
+            app.applyFilter("project:flowlegacy")
+            const legacy = uuids().map(taskOf).find(x => x.description === "Legacy-Aufgabe")
+            check(!!legacy && legacy.project === "flowlegacy"
+                  && legacy.tags.indexOf("flowtest") !== -1 && legacy.priority === "H",
+                  "Legacy-Tokens in Properties überführt")
+
             // 9. Tag/Projekt-Management
             app.renameTag("flowtest", "flowfertig")
             check(taskOf(folge.uuid).tags.indexOf("flowfertig") !== -1

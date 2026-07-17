@@ -21,7 +21,7 @@ jobs:
             qqc2-desktop-style breeze-icons \
             gettext
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Cargo-Cache
         uses: actions/cache@v4
@@ -63,3 +63,11 @@ jobs:
           if grep -E "I18N_ARGUMENT_MISSING|kf.i18n:.*instead of" /tmp/flow.log; then
             echo "::error::i18n-Argumentfehler im Flow-Log"; exit 1
           fi
+
+      - name: Interaktionstest (synthetische Events)
+        run: |
+          export XDG_DATA_HOME=/tmp/vmn-input XDG_CONFIG_HOME=/tmp/vmn-input-cfg
+          export QT_QPA_PLATFORM=offscreen QT_FORCE_STDERR_LOGGING=1
+          cargo run -q -p vergissmeinnicht-core --example seed_demo -- /tmp/vmn-input/vergissmeinnicht/replica
+          timeout 120 ./target/debug/vergissmeinnicht --test-input > /tmp/input.log 2>&1 || true
+          grep -q "INPUT-ENDE: alles grün" /tmp/input.log || { cat /tmp/input.log; exit 1; }

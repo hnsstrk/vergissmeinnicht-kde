@@ -553,6 +553,139 @@ Kirigami.ScrollablePage {
         }
     }
 
+    // ── Synthetischer Interaktionstest (--test-input) ───────────────────────
+    // Injiziert echte QMouseEvent/QKeyEvent in das Fenster (C++-Shim) und prüft
+    // das Klick-Routing: Selektion, Strg/Umschalt-Mehrfachauswahl, Doppelklick,
+    // Kontextmenü, Checkbox, Texteingabe in der Schnelleingabe. Nur mit
+    // Wegwerf-Daten (XDG_DATA_HOME) verwenden. Ausgabe: INPUT-OK/INPUT-FAIL.
+    Timer {
+        id: inputFlow
+        property int step: 0
+        property int failures: 0
+        property string doneUuid: ""
+        property int pendingBefore: 0
+        interval: 500
+        repeat: true
+        running: Qt.application.arguments.indexOf("--test-input") !== -1
+
+        function check(cond, label) {
+            console.log((cond ? "INPUT-OK  " : "INPUT-FAIL ") + label)
+            if (!cond) failures++
+        }
+        function rowPoint(i, fx) {
+            const item = taskList.itemAtIndex(i)
+            if (!item) return null
+            return item.mapToItem(null, item.width * fx, item.height / 2)
+        }
+        function typeText(text) {
+            for (const ch of text) {
+                const key = ch === " " ? Qt.Key_Space : ch.toUpperCase().charCodeAt(0)
+                app.testKey(key, ch === ch.toUpperCase() && ch !== ch.toLowerCase()
+                            ? Qt.ShiftModifier : 0, ch)
+            }
+        }
+
+        onTriggered: {
+            step++
+            switch (step) {
+            case 1: {
+                // Deterministische Ausgangslage (Demo-Daten sichtbar).
+                app.applyFilter("todo")
+                break
+            }
+            case 2: {
+                // Einfacher Klick auf Zeile 0 → Einzelauswahl.
+                const p = rowPoint(0, 0.5)
+                app.testClick(p.x, p.y, Qt.LeftButton, 0, false)
+                break
+            }
+            case 3: {
+                check(page.selection.length === 1, "Klick: Einzelauswahl")
+                const p = rowPoint(2, 0.5)
+                app.testClick(p.x, p.y, Qt.LeftButton, Qt.ControlModifier, false)
+                break
+            }
+            case 4: {
+                check(page.selection.length === 2, "Strg+Klick: Auswahl erweitert")
+                const p = rowPoint(4, 0.5)
+                app.testClick(p.x, p.y, Qt.LeftButton, Qt.ShiftModifier, false)
+                break
+            }
+            case 5: {
+                check(page.selection.length === 3, "Umschalt+Klick: Bereichsauswahl (2–4)")
+                page.clearSelection()
+                // Checkbox von Zeile 0 → Erledigt.
+                doneUuid = Array.from(app.visibleUuids(0, 0))[0]
+                pendingBefore = taskList.count
+                const p = taskList.itemAtIndex(0).checkboxPoint()
+                app.testClick(p.x, p.y, Qt.LeftButton, 0, false)
+                break
+            }
+            case 6: {
+                const t = JSON.parse(app.taskJson(doneUuid))
+                check(t.status === "completed", "Checkbox-Klick: Aufgabe erledigt")
+                app.reactivateTask(doneUuid)
+                break
+            }
+            case 7: {
+                // Doppelklick auf Zeile 1 → Detail-Dialog.
+                const p = rowPoint(1, 0.5)
+                app.testClick(p.x, p.y, Qt.LeftButton, 0, true)
+                break
+            }
+            case 8: {
+                check(detailDialog.visible, "Doppelklick: Detail-Dialog offen")
+                detailDialog.close()
+                break
+            }
+            case 9: {
+                // Rechtsklick auf Zeile 0 → Kontextmenü.
+                const p = rowPoint(0, 0.5)
+                app.testClick(p.x, p.y, Qt.RightButton, 0, false)
+                break
+            }
+            case 10: {
+                check(contextMenu.visible, "Rechtsklick: Kontextmenü offen")
+                contextMenu.close()
+                break
+            }
+            case 11: {
+                // Schnelleingabe: echte Texteingabe + Enter.
+                quickCaptureDialog.openCapture()
+                break
+            }
+            case 12: {
+                typeText("Input-Testaufgabe +inputflow")
+                break
+            }
+            case 13: {
+                app.testKey(Qt.Key_Return, 0, "\r")
+                break
+            }
+            case 14: {
+                check(!quickCaptureDialog.visible, "Enter: Schnelleingabe committet und geschlossen")
+                app.applySearch("tag:inputflow")
+                const treffer = Array.from(app.visibleUuids(0, 99))
+                check(treffer.length === 1, "Getippte Aufgabe existiert")
+                if (treffer.length === 1) {
+                    const t = JSON.parse(app.taskJson(treffer[0]))
+                    check(t.description === "Input-Testaufgabe", "Getippter Titel korrekt")
+                    app.deleteTasks(treffer)
+                }
+                app.applySearch("")
+                break
+            }
+            default: {
+                console.log(failures === 0
+                            ? "INPUT-ENDE: alles grün"
+                            : `INPUT-ENDE: ${failures} Fehler`)
+                inputFlow.running = false
+                Qt.quit()
+            }
+            }
+        }
+    }
+
     // ── Seiten-Shortcuts ────────────────────────────────────────────────────
     Shortcut {
         sequence: StandardKey.Find

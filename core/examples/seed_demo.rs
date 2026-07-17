@@ -88,7 +88,8 @@ const DEMO_TASKS: &[Demo] = &[
     },
     Demo {
         description: "Declutter the basement",
-        project: Some("household"),
+        // Gepunktetes Subprojekt — zeigt die Projekt-Hierarchie in der Sidebar.
+        project: Some("household.basement"),
         tags: &["project"],
         due_offset_days: None,
         priority: Some("L"),

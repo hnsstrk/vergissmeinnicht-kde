@@ -162,6 +162,25 @@ FormCard.FormCardDialog {
         description: i18n("Noch keine Backups vorhanden.")
     }
 
+    FormCard.FormHeader {
+        title: i18n("Wartung — Reparatur")
+    }
+
+    FormCard.FormButtonDelegate {
+        id: repairButton
+        property int lastResult: -2
+        text: i18n("Legacy-Aufgaben reparieren")
+        description: {
+            if (lastResult === -2)
+                return i18n("Überführt Token-Syntax in Titeln (+tag, project:, due:, priority:) in echte Eigenschaften.")
+            if (lastResult < 0)
+                return i18n("Reparatur fehlgeschlagen — Details im Fehlerbanner.")
+            return i18np("1 Aufgabe repariert.", "%1 Aufgaben repariert.", lastResult)
+        }
+        icon.name: "tools-wizard"
+        onClicked: lastResult = app.repairLegacyTasks()
+    }
+
     Kirigami.PromptDialog {
         id: restoreConfirm
         title: i18n("Backup wiederherstellen")

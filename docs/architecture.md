@@ -131,6 +131,11 @@ locked and no input injection was possible):
   and quits.
 - `--test-flow` runs a scripted end-to-end smoke test through the real
   QML→bridge invokables (capture, search, edit, annotations, snooze,
-  recurring follow-up, bulk actions, saved searches, rename, delete) and
-  prints `FLOW-OK`/`FLOW-FAIL` lines. Run it only against a disposable
-  `XDG_DATA_HOME`.
+  recurring follow-up, dependencies, legacy repair, bulk actions, saved
+  searches, rename, delete) and prints `FLOW-OK`/`FLOW-FAIL` lines. Run it
+  only against a disposable `XDG_DATA_HOME`.
+- `--test-input` drives the UI with synthetic `QMouseEvent`/`QKeyEvent`
+  injection (C++ shim): click selection, Ctrl/Shift multi-selection,
+  checkbox toggle, double click → detail dialog, right click → context
+  menu, and real typing into quick capture. This substitutes for a human
+  mouse when no interactive session is available and runs in CI.

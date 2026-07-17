@@ -22,7 +22,7 @@ jobs:
             qqc2-desktop-style breeze-icons \
             gettext
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Tests
         run: cargo test --workspace

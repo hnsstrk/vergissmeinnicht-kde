@@ -131,15 +131,43 @@ impl AppState {
         .to_string()
     }
 
+    /// Projekte als flache, hierarchisch sortierte Liste mit Tiefe (gepunktete
+    /// Taskwarrior-Hierarchie, macOS-#10-Pendant). Implizite Eltern (`Work` bei
+    /// `Work.Sub` ohne eigene Aufgaben) werden ergänzt; der Count nutzt die
+    /// Präfix-Semantik von `SidebarFilter::Project` und zählt Subprojekte mit.
     pub fn projects_json(&self) -> String {
         let now = now_secs();
         let days = self.settings.due_soon_days;
-        let items: Vec<serde_json::Value> = projects_from(&self.tasks)
-            .into_iter()
+
+        // Explizite Projekte + implizite Eltern sammeln.
+        let mut names: Vec<String> = projects_from(&self.tasks);
+        let mut all: std::collections::BTreeSet<String> = std::collections::BTreeSet::new();
+        for name in names.drain(..) {
+            let parts: Vec<&str> = name.split('.').collect();
+            for i in 1..=parts.len() {
+                all.insert(parts[..i].join("."));
+            }
+        }
+        // Hierarchische Ordnung: case-insensitiv, Kinder direkt unter Eltern.
+        let mut sorted: Vec<String> = all.into_iter().collect();
+        sorted.sort_by_key(|n| n.to_lowercase());
+
+        let items: Vec<serde_json::Value> = sorted
+            .iter()
             .map(|name| {
                 let f = SidebarFilter::Project(name.clone());
                 let count = self.tasks.iter().filter(|t| f.matches(t, now, days)).count();
-                json!({"name": name, "count": count})
+                let depth = name.matches('.').count();
+                let label = name.rsplit('.').next().unwrap_or(name).to_string();
+                let prefix = format!("{name}.");
+                let has_children = sorted.iter().any(|n| n.starts_with(&prefix));
+                json!({
+                    "name": name,
+                    "label": label,
+                    "depth": depth,
+                    "hasChildren": has_children,
+                    "count": count,
+                })
             })
             .collect();
         serde_json::Value::Array(items).to_string()
@@ -163,6 +191,28 @@ impl AppState {
         let mut sorted = self.settings.saved_searches.clone();
         sorted.sort_by_key(|a| a.name.to_lowercase());
         serde_json::to_string(&sorted).unwrap_or_else(|_| "[]".into())
+    }
+
+    /// Offene Aufgaben (Pending) als kompakte JSON-Liste — Auswahlquelle für
+    /// den Abhängigkeits-Editor. Sortiert nach Working-Set-ID.
+    pub fn pending_tasks_json(&self) -> String {
+        let mut pending: Vec<&TaskInfo> = self
+            .tasks
+            .iter()
+            .filter(|t| t.status == TaskStatus::Pending)
+            .collect();
+        pending.sort_by_key(|t| t.working_set_id.unwrap_or(u32::MAX));
+        let items: Vec<serde_json::Value> = pending
+            .iter()
+            .map(|t| {
+                json!({
+                    "uuid": t.uuid,
+                    "title": t.description,
+                    "wsId": t.working_set_id,
+                })
+            })
+            .collect();
+        serde_json::Value::Array(items).to_string()
     }
 
     /// Vollständige Task-Details als JSON für den Detail-Editor.
@@ -350,6 +400,61 @@ impl AppState {
             return Err(format!("{errors} Aufgabe(n) konnten nicht geändert werden"));
         }
         result
+    }
+
+    /// Legacy-Reparatur (Port des macOS-Repair-Laufs): Pending-Aufgaben, deren
+    /// Description noch Token-Syntax enthält (`+tag`, `project:`, `due:`,
+    /// `priority:` als Text), werden in saubere Properties überführt.
+    /// Bestehende Properties gewinnen; Token-Werte füllen nur Lücken.
+    /// Gibt die Anzahl reparierter Aufgaben zurück.
+    pub fn repair_legacy_tasks(&mut self) -> Result<usize, String> {
+        let Some(store) = self.store.clone() else {
+            return Err("Store nicht initialisiert".into());
+        };
+        let now = now_secs();
+        let mut repaired = 0;
+        let mut errors = 0;
+        for task in self.tasks.clone() {
+            if task.status != TaskStatus::Pending {
+                continue;
+            }
+            let preview = parsers::parse_quick_capture(&task.description);
+            let has_meta = !preview.tags.is_empty()
+                || preview.project.is_some()
+                || preview.due.is_some()
+                || preview.priority.is_some();
+            if !has_meta || preview.description.trim().is_empty() {
+                continue;
+            }
+            let project = task.project.clone().or(preview.project);
+            let mut tags = task.tags.clone();
+            for t in preview.tags {
+                if !tags.contains(&t) {
+                    tags.push(t);
+                }
+            }
+            let due = task
+                .due
+                .or_else(|| preview.due.as_deref().and_then(|d| parsers::parse_due_date(d, now)));
+            if store
+                .update_task_metadata(task.uuid.clone(), preview.description, project, tags, due)
+                .is_err()
+            {
+                errors += 1;
+                continue;
+            }
+            if task.priority.is_none() {
+                if let Some(p) = preview.priority {
+                    let _ = store.set_priority(task.uuid.clone(), Some(p));
+                }
+            }
+            repaired += 1;
+        }
+        self.refresh()?;
+        if errors > 0 {
+            return Err(format!("{errors} Aufgabe(n) konnten nicht repariert werden"));
+        }
+        Ok(repaired)
     }
 
     // ─── Saved Searches ─────────────────────────────────────────────────────
@@ -589,6 +694,58 @@ mod tests {
 
         state.clear_project("neu").unwrap();
         assert!(state.tasks.iter().all(|t| t.project.is_none()));
+    }
+
+    #[test]
+    fn projects_json_builds_hierarchy_with_implicit_parents() {
+        let mut state = AppState {
+            store: None,
+            init_error: None,
+            tasks: vec![],
+            visible: vec![],
+            filter: SidebarFilter::Todo,
+            search_query: String::new(),
+            sort: SortOrder::Id,
+            sort_ascending: true,
+            settings: Settings::default(),
+        };
+        let a = TaskInfo {
+            uuid: "a".into(),
+            description: "A".into(),
+            project: Some("Work.Sub.Deep".into()),
+            tags: vec![],
+            due: None,
+            status: TaskStatus::Pending,
+            entry: None,
+            working_set_id: Some(1),
+            priority: None,
+            annotations: vec![],
+            wait: None,
+            recur: None,
+            scheduled: None,
+            depends: vec![],
+            is_blocked: false,
+            is_blocking: false,
+        };
+        let mut b = a.clone();
+        b.uuid = "b".into();
+        b.project = Some("Workshop".into());
+        state.tasks = vec![a.clone(), b];
+
+        let parsed: serde_json::Value =
+            serde_json::from_str(&state.projects_json()).unwrap();
+        let items = parsed.as_array().unwrap();
+        let names: Vec<&str> = items.iter().map(|i| i["name"].as_str().unwrap()).collect();
+        // Implizite Eltern vorhanden, hierarchische Reihenfolge, Workshop getrennt.
+        assert_eq!(names, vec!["Work", "Work.Sub", "Work.Sub.Deep", "Workshop"]);
+        assert_eq!(items[0]["depth"], 0);
+        assert_eq!(items[0]["hasChildren"], true);
+        // Präfix-Zählung: implizites Elternprojekt zählt das tiefe Kind mit,
+        // Workshop wird nicht von "Work" mitgezählt.
+        assert_eq!(items[0]["count"], 1);
+        assert_eq!(items[2]["depth"], 2);
+        assert_eq!(items[2]["label"], "Deep");
+        assert_eq!(items[3]["count"], 1);
     }
 
     #[test]

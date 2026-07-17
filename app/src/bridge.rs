@@ -60,6 +60,14 @@ mod qobject {
         /// Rendert das Hauptfenster synchron in eine PNG-Datei (Testhaken).
         #[rust_name = "grab_first_window"]
         fn vmnGrabFirstWindow(path: &QString) -> bool;
+
+        include!("inputsim.h");
+        /// Synthetischer Mausklick ins Hauptfenster (Testhaken --test-input).
+        #[rust_name = "send_click"]
+        fn vmnSendClick(x: f64, y: f64, button: i32, modifiers: i32, double_click: bool);
+        /// Synthetisches Tastatur-Event (Testhaken --test-input).
+        #[rust_name = "send_key"]
+        fn vmnSendKey(key: i32, modifiers: i32, text: &QString);
     }
 
     /// Modell-Rollen der Task-Liste.
@@ -201,6 +209,13 @@ mod qobject {
         fn remove_task_annotation(self: Pin<&mut AppContainer>, uuid: &QString, entry: i64);
         #[qinvokable]
         fn snooze_task(self: Pin<&mut AppContainer>, uuid: &QString, until: i64);
+        /// Auswahlquelle für den Abhängigkeits-Editor: alle offenen Aufgaben.
+        #[qinvokable]
+        fn pending_tasks_json(self: &AppContainer) -> QString;
+        #[qinvokable]
+        fn add_task_dependency(self: Pin<&mut AppContainer>, uuid: &QString, depends_on: &QString);
+        #[qinvokable]
+        fn remove_task_dependency(self: Pin<&mut AppContainer>, uuid: &QString, depends_on: &QString);
 
         // ── Bulk-Aktionen ───────────────────────────────────────────────────
         #[qinvokable]
@@ -256,6 +271,11 @@ mod qobject {
         #[qinvokable]
         fn set_auto_sync_mode_setting(self: Pin<&mut AppContainer>, mode: &QString);
 
+        /// Legacy-Reparatur: Token-Syntax in Descriptions → echte Properties.
+        /// Rückgabe: Anzahl reparierter Aufgaben, -1 bei Fehler.
+        #[qinvokable]
+        fn repair_legacy_tasks(self: Pin<&mut AppContainer>) -> i32;
+
         // ── Backups ─────────────────────────────────────────────────────────
         #[qinvokable]
         fn backup_now(self: Pin<&mut AppContainer>) -> QString;
@@ -274,6 +294,12 @@ mod qobject {
         /// Testhaken: rendert das Fenster in eine PNG-Datei (siehe --test-grab).
         #[qinvokable]
         fn grab_window_to(self: &AppContainer, path: &QString) -> bool;
+        /// Testhaken: synthetischer Klick in Fensterkoordinaten (--test-input).
+        #[qinvokable]
+        fn test_click(self: &AppContainer, x: f64, y: f64, button: i32, modifiers: i32, double_click: bool);
+        /// Testhaken: synthetisches Tastatur-Event (--test-input).
+        #[qinvokable]
+        fn test_key(self: &AppContainer, key: i32, modifiers: i32, text: &QString);
         #[qinvokable]
         fn parse_due_token(self: &AppContainer, token: &QString) -> i64;
         #[qinvokable]
@@ -820,6 +846,28 @@ impl qobject::AppContainer {
         );
     }
 
+    fn pending_tasks_json(&self) -> QString {
+        QString::from(self.state.pending_tasks_json().as_str())
+    }
+
+    fn add_task_dependency(self: Pin<&mut Self>, uuid: &QString, depends_on: &QString) {
+        let uuid = uuid.to_string();
+        let dep = depends_on.to_string();
+        self.apply(
+            move |s| s.mutate(|store| store.add_dependency(uuid.clone(), dep.clone())),
+            true,
+        );
+    }
+
+    fn remove_task_dependency(self: Pin<&mut Self>, uuid: &QString, depends_on: &QString) {
+        let uuid = uuid.to_string();
+        let dep = depends_on.to_string();
+        self.apply(
+            move |s| s.mutate(|store| store.remove_dependency(uuid.clone(), dep.clone())),
+            true,
+        );
+    }
+
     // ─── Bulk ───────────────────────────────────────────────────────────────
 
     fn mark_done_bulk(self: Pin<&mut Self>, uuids: &cxx_qt_lib::QStringList) {
@@ -1182,6 +1230,24 @@ impl qobject::AppContainer {
         let _ = state.settings.save();
     }
 
+    fn repair_legacy_tasks(mut self: Pin<&mut Self>) -> i32 {
+        self.as_mut().begin_reset_model();
+        let result = self.as_mut().rust_mut().state.repair_legacy_tasks();
+        self.as_mut().end_reset_model();
+        let count = match result {
+            Ok(n) => {
+                self.as_mut().set_error_message(QString::default());
+                n as i32
+            }
+            Err(e) => {
+                self.as_mut().set_error_message(QString::from(e.as_str()));
+                -1
+            }
+        };
+        self.publish();
+        count
+    }
+
     // ─── Backups ────────────────────────────────────────────────────────────
 
     fn backup_now(mut self: Pin<&mut Self>) -> QString {
@@ -1291,6 +1357,14 @@ impl qobject::AppContainer {
 
     fn grab_window_to(&self, path: &QString) -> bool {
         qobject::grab_first_window(path)
+    }
+
+    fn test_click(&self, x: f64, y: f64, button: i32, modifiers: i32, double_click: bool) {
+        qobject::send_click(x, y, button, modifiers, double_click);
+    }
+
+    fn test_key(&self, key: i32, modifiers: i32, text: &QString) {
+        qobject::send_key(key, modifiers, text);
     }
 
     fn parse_due_token(&self, token: &QString) -> i64 {

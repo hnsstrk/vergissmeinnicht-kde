@@ -24,7 +24,9 @@ platform.
 
 - **Sidebar perspectives** — Inbox · Today · To Do · Overdue · Due Soon ·
   Scheduled · Waiting · All, plus per-project and per-tag rows. Live counts,
-  drop targets, context menus for rename/remove.
+  drop targets, context menus for rename/remove. Dotted projects
+  (`Work.Sub`) form a collapsible tree; selecting a parent includes its
+  subprojects (Taskwarrior prefix semantics).
 - **Full-text search with operators** (Ctrl+F) — covers title, project, tags,
   and annotations across the entire store (pending, completed, recurring).
   Supports AND terms, quoted phrases, and `project:`, `tag:`, `status:`
@@ -38,7 +40,7 @@ platform.
 
   ![Vergissmeinnicht — quick capture](docs/screenshots/quick-capture.png)
 - **Detail editor** — title, project, tags, due, scheduled, wait, priority,
-  recurrence, annotations, dependency indicators, reactivate for completed
+  recurrence, annotations, dependency editor, reactivate for completed
   tasks.
 
   ![Vergissmeinnicht — detail editor](docs/screenshots/detail.png)
@@ -49,9 +51,9 @@ platform.
   Ny`. Completing a recurring task atomically creates the next instance.
 - **Snooze / wait** — defer tasks; they appear under "Waiting" instead of
   cluttering Today.
-- **Dependency reports** — Blocked / Blocking / Unblocked views
-  (`+BLOCKED`/`+BLOCKING`/`+UNBLOCKED` semantics), computed from the native
-  `depends` relation.
+- **Dependencies** — Blocked / Blocking / Unblocked report views
+  (`+BLOCKED`/`+BLOCKING`/`+UNBLOCKED` semantics) plus a dependency editor in
+  the detail dialog (add/remove `depends` relations with title lookup).
 - **Notifications** — opt-in summary at launch when overdue tasks exist
   (freedesktop notifications).
 - **Localization** — German (source) and English via ki18n/gettext, with
@@ -63,6 +65,8 @@ platform.
 - **Automatic backups** — `VACUUM INTO` snapshot before every sync, rotated
   to the last 10. Manual backup and restore from settings. See
   [`docs/backup-and-restore.md`](docs/backup-and-restore.md).
+- **Legacy repair** — a maintenance action converts token syntax left in
+  task titles (`+tag project:x`) into real properties.
 
 *(All screenshots show a seeded demo dataset —
 `cargo run --release -p vergissmeinnicht-core --example seed_demo -- <replica-path>`.)*

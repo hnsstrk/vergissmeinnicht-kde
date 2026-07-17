@@ -22,6 +22,9 @@ Oberfläche auf jeder Plattform.
 - **Seitenleisten-Perspektiven** — Eingang · Heute · Zu erledigen · Überfällig ·
   Bald fällig · Geplant · Wartend · Alle, dazu Projekt- und Tag-Zeilen mit
   Live-Zählern, Drop-Zielen und Kontextmenüs (Umbenennen/Entfernen).
+  Gepunktete Projekte (`Arbeit.Teilprojekt`) bilden einen klappbaren Baum;
+  die Auswahl eines Elternprojekts schließt Subprojekte ein
+  (Taskwarrior-Präfix-Semantik).
 - **Volltextsuche mit Operatoren** (Strg+F) — durchsucht Titel, Projekt, Tags
   und Notizen über den gesamten Bestand (offen, erledigt, wiederkehrend).
   UND-Verknüpfung, Phrasen in Anführungszeichen sowie `projekt:`, `tag:`,
@@ -34,7 +37,7 @@ Oberfläche auf jeder Plattform.
   Terminal-Syntax (`+tag project:foo due:tomorrow priority:H`) mit
   Live-Vorschau.
 - **Detail-Editor** — Titel, Projekt, Tags, Fällig, Geplant ab, Warten bis,
-  Priorität, Wiederholung, Notizen, Abhängigkeits-Anzeige, Reaktivieren
+  Priorität, Wiederholung, Notizen, Abhängigkeits-Editor, Reaktivieren
   erledigter Aufgaben.
 - **Mehrfachauswahl** mit Sammel-Aktionen (Erledigt / Löschen / Projekt /
   Tag / Priorität / Fälligkeit / Zurückstellen) über das Kontextmenü
@@ -45,9 +48,9 @@ Oberfläche auf jeder Plattform.
   sowie `Nd / Nw / Nm / Ny`. Das Erledigen erzeugt atomar die Folge-Instanz.
 - **Zurückstellen (Snooze)** — verschobene Aufgaben erscheinen unter
   „Wartend“ statt „Heute“ zu verstopfen.
-- **Abhängigkeits-Berichte** — Blockiert / Blockierend / Nicht blockiert
-  (`+BLOCKED`/`+BLOCKING`/`+UNBLOCKED`-Semantik) aus der nativen
-  `depends`-Relation.
+- **Abhängigkeiten** — Berichte Blockiert / Blockierend / Nicht blockiert
+  (`+BLOCKED`/`+BLOCKING`/`+UNBLOCKED`-Semantik) plus Abhängigkeits-Editor im
+  Detail-Dialog (`depends`-Relationen hinzufügen/entfernen, mit Titel-Auflösung).
 - **Benachrichtigungen** — Opt-in-Zusammenfassung beim Start, wenn
   überfällige Aufgaben vorliegen.
 - **Lokalisierung** — Deutsch (Quellsprache) und Englisch über
@@ -59,6 +62,8 @@ Oberfläche auf jeder Plattform.
 - **Automatische Backups** — `VACUUM INTO`-Snapshot vor jedem Sync,
   rotierend die letzten 10. Manuelles Backup und Wiederherstellung in den
   Einstellungen. Siehe [`docs/backup-and-restore.md`](docs/backup-and-restore.md).
+- **Legacy-Reparatur** — eine Wartungsaktion überführt Token-Syntax in
+  Aufgabentiteln (`+tag project:x`) in echte Eigenschaften.
 
 *(Alle Screenshots zeigen einen deterministischen Demo-Datensatz —
 `cargo run --release -p vergissmeinnicht-core --example seed_demo -- <replica-pfad>`.)*

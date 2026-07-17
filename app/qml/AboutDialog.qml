@@ -48,7 +48,7 @@ Kirigami.Dialog {
             horizontalAlignment: Text.AlignHCenter
             textFormat: Text.RichText
             onLinkActivated: link => Qt.openUrlExternally(link)
-            text: "<a href=\"https://github.com/hnsstrk/vergissmeinnicht-kde\">github.com/hnsstrk/vergissmeinnicht-kde</a> · MIT-Lizenz"
+            text: "<a href=\"https://github.com/hnsstrk/vergissmeinnicht-kde\">github.com/hnsstrk/vergissmeinnicht-kde</a> · " + i18n("MIT-Lizenz")
         }
     }
 }

@@ -18,6 +18,19 @@ Kirigami.OverlayDrawer {
     topPadding: 0
     bottomPadding: 0
 
+    // Eingeklappte Projekt-Knoten (Name → true); Kinder eingeklappter Knoten
+    // werden ausgeblendet.
+    property var collapsedProjects: ({})
+
+    function projectVisible(name) {
+        const parts = name.split(".")
+        for (let i = 1; i < parts.length; i++) {
+            if (collapsedProjects[parts.slice(0, i).join(".")])
+                return false
+        }
+        return true
+    }
+
     // Systemfilter — Reihenfolge wie macOS-Sidebar; "Wartend" nur bei Bedarf.
     readonly property var systemFilters: [
         { key: "inbox", label: i18n("Eingang"), icon: "mail-folder-inbox" },
@@ -85,11 +98,23 @@ Kirigami.OverlayDrawer {
                 delegate: SidebarRow {
                     required property var modelData
                     filterKey: "project:" + modelData.name
-                    label: modelData.name
+                    label: modelData.label ?? modelData.name
                     iconName: "folder"
                     count: modelData.count
+                    depth: modelData.depth ?? 0
+                    hasChildren: modelData.hasChildren ?? false
+                    expanded: !drawer.collapsedProjects[modelData.name]
+                    visible: drawer.projectVisible(modelData.name)
                     acceptsDrop: true
                     onDropped: uuids => app.dropOnProject(uuids, modelData.name)
+                    onToggleExpanded: {
+                        const c = Object.assign({}, drawer.collapsedProjects)
+                        if (c[modelData.name])
+                            delete c[modelData.name]
+                        else
+                            c[modelData.name] = true
+                        drawer.collapsedProjects = c
+                    }
                     onOpenContextMenu: {
                         projectMenu.projectName = modelData.name
                         projectMenu.popup()
@@ -211,9 +236,14 @@ Kirigami.OverlayDrawer {
         property int count: 0
         property bool acceptsDrop: false
         property var contextMenu: null
+        // Hierarchie (Projekte): Einrück-Tiefe + Klapp-Zustand.
+        property int depth: 0
+        property bool hasChildren: false
+        property bool expanded: true
 
         signal dropped(var uuids)
         signal openContextMenu()
+        signal toggleExpanded()
 
         Layout.fillWidth: true
         text: label
@@ -223,6 +253,14 @@ Kirigami.OverlayDrawer {
 
         contentItem: RowLayout {
             spacing: Kirigami.Units.smallSpacing
+            Item { Layout.preferredWidth: row.depth * Kirigami.Units.gridUnit; visible: row.depth > 0 }
+            QQC2.ToolButton {
+                visible: row.hasChildren
+                icon.name: row.expanded ? "arrow-down" : "arrow-right"
+                Layout.preferredWidth: Kirigami.Units.iconSizes.small
+                Layout.preferredHeight: Kirigami.Units.iconSizes.small
+                onClicked: row.toggleExpanded()
+            }
             Kirigami.Icon {
                 source: row.iconName
                 Layout.preferredWidth: Kirigami.Units.iconSizes.smallMedium

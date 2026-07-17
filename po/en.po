@@ -1,7 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: vergissmeinnicht 0.1.0\n"
-"Report-Msgid-Bugs-To: https://github.com/hnsstrk/vergissmeinnicht-kde/issues\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-07-17 11:07+0200\n"
 "Language: en\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -23,6 +24,10 @@ msgid ""
 msgstr ""
 "Native KDE client for Taskwarrior 3.x built on TaskChampion.\n"
 "Kirigami interface, Rust core via cxx-qt."
+
+#: app/qml/AboutDialog.qml:51
+msgid "MIT-Lizenz"
+msgstr "MIT license"
 
 #: app/qml/DetailDialog.qml:16
 msgid "Aufgabe bearbeiten"
@@ -128,8 +133,9 @@ msgstr "Unrecognized interval"
 msgid "Status"
 msgstr "Status"
 
-#: app/qml/DetailDialog.qml:147 app/qml/TaskDelegate.qml:52
-#: app/qml/TasksPage.qml:171 app/qml/TasksPage.qml:363
+#: app/qml/DetailDialog.qml:147 app/qml/DetailDialog.qml:182
+#: app/qml/TaskDelegate.qml:58 app/qml/TasksPage.qml:171
+#: app/qml/TasksPage.qml:363
 msgid "Erledigt"
 msgstr "Done"
 
@@ -145,36 +151,52 @@ msgstr "Recurring (template)"
 msgid "Ausstehend"
 msgstr "Pending"
 
-#: app/qml/DetailDialog.qml:155 app/qml/TaskDelegate.qml:52
+#: app/qml/DetailDialog.qml:155 app/qml/TaskDelegate.qml:58
 #: app/qml/TasksPage.qml:368
 msgid "Reaktivieren"
 msgstr "Reactivate"
 
-#: app/qml/DetailDialog.qml:166
+#: app/qml/DetailDialog.qml:165
 msgid "Abhängigkeiten"
 msgstr "Dependencies"
 
 #: app/qml/DetailDialog.qml:170
-msgid "blockiert durch andere Aufgaben"
-msgstr "blocked by other tasks"
+msgid "Diese Aufgabe blockiert andere Aufgaben."
+msgstr "This task blocks other tasks."
 
-#: app/qml/DetailDialog.qml:171
-msgid "blockiert andere Aufgaben"
-msgstr "blocks other tasks"
+#: app/qml/DetailDialog.qml:180
+msgid "Hängt ab von: %1"
+msgstr "Depends on: %1"
 
-#: app/qml/DetailDialog.qml:177 app/qml/QuickCaptureDialog.qml:102
+#: app/qml/DetailDialog.qml:181
+msgid "Hängt ab von unbekannter Aufgabe (%1)"
+msgstr "Depends on unknown task (%1)"
+
+#: app/qml/DetailDialog.qml:185
+msgid "Abhängigkeit entfernen"
+msgstr "Remove dependency"
+
+#: app/qml/DetailDialog.qml:197
+msgid "Abhängigkeit hinzufügen"
+msgstr "Add dependency"
+
+#: app/qml/DetailDialog.qml:198
+msgid "Aufgabe wählen …"
+msgstr "Pick a task …"
+
+#: app/qml/DetailDialog.qml:216 app/qml/QuickCaptureDialog.qml:102
 msgid "Notizen"
 msgstr "Notes"
 
-#: app/qml/DetailDialog.qml:188
+#: app/qml/DetailDialog.qml:227
 msgid "Notiz entfernen"
 msgstr "Remove note"
 
-#: app/qml/DetailDialog.qml:200
+#: app/qml/DetailDialog.qml:239
 msgid "Neue Notiz"
 msgstr "New note"
 
-#: app/qml/DetailDialog.qml:213 app/qml/TasksPage.qml:200
+#: app/qml/DetailDialog.qml:252 app/qml/TasksPage.qml:200
 msgid "Angelegt"
 msgstr "Created"
 
@@ -299,41 +321,41 @@ msgstr "Quick capture syntax"
 msgid "Gespeicherte Suche"
 msgstr "Saved search"
 
-#: app/qml/Main.qml:41 app/qml/SettingsDialog.qml:38 app/qml/Sidebar.qml:30
+#: app/qml/Main.qml:41 app/qml/SettingsDialog.qml:38 app/qml/Sidebar.qml:43
 msgid "Alle"
 msgstr "All"
 
 #: app/qml/Main.qml:42 app/qml/QuickCaptureDialog.qml:123
-#: app/qml/SettingsDialog.qml:38 app/qml/Sidebar.qml:24
+#: app/qml/SettingsDialog.qml:38 app/qml/Sidebar.qml:37
 #: app/qml/TasksPage.qml:444
 msgid "Heute"
 msgstr "Today"
 
-#: app/qml/Main.qml:43 app/qml/SettingsDialog.qml:38 app/qml/Sidebar.qml:25
+#: app/qml/Main.qml:43 app/qml/SettingsDialog.qml:38 app/qml/Sidebar.qml:38
 msgid "Zu erledigen"
 msgstr "To Do"
 
-#: app/qml/Main.qml:44 app/qml/SettingsDialog.qml:38 app/qml/Sidebar.qml:26
+#: app/qml/Main.qml:44 app/qml/SettingsDialog.qml:38 app/qml/Sidebar.qml:39
 msgid "Überfällig"
 msgstr "Overdue"
 
-#: app/qml/Main.qml:45 app/qml/SettingsDialog.qml:38 app/qml/Sidebar.qml:27
+#: app/qml/Main.qml:45 app/qml/SettingsDialog.qml:38 app/qml/Sidebar.qml:40
 msgid "Bald fällig"
 msgstr "Due Soon"
 
-#: app/qml/Main.qml:46 app/qml/SettingsDialog.qml:38 app/qml/Sidebar.qml:28
+#: app/qml/Main.qml:46 app/qml/SettingsDialog.qml:38 app/qml/Sidebar.qml:41
 msgid "Geplant"
 msgstr "Scheduled"
 
-#: app/qml/Main.qml:47 app/qml/Sidebar.qml:29
+#: app/qml/Main.qml:47 app/qml/Sidebar.qml:42
 msgid "Wartend"
 msgstr "Waiting"
 
-#: app/qml/Main.qml:48 app/qml/TaskDelegate.qml:137 app/qml/TasksPage.qml:251
+#: app/qml/Main.qml:48 app/qml/TaskDelegate.qml:143 app/qml/TasksPage.qml:251
 msgid "Blockiert"
 msgstr "Blocked"
 
-#: app/qml/Main.qml:49 app/qml/TaskDelegate.qml:143 app/qml/TasksPage.qml:255
+#: app/qml/Main.qml:49 app/qml/TaskDelegate.qml:149 app/qml/TasksPage.qml:255
 msgid "Blockierend"
 msgstr "Blocking"
 
@@ -341,7 +363,7 @@ msgstr "Blocking"
 msgid "Nicht blockiert"
 msgstr "Unblocked"
 
-#: app/qml/Main.qml:51 app/qml/SettingsDialog.qml:38 app/qml/Sidebar.qml:23
+#: app/qml/Main.qml:51 app/qml/SettingsDialog.qml:38 app/qml/Sidebar.qml:36
 msgid "Eingang"
 msgstr "Inbox"
 
@@ -369,7 +391,7 @@ msgstr "Due (not recognized): %1"
 msgid "Priorität: %1"
 msgstr "Priority: %1"
 
-#: app/qml/QuickCaptureDialog.qml:116 app/qml/Sidebar.qml:102
+#: app/qml/QuickCaptureDialog.qml:116 app/qml/Sidebar.qml:127
 msgid "Tags"
 msgstr "Tags"
 
@@ -511,7 +533,7 @@ msgstr "Create backup now"
 msgid "Backup-Ordner öffnen"
 msgstr "Open backup folder"
 
-#: app/qml/SettingsDialog.qml:155 app/qml/SettingsDialog.qml:167
+#: app/qml/SettingsDialog.qml:155 app/qml/SettingsDialog.qml:186
 msgid "Backup wiederherstellen"
 msgstr "Restore backup"
 
@@ -519,51 +541,73 @@ msgstr "Restore backup"
 msgid "Noch keine Backups vorhanden."
 msgstr "No backups yet."
 
-#: app/qml/SettingsDialog.qml:169
+#: app/qml/SettingsDialog.qml:166
+msgid "Wartung — Reparatur"
+msgstr "Maintenance — Repair"
+
+#: app/qml/SettingsDialog.qml:172
+msgid "Legacy-Aufgaben reparieren"
+msgstr "Repair legacy tasks"
+
+#: app/qml/SettingsDialog.qml:175
+msgid "Überführt Token-Syntax in Titeln (+tag, project:, due:, priority:) in echte Eigenschaften."
+msgstr "Converts token syntax in titles (+tag, project:, due:, priority:) into real properties."
+
+#: app/qml/SettingsDialog.qml:177
+msgid "Reparatur fehlgeschlagen — Details im Fehlerbanner."
+msgstr "Repair failed — details in the error banner."
+
+#: app/qml/SettingsDialog.qml:178
+msgid "1 Aufgabe repariert."
+msgid_plural "%1 Aufgaben repariert."
+msgstr[0] "1 task repaired."
+msgstr[1] "%1 tasks repaired."
+
+#: app/qml/SettingsDialog.qml:188
 msgid "Die aktuelle Replica wird durch „%1“ ersetzt. Vorher wird automatisch ein Sicherheits-Backup angelegt."
 msgstr "The current replica will be replaced by “%1”. A safety backup is created automatically beforehand."
 
-#: app/qml/SettingsDialog.qml:174
+#: app/qml/SettingsDialog.qml:193
 msgid "Wiederherstellen"
 msgstr "Restore"
 
-#: app/qml/Sidebar.qml:56
+#: app/qml/Sidebar.qml:69
 msgid "Gespeicherte Suchen"
 msgstr "Saved Searches"
 
-#: app/qml/Sidebar.qml:79
+#: app/qml/Sidebar.qml:92
 msgid "Projekte"
 msgstr "Projects"
 
-#: app/qml/Sidebar.qml:133 app/qml/Sidebar.qml:149 app/qml/Sidebar.qml:166
+#: app/qml/Sidebar.qml:158 app/qml/Sidebar.qml:174 app/qml/Sidebar.qml:191
 msgid "Umbenennen …"
 msgstr "Rename …"
 
-#: app/qml/Sidebar.qml:135
+#: app/qml/Sidebar.qml:160
 msgid "Projekt umbenennen"
 msgstr "Rename project"
 
-#: app/qml/Sidebar.qml:139 app/qml/Sidebar.qml:155
+#: app/qml/Sidebar.qml:164 app/qml/Sidebar.qml:180
 msgid "Aus allen Aufgaben entfernen"
 msgstr "Remove from all tasks"
 
-#: app/qml/Sidebar.qml:151
+#: app/qml/Sidebar.qml:176
 msgid "Tag umbenennen"
 msgstr "Rename tag"
 
-#: app/qml/Sidebar.qml:168
+#: app/qml/Sidebar.qml:193
 msgid "Suche umbenennen"
 msgstr "Rename search"
 
-#: app/qml/Sidebar.qml:172 app/qml/TasksPage.qml:178 app/qml/TasksPage.qml:472
+#: app/qml/Sidebar.qml:197 app/qml/TasksPage.qml:178 app/qml/TasksPage.qml:472
 msgid "Löschen"
 msgstr "Delete"
 
-#: app/qml/TaskDelegate.qml:122
+#: app/qml/TaskDelegate.qml:128
 msgid "Geplant ab %1"
 msgstr "Scheduled from %1"
 
-#: app/qml/TaskDelegate.qml:127
+#: app/qml/TaskDelegate.qml:133
 msgid "Wartet bis %1"
 msgstr "Waiting until %1"
 
@@ -762,3 +806,6 @@ msgstr "New tag"
 #: app/qml/TasksPage.qml:546
 msgid "Tag (ohne Leerzeichen)"
 msgstr "Tag (no spaces)"
+
+#~ msgid "blockiert durch andere Aufgaben"
+#~ msgstr "blocked by other tasks"

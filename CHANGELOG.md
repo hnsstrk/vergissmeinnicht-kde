@@ -5,6 +5,42 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-07-17
+
+### Added
+
+- **Dependency editor** in the detail dialog: list existing `depends`
+  relations with title lookup, remove them, add new ones from a picker of
+  pending tasks (blocked/blocking flags update immediately).
+- **Project hierarchy** in the sidebar: dotted projects (`Work.Sub`) render
+  as a collapsible tree with implicit parents; counts use Taskwarrior
+  prefix semantics (parent includes subprojects).
+- **Legacy repair** maintenance action (Settings → Maintenance): converts
+  token syntax left in task titles (`+tag project:x due:… priority:…`)
+  into real properties; existing properties win, tokens fill gaps.
+- **Synthetic interaction test** (`--test-input`): injects real
+  `QMouseEvent`/`QKeyEvent` into the window (C++ shim with QTest-style fake
+  timestamps) and verifies click selection, Ctrl/Shift multi-selection,
+  checkbox toggle, double click → detail, right click → context menu, and
+  real typing in quick capture. Runs in CI (offscreen).
+- Live Secret Service roundtrip test (`cargo test -- --ignored secrets`).
+- The demo dataset now contains a dotted subproject for hierarchy
+  screenshots.
+
+### Fixed
+
+- Left-click handling on task rows was owned by the delegate button, so
+  modifier clicks (Ctrl/Shift) never reached the selection logic — found by
+  the new interaction test. Selection now uses a mouse overlay with
+  explicit modifier handling; the done-checkbox stays natively clickable.
+- The deprecated `KLocalizedContext` was replaced by
+  `KLocalizedQmlContext` (KF ≥ 6.8).
+- "MIT-Lizenz" in the About dialog is now translatable.
+
+### Changed
+
+- CI: `actions/checkout@v5`, new interaction-test step.
+
 ## [0.1.1] - 2026-07-17
 
 ### Fixed
@@ -64,6 +100,7 @@ feature-comparable for the daily-driver workflows.
 - Packaging: desktop file, scalable icon, AppStream metainfo,
   `scripts/install-local.sh`, CI and release workflows (Arch container).
 
-[Unreleased]: https://github.com/hnsstrk/vergissmeinnicht-kde/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/hnsstrk/vergissmeinnicht-kde/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/hnsstrk/vergissmeinnicht-kde/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/hnsstrk/vergissmeinnicht-kde/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/hnsstrk/vergissmeinnicht-kde/releases/tag/v0.1.0

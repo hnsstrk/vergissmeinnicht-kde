@@ -27,6 +27,11 @@ QQC2.ItemDelegate {
     required property int annotationCount
 
     readonly property bool completed: statusKey === "completed"
+
+    // Zielpunkt der Erledigt-Checkbox in Fensterkoordinaten (für --test-input).
+    function checkboxPoint() {
+        return doneBox.mapToItem(null, doneBox.width / 2, doneBox.height / 2)
+    }
     readonly property bool recurringMaster: statusKey === "recurring"
     readonly property var tags: JSON.parse(tagsJson || "[]")
     readonly property double nowSecs: Date.now() / 1000
@@ -41,6 +46,7 @@ QQC2.ItemDelegate {
         spacing: Kirigami.Units.smallSpacing
 
         QQC2.CheckBox {
+            id: doneBox
             checked: delegate.completed
             visible: !delegate.recurringMaster
             onToggled: {
@@ -151,21 +157,32 @@ QQC2.ItemDelegate {
         }
     }
 
-    // Auswahl-Logik: Klick = Einzelauswahl, Strg = Umschalten, Umschalt = Bereich.
-    onClicked: page.selectSingle(uuid, index)
-    onDoubleClicked: root.openDetail(uuid)
-
-    TapHandler {
-        acceptedModifiers: Qt.ControlModifier
-        onTapped: page.toggleSelection(delegate.uuid, delegate.index)
-    }
-    TapHandler {
-        acceptedModifiers: Qt.ShiftModifier
-        onTapped: page.selectRange(delegate.index)
-    }
-    TapHandler {
-        acceptedButtons: Qt.RightButton
-        onTapped: contextMenu.popupFor(delegate.uuid, delegate.completed)
+    // Auswahl-Logik: Klick = Einzelauswahl, Strg = Umschalten, Umschalt = Bereich,
+    // Doppelklick = Detail, Rechtsklick = Kontextmenü. Als MouseArea-Overlay
+    // OBERHALB des Delegate-Buttons — der Button würde sonst den Links-Klick-Grab
+    // übernehmen und TapHandler nie feuern lassen (von --test-input aufgedeckt).
+    // Die Checkbox links bleibt ausgespart und damit nativ klickbar.
+    MouseArea {
+        anchors.fill: parent
+        anchors.leftMargin: delegate.recurringMaster
+                            ? 0
+                            : doneBox.x + doneBox.width + delegate.leftPadding
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
+        onClicked: mouse => {
+            if (mouse.button === Qt.RightButton) {
+                contextMenu.popupFor(delegate.uuid, delegate.completed)
+            } else if (mouse.modifiers & Qt.ControlModifier) {
+                page.toggleSelection(delegate.uuid, delegate.index)
+            } else if (mouse.modifiers & Qt.ShiftModifier) {
+                page.selectRange(delegate.index)
+            } else {
+                page.selectSingle(delegate.uuid, delegate.index)
+            }
+        }
+        onDoubleClicked: mouse => {
+            if (mouse.button === Qt.LeftButton && mouse.modifiers === Qt.NoModifier)
+                root.openDetail(delegate.uuid)
+        }
     }
 
     // Drag auf die Sidebar (Projekt/Tag/Eingang).
