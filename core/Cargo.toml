@@ -1,0 +1,18 @@
+[package]
+name = "vergissmeinnicht-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[lib]
+name = "vergissmeinnicht_core"
+
+[dependencies]
+taskchampion.workspace = true
+tokio.workspace = true
+uuid.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+tempfile = "3"

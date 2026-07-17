@@ -1,0 +1,10 @@
+# Build-Outputs
+/target/
+
+# IDE
+.idea/
+.vscode/
+
+# Claude Code lokal
+.claude/settings.local.json
+.claude/projects/
