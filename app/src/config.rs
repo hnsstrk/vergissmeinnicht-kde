@@ -3,7 +3,8 @@
 //! `~/.local/share/vergissmeinnicht/replica/`, Backups daneben.
 //!
 //! Pendant zu `AppSettings`/`@AppStorage` der macOS-Version. Sync-Credentials
-//! liegen NICHT hier, sondern im Secret Service (KWallet) — siehe `secrets.rs`.
+//! und der KI-API-Key liegen NICHT hier, sondern im Secret Service (KWallet)
+//! — siehe `secrets.rs`.
 
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
@@ -42,6 +43,21 @@ pub struct Settings {
     pub sidebar_width: i64,
     /// Eingeklappte Sidebar-Sektionen ("saved" | "projects" | "tags").
     pub collapsed_sections: Vec<String>,
+    /// KI-Provider-Preset: "ollama" | "openrouter" | "custom".
+    pub ai_provider: String,
+    /// Basis-URL des OpenAI-kompatiblen Endpunkts (vom Preset vorbefüllt).
+    pub ai_base_url: String,
+    /// Modellname beim Provider; leer = KI nicht konfiguriert.
+    /// Der API-Key ist bewusst KEIN Feld hier — er liegt im Secret Service.
+    pub ai_model: String,
+    /// Speech-to-Text-Backend: "openai-whisper" | "whisper-cpp".
+    pub ai_stt_backend: String,
+    /// Whisper-Modellname für das openai-whisper-Backend (z. B. "small").
+    pub ai_whisper_model: String,
+    /// Pfad zum whisper-cli-Binary (nur für das whisper-cpp-Backend).
+    pub ai_whisper_cpp_binary: String,
+    /// Pfad zur GGML-Modelldatei (nur für das whisper-cpp-Backend).
+    pub ai_whisper_cpp_model: String,
 }
 
 impl Default for Settings {
@@ -60,6 +76,13 @@ impl Default for Settings {
             last_overdue_count: 0,
             sidebar_width: 0,
             collapsed_sections: Vec::new(),
+            ai_provider: "ollama".into(),
+            ai_base_url: "http://localhost:11434/v1".into(),
+            ai_model: String::new(),
+            ai_stt_backend: "openai-whisper".into(),
+            ai_whisper_model: "small".into(),
+            ai_whisper_cpp_binary: String::new(),
+            ai_whisper_cpp_model: String::new(),
         }
     }
 }
@@ -126,6 +149,39 @@ mod tests {
         let wieder: Settings = serde_json::from_str(r#"{"default_filter":"todo"}"#).unwrap();
         assert_eq!(wieder.sidebar_width, 0);
         assert!(wieder.collapsed_sections.is_empty());
+        assert_eq!(wieder.default_filter, "todo");
+    }
+
+    #[test]
+    fn ai_defaults() {
+        let s = Settings::default();
+        assert_eq!(s.ai_provider, "ollama");
+        assert_eq!(s.ai_base_url, "http://localhost:11434/v1");
+        assert!(s.ai_model.is_empty());
+        assert_eq!(s.ai_stt_backend, "openai-whisper");
+        assert_eq!(s.ai_whisper_model, "small");
+        assert!(s.ai_whisper_cpp_binary.is_empty());
+        assert!(s.ai_whisper_cpp_model.is_empty());
+    }
+
+    #[test]
+    fn api_key_never_lands_in_config_json() {
+        // Der KI-API-Key liegt im Secret Service (secrets.rs) — die
+        // serialisierte Config darf kein Key-Feld enthalten.
+        let raw = serde_json::to_string(&Settings::default()).unwrap();
+        assert!(!raw.to_lowercase().contains("api_key"));
+        assert!(!raw.to_lowercase().contains("apikey"));
+    }
+
+    #[test]
+    fn old_config_without_ai_fields_gets_ai_defaults() {
+        // Config aus einer Version vor der KI-Integration — Defaults greifen.
+        let wieder: Settings = serde_json::from_str(r#"{"default_filter":"todo"}"#).unwrap();
+        assert_eq!(wieder.ai_provider, "ollama");
+        assert_eq!(wieder.ai_base_url, "http://localhost:11434/v1");
+        assert!(wieder.ai_model.is_empty());
+        assert_eq!(wieder.ai_stt_backend, "openai-whisper");
+        assert_eq!(wieder.ai_whisper_model, "small");
         assert_eq!(wieder.default_filter, "todo");
     }
 }

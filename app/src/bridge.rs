@@ -413,6 +413,14 @@ fn compute_sync_configured(settings: &Settings) -> bool {
     has(secrets::KEY_CLIENT_ID) && has(secrets::KEY_SECRET)
 }
 
+/// KI gilt als konfiguriert, wenn Basis-URL und Modellname gesetzt sind.
+/// Der API-Key ist absichtlich keine Bedingung — lokale Endpunkte (Ollama)
+/// brauchen keinen. Die Bridge-Property dazu kommt mit Story AI-A3.
+#[allow(dead_code)]
+fn compute_ai_configured(settings: &Settings) -> bool {
+    !settings.ai_base_url.trim().is_empty() && !settings.ai_model.trim().is_empty()
+}
+
 fn opt_string(q: &QString) -> Option<String> {
     let s = q.to_string();
     if s.trim().is_empty() {
@@ -1514,5 +1522,22 @@ impl qobject::AppContainer {
             },
             true,
         );
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn ai_configured_requires_base_url_and_model() {
+        let mut s = Settings::default();
+        // Default: Basis-URL vorbefüllt, Modell leer → nicht konfiguriert.
+        assert!(!compute_ai_configured(&s));
+        s.ai_model = "qwen3.6:27b-128k".into();
+        assert!(compute_ai_configured(&s));
+        // Nur Whitespace zählt nicht als gesetzt.
+        s.ai_base_url = "   ".into();
+        assert!(!compute_ai_configured(&s));
     }
 }
