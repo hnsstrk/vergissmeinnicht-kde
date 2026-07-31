@@ -19,11 +19,11 @@ through the existing, user-confirmed code paths.
 | Question | Decision |
 |---|---|
 | Use cases | NL capture (MVP, incl. dictation), inbox triage, day planner, chat — plus an ideas backlog (§9) |
-| Model backend | Configurable: any OpenAI-compatible endpoint. Default: local Ollama (`http://localhost:11434/v1`); cloud APIs via API key |
+| Model backend | Configurable: any OpenAI-compatible endpoint, via provider presets — **Ollama** (local, default), **OpenRouter** (cloud, incl. Claude models as `anthropic/claude-*`), or a custom URL. API key per provider |
 | Autonomy | Suggest only, never execute |
 | Layer | KDE app only (`app/src/ai/`), no core changes |
 | Realization | In-app, Rust-native — no sidecar process, no MCP server |
-| Speech-to-text | The locally installed `openai-whisper` CLI, invoked as a subprocess |
+| Speech-to-text | Selectable local backend: the `openai-whisper` CLI (CPU) or a `whisper.cpp` build (GPU), both invoked as subprocesses |
 
 ## 3. Guiding principles
 
@@ -49,19 +49,32 @@ Qt-free and unit-testable, like `parsers.rs`.
 - `client.rs` — `LlmClient`: blocking `reqwest` client against any
   OpenAI-compatible `/v1/chat/completions` endpoint. `reqwest 0.12` is
   already resolved in the tree (transitively via taskchampion), so this
-  adds no second TLS stack. Responses are requested as JSON
-  (`response_format: {"type": "json_object"}`, supported by Ollama and the
-  cloud providers alike). A trait `Llm` fronts the client so tests can
-  substitute a mock. On unparseable output: one silent retry with a format
-  reminder appended, then error.
+  adds no second TLS stack. JSON output is enforced on two levels: the
+  request asks for it (`response_format: {"type": "json_object"}` —
+  honored by Ollama and most OpenRouter models) **and** the prompt demands
+  it, because some endpoints silently ignore `response_format` (Anthropic's
+  OpenAI-compatibility layer documents exactly that). Every response is
+  validated regardless of what the endpoint promised. A trait `Llm` fronts
+  the client so tests can substitute a mock. On unparseable output: one
+  silent retry with a format reminder appended, then error.
 - `transcribe.rs` — `Transcriber`: records via `pw-record` (PipeWire,
   present on every current Linux desktop — avoids a new qt6-multimedia
-  dependency), then runs the `whisper` CLI
-  (`whisper --model <m> --language de --output_format json
-  --output_dir <runtime-dir>`). Availability of both binaries is probed
-  once at startup; if either is missing, the microphone button is not
-  shown at all. Recordings and transcripts live in the XDG runtime dir and
-  are deleted after use.
+  dependency), then transcribes through one of two selectable backends,
+  both plain subprocesses with backend-specific output parsing:
+  - **`openai-whisper`** (default): the `whisper` CLI from PATH
+    (`whisper --model <m> --language de --output_format json
+    --output_dir <runtime-dir>`). Runs on CPU; models auto-download on
+    first use.
+  - **`whisper.cpp`**: a user-provided `whisper-cli` binary plus a GGML
+    model file (both configured as paths in the settings) —
+    `whisper-cli -m <model> -f <wav> -l de --output-json`. This covers
+    GPU builds; the reference machine has a ROCm/HIP build with
+    `ggml-large-v3` from the RPG-audio project.
+
+  Availability is probed once at startup: `pw-record` plus the configured
+  backend's binary (and model file, for whisper.cpp). If anything is
+  missing, the microphone button is not shown at all. Recordings and
+  transcripts live in the XDG runtime dir and are deleted after use.
 - `types.rs` — suggestion data types (`AiDraft`, `TriageSuggestion`,
   `PlanEntry`, `ChatMessage`), serde-serializable; they cross the bridge
   as JSON QStrings (the app's established pattern).
@@ -96,21 +109,36 @@ Qt-free and unit-testable, like `parsers.rs`.
 ### 4.3 Settings and secrets
 
 - New `Settings` fields (backwards compatible via `#[serde(default)]`):
-  `ai_base_url` (default `http://localhost:11434/v1`), `ai_model`
-  (default empty), `ai_whisper_model` (default `small`; the whisper CLI
-  auto-downloads models on first use). `aiConfigured` requires a non-empty
-  base URL and model name, cached like `compute_sync_configured`.
+  `ai_provider` (preset: `ollama` | `openrouter` | `custom`; default
+  `ollama`), `ai_base_url` (prefilled by the preset:
+  `http://localhost:11434/v1` for Ollama,
+  `https://openrouter.ai/api/v1` for OpenRouter; editable), `ai_model`
+  (default empty), `ai_stt_backend` (`openai-whisper` | `whisper-cpp`;
+  default `openai-whisper`), `ai_whisper_model` (default `small`, for the
+  openai-whisper backend), `ai_whisper_cpp_binary` and
+  `ai_whisper_cpp_model` (paths, for the whisper.cpp backend).
+  `aiConfigured` requires a non-empty base URL and model name, cached like
+  `compute_sync_configured`.
+- **Claude models** are reached through OpenRouter (`anthropic/claude-*`)
+  — that is the recommended path, since it speaks the same
+  OpenAI-compatible protocol as everything else. Anthropic's own
+  OpenAI-compatibility endpoint (`https://api.anthropic.com/v1/`) works
+  via the `custom` preset, but Anthropic documents it as a
+  testing-oriented layer that ignores `response_format`; the prompt-level
+  JSON enforcement in §4.1 covers that case.
 - The API key (needed for cloud endpoints only) is stored in the Secret
   Service via `secrets.rs`. The existing service string is literally
   `de.hnsstrk.vergissmeinnicht.sync`; the AI key gets its own service
   string `de.hnsstrk.vergissmeinnicht.ai` rather than squatting in the
   sync-named service. It is never written to `config.json`.
 - Settings UI: a new **“AI assistant”** section modeled 1:1 on the sync
-  section — explanatory row, base URL field, model name field, API key
-  password field, whisper model combo box, and a **“Save and test”**
-  button that performs a cheap request (model list) and reports the result
-  in the section's own status line. A privacy note appears when the base
-  URL is not localhost.
+  section — explanatory row, provider combo box (prefills the base URL),
+  base URL field, model name field, API key password field, a
+  speech-to-text backend combo with its per-backend fields (whisper model
+  combo, or binary/model path fields), and a **“Save and test”** button
+  that performs a cheap request (model list) and reports the result in
+  the section's own status line. A privacy note appears when the base URL
+  is not localhost.
 
 ## 5. Feature stages
 
@@ -147,9 +175,11 @@ Quick Capture adopts that pattern as part of this stage. The model may propose a
 that does not exist yet — it appears in the form like any typed value and
 creates the project on commit, exactly as manual input would.
 
-Whisper runs CPU-only on the reference machine (PyTorch without ROCm);
-for short dictations this is adequate, but each CLI invocation reloads
-the model (seconds). Acceptable for v1; see §10 for the GPU path.
+Both speech-to-text backends reload their model on every CLI invocation
+(seconds — more for whisper.cpp with `large-v3`); for short dictations
+this is acceptable in v1. The openai-whisper backend runs CPU-only on the
+reference machine (PyTorch without ROCm); the whisper.cpp backend uses
+the GPU and delivers the best German quality via `large-v3`.
 
 ### Stage 2 — Inbox triage
 
@@ -213,8 +243,9 @@ are deleted after transcription. The API key lives in the Secret Service.
 
 - `aiError` is displayed at the surface that triggered the action
   (capture dialog, triage window, chat) — never in the global banner.
-- Unreachable backend → a clear message (“AI backend unreachable — is
-  Ollama running?”); the settings “Save and test” button catches
+- Unreachable backend → a clear, provider-aware message (“AI backend
+  unreachable — is Ollama running?” for the Ollama preset, a generic
+  network message otherwise); the settings “Save and test” button catches
   misconfiguration early.
 - Model output that fails validation is retried once with a format
   reminder, then reported as an error. Only validated data reaches the UI.
@@ -263,9 +294,13 @@ Deliberately out of the staged plan; revisit only on demand:
 - **Tool-calling in chat** — the structured suggest-only schema replaces
   it in v1.
 - **Core/macOS portability** — decided against for this feature set.
-- **GPU speech-to-text** (ROCm PyTorch or whisper.cpp) — a user-side
-  installation choice; the subprocess seam keeps the app compatible with
-  either.
+- **WhisperX-ROCm as a third STT backend** — planned as the primary
+  engine in the RPG-audio project, but not installed on the reference
+  machine (requires a self-built ROCm CTranslate2 stack). The backend
+  seam in §4.1 keeps the door open.
+- **A native Anthropic Messages-API client** — Claude models are served
+  through the OpenAI-compatible path (§4.3); a second, native protocol
+  client is not worth the surface area for v1.
 
 ## Reference environment (Ganymed, 2026-07-31)
 
@@ -273,4 +308,7 @@ Ollama 0.32 with ROCm (RX 7900 XTX): `qwen3.6:27b-128k`,
 `gemma4:26b-256k`, `ministral-3`, `granite4.1:8b`, embedding model
 `snowflake-arctic-embed2`. `python-openai-whisper` 20250625 (CLI
 `/usr/bin/whisper`), currently with the `base` model cached, PyTorch
-CPU-only. PipeWire (`pw-record`) available.
+CPU-only. whisper.cpp ROCm/HIP build with `ggml-large-v3.bin` at
+`~/Projekte/rpg-audio-studio/models/whisper.cpp/` (binary
+`build/bin/whisper-cli`), verified on gfx1100 by the RPG-audio project.
+WhisperX-ROCm is not installed. PipeWire (`pw-record`) available.
