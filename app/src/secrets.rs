@@ -53,8 +53,7 @@ pub const KEY_SECRET: &str = "encryption-secret";
 
 const KEY_AI_API_KEY: &str = "api-key";
 
-/// KI-API-Key lesen (Service `…vergissmeinnicht.ai`). Genutzt ab Story AI-A3.
-#[allow(dead_code)]
+/// KI-API-Key lesen (Service `…vergissmeinnicht.ai`).
 pub fn get_ai_api_key() -> Result<Option<String>, String> {
     get_in(SERVICE_AI, KEY_AI_API_KEY)
 }

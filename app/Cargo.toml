@@ -23,6 +23,10 @@ rusqlite = "0.39"
 keyring = { version = "3", features = ["sync-secret-service"] }
 notify-rust = "4"
 uuid.workspace = true
+# Blockierender HTTP-Client für den KI-Endpunkt (ai/client.rs). rustls statt
+# native-tls, damit neben dem von taskchampion aufgelösten reqwest/rustls kein
+# zweiter TLS-Stack (openssl-sys) in den Baum kommt; kein direktes tokio.
+reqwest = { version = "0.12", default-features = false, features = ["blocking", "json", "rustls-tls"] }
 
 [dev-dependencies]
 tempfile = "3"
