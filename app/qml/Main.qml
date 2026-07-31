@@ -383,6 +383,18 @@ Kirigami.ApplicationWindow {
                   && legacy.tags.indexOf("flowtest") !== -1 && legacy.priority === "H",
                   "Legacy-Tokens in Properties überführt")
 
+            // 8d. Custom-Werte (AI-B0): freie due/recur-Tokens wie im
+            // Quick-Capture-Dialog bei „Benutzerdefiniert …" committet.
+            const customDue = app.parseDueToken("+3d")
+            check(customDue > 0, "parseDueToken versteht +3d")
+            check(app.isValidRecurToken("quarterly"), "isValidRecurToken versteht quarterly")
+            check(app.addTaskDetailed("Flow-Custom", "", "flowtest", customDue, "", "quarterly", ""),
+                  "addTaskDetailed mit Custom-due/-recur")
+            app.applyFilter("all")
+            const custom = uuids().map(taskOf).find(x => x.description === "Flow-Custom")
+            check(!!custom && custom.due === customDue && custom.recur === "quarterly",
+                  "Custom-Werte persistiert")
+
             // 9. Tag/Projekt-Management
             app.renameTag("flowtest", "flowfertig")
             check(taskOf(folge.uuid).tags.indexOf("flowfertig") !== -1

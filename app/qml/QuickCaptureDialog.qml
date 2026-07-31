@@ -23,8 +23,10 @@ FormWindow {
         tagsField.text = ""
         dueCombo.currentIndex = 0
         dueDate.value = new Date()
+        dueCustomField.text = ""
         priorityCombo.currentIndex = 0
         recurCombo.currentIndex = 0
+        recurCustomField.text = ""
         preview = {}
         openWindow()
         titleField.forceActiveFocus()
@@ -49,10 +51,12 @@ FormWindow {
         const tags = Array.from(new Set(tokenTags.concat(fieldTags))).join(" ")
 
         let due = 0
-        const presets = ["", "today", "tomorrow", "+1w", "date"]
+        const presets = ["", "today", "tomorrow", "+1w", "date", "custom"]
         const preset = presets[dueCombo.currentIndex]
         if (preset === "date")
             due = Math.floor(dueDate.value.getTime() / 1000)
+        else if (preset === "custom")
+            due = app.parseDueToken(dueCustomField.text)
         else if (preset !== "")
             due = app.parseDueToken(preset)
         else if (p.due)
@@ -63,8 +67,10 @@ FormWindow {
         if (priority === "" && p.priority)
             priority = p.priority
 
-        const recurs = ["", "daily", "weekly", "monthly", "yearly"]
-        const recur = recurs[recurCombo.currentIndex]
+        const recurs = ["", "daily", "weekly", "monthly", "yearly", null]
+        let recur = recurs[recurCombo.currentIndex]
+        if (recur === null)
+            recur = recurCustomField.text.trim()
 
         const ok = app.addTaskDetailed(title, project, tags, due, priority, recur, notesArea.text)
         if (ok)
@@ -141,7 +147,7 @@ FormWindow {
         Layout.fillWidth: true
         id: dueCombo
         text: i18n("Fällig")
-        model: [i18n("Keine Angabe"), i18n("Heute"), i18n("Morgen"), i18n("+1 Woche"), i18n("Datum wählen …")]
+        model: [i18n("Keine Angabe"), i18n("Heute"), i18n("Morgen"), i18n("+1 Woche"), i18n("Datum wählen …"), i18n("Benutzerdefiniert …")]
     }
 
     FormCard.FormDateTimeDelegate {
@@ -150,6 +156,20 @@ FormWindow {
         visible: dueCombo.currentIndex === 4
         text: i18n("Fällig am")
         dateTimeDisplay: FormCard.FormDateTimeDelegate.DateTimeDisplay.Date
+    }
+
+    // Freitext-Fälligkeit (Taskwarrior-Ausdruck) — Custom-Muster wie beim
+    // recur-Feld im DetailDialog; parseDueToken liefert 0 für Unbekanntes.
+    FormCard.FormTextFieldDelegate {
+        Layout.fillWidth: true
+        id: dueCustomField
+        visible: dueCombo.currentIndex === 5
+        label: i18n("Fälligkeits-Ausdruck")
+        placeholderText: i18n("z. B. +3d, eow oder 2026-12-31")
+        status: text.trim().length === 0 || app.parseDueToken(text) > 0
+                ? Kirigami.MessageType.Positive : Kirigami.MessageType.Error
+        statusMessage: text.trim().length === 0 || app.parseDueToken(text) > 0
+                       ? "" : i18n("Nicht erkannter Ausdruck")
     }
 
     FormCard.FormComboBoxDelegate {
@@ -163,7 +183,16 @@ FormWindow {
         Layout.fillWidth: true
         id: recurCombo
         text: i18n("Wiederholung")
-        model: [i18n("Keine"), i18n("Täglich"), i18n("Wöchentlich"), i18n("Monatlich"), i18n("Jährlich")]
+        model: [i18n("Keine"), i18n("Täglich"), i18n("Wöchentlich"), i18n("Monatlich"), i18n("Jährlich"), i18n("Benutzerdefiniert …")]
+    }
+    FormCard.FormTextFieldDelegate {
+        Layout.fillWidth: true
+        id: recurCustomField
+        visible: recurCombo.currentIndex === 5
+        label: i18n("Intervall (Nd / Nw / Nm / Ny)")
+        placeholderText: i18n("z. B. 3d oder 2w")
+        status: app.isValidRecurToken(text) ? Kirigami.MessageType.Positive : Kirigami.MessageType.Error
+        statusMessage: app.isValidRecurToken(text) ? "" : i18n("Nicht erkanntes Intervall")
     }
 
     FormCard.FormDelegateSeparator { Layout.fillWidth: true }

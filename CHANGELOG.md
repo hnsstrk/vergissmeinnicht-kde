@@ -5,6 +5,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- Quick capture: the due and recurrence combos gained a "Custom …" entry
+  (pattern from the detail editor). Due accepts any Taskwarrior date
+  expression (`+3d`, `eow`, ISO date) in a validated text field;
+  recurrence accepts free intervals such as `3d`, `2w` or `quarterly`
+  (AI-B0, #6).
+
 ## [0.3.2] - 2026-07-17
 
 ### Fixed
