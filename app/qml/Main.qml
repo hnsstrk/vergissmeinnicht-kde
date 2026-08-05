@@ -726,11 +726,33 @@ Kirigami.ApplicationWindow {
             check(s.ai_model.length > 0, "aiSettingsJson liefert konfiguriertes Modell")
             // aiConfigured folgt dem Speichern live (kein Neustart nötig).
             app.saveAiSettings(s.ai_provider, s.ai_base_url, "", s.ai_stt_backend,
-                               s.ai_whisper_model, s.ai_whisper_cpp_binary, s.ai_whisper_cpp_model)
+                               s.ai_whisper_model, s.ai_whisper_cpp_binary, s.ai_whisper_cpp_model,
+                               s.ai_context_level)
             check(!app.aiConfigured, "aiConfigured false ohne Modell (live)")
             app.saveAiSettings(s.ai_provider, s.ai_base_url, s.ai_model, s.ai_stt_backend,
-                               s.ai_whisper_model, s.ai_whisper_cpp_binary, s.ai_whisper_cpp_model)
+                               s.ai_whisper_model, s.ai_whisper_cpp_binary, s.ai_whisper_cpp_model,
+                               s.ai_context_level)
             check(app.aiConfigured, "aiConfigured true nach Wiederherstellen (live)")
+            // AI-B1b (#31): Kontextstufe erreicht den Prompt-Pfad — die
+            // Preview baut den Prompt über denselben Code wie startAiInterpret.
+            check(s.ai_context_level === "taxonomy", "ai_context_level Default taxonomy")
+            function speichernMitStufe(stufe) {
+                app.saveAiSettings(s.ai_provider, s.ai_base_url, s.ai_model, s.ai_stt_backend,
+                                   s.ai_whisper_model, s.ai_whisper_cpp_binary,
+                                   s.ai_whisper_cpp_model, stufe)
+            }
+            const previewA = app.aiCapturePromptPreview("x")
+            check(previewA.indexOf("Aufgaben (") === -1, "Stufe A ohne Aufgabenliste")
+            speichernMitStufe("open_titles")
+            check(app.aiCapturePromptPreview("x").indexOf("Offene Aufgaben (Titel):") !== -1,
+                  "Stufe B trägt Titel offener Aufgaben")
+            speichernMitStufe("all")
+            const previewC = app.aiCapturePromptPreview("x")
+            check(previewC.indexOf("Alle Aufgaben (kompakt):") !== -1,
+                  "Stufe C trägt alle Aufgaben kompakt")
+            check(previewC.indexOf("Aktuelles Datum:") > previewC.indexOf("Alle Aufgaben (kompakt):"),
+                  "Datum steht hinter der Aufgabenliste (Präfix-Cache)")
+            speichernMitStufe("taxonomy")
             check(JSON.parse(app.aiModelsJson || "[]").length === 0, "aiModelsJson anfangs leer")
             app.startAiListModels()
             check(app.aiBusy, "aiBusy während Modelllisten-Abruf")

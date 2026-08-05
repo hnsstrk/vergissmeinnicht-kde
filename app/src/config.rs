@@ -58,6 +58,11 @@ pub struct Settings {
     pub ai_whisper_cpp_binary: String,
     /// Pfad zur GGML-Modelldatei (nur für das whisper-cpp-Backend).
     pub ai_whisper_cpp_model: String,
+    /// Kontextumfang der KI-Interpretation (AI-B1b, #31):
+    /// "taxonomy" = nur Projekt-/Schlagwortnamen (Default, bisheriges
+    /// Verhalten), "open_titles" = zusätzlich Titel offener Aufgaben,
+    /// "all" = alle nicht gelöschten Aufgaben kompakt.
+    pub ai_context_level: String,
 }
 
 impl Default for Settings {
@@ -83,6 +88,7 @@ impl Default for Settings {
             ai_whisper_model: "small".into(),
             ai_whisper_cpp_binary: String::new(),
             ai_whisper_cpp_model: String::new(),
+            ai_context_level: "taxonomy".into(),
         }
     }
 }
@@ -173,6 +179,7 @@ mod tests {
         assert_eq!(s.ai_whisper_model, "small");
         assert!(s.ai_whisper_cpp_binary.is_empty());
         assert!(s.ai_whisper_cpp_model.is_empty());
+        assert_eq!(s.ai_context_level, "taxonomy");
     }
 
     #[test]
@@ -203,6 +210,8 @@ mod tests {
         assert!(wieder.ai_model.is_empty());
         assert_eq!(wieder.ai_stt_backend, "openai-whisper");
         assert_eq!(wieder.ai_whisper_model, "small");
+        // AI-B1b: Bestandsinstallationen behalten das bisherige Verhalten.
+        assert_eq!(wieder.ai_context_level, "taxonomy");
         assert_eq!(wieder.default_filter, "todo");
     }
 }

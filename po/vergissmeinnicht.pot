@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-05 21:38+0200\n"
+"POT-Creation-Date: 2026-08-05 22:19+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -40,115 +40,157 @@ msgstr ""
 msgid "KI-Assistent"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:78
+#: app/qml/AiSettingsPage.qml:80
 msgid "KI-Backend"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:83
+#: app/qml/AiSettingsPage.qml:85
 msgid "OpenAI-kompatibler Endpunkt"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:84
+#: app/qml/AiSettingsPage.qml:86
 msgid ""
 "Vorgabe ist Ollama auf dieser Maschine — dabei verlassen keine Daten den "
 "Rechner. Der API-Key wird im Passwortspeicher des Systems (KWallet/Secret "
 "Service) abgelegt."
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:89
+#: app/qml/AiSettingsPage.qml:91
 msgid "Provider"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:91
+#: app/qml/AiSettingsPage.qml:93
 msgid "Ollama (lokal)"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:91
+#: app/qml/AiSettingsPage.qml:93
 msgid "OpenRouter (Cloud)"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:91
+#: app/qml/AiSettingsPage.qml:93
 msgid "Benutzerdefiniert"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:103
+#: app/qml/AiSettingsPage.qml:105
 msgid "Basis-URL (inklusive /v1)"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:111
+#: app/qml/AiSettingsPage.qml:113
+msgid "Kontextumfang der Interpretation"
+msgstr ""
+
+#: app/qml/AiSettingsPage.qml:115
+msgid "Nur Projekt- und Schlagwortnamen"
+msgstr ""
+
+#: app/qml/AiSettingsPage.qml:116
+msgid "Zusätzlich Titel offener Aufgaben"
+msgstr ""
+
+#: app/qml/AiSettingsPage.qml:117
+msgid "Alle Aufgaben (kompakt)"
+msgstr ""
+
+#: app/qml/AiSettingsPage.qml:121
+msgid ""
+"Die KI erhält Freitext, Datum, Projekt- und Schlagwortnamen sowie die Titel "
+"aller offenen Aufgaben."
+msgstr ""
+
+#: app/qml/AiSettingsPage.qml:123
+msgid ""
+"Die KI erhält Freitext, Datum, Projekt- und Schlagwortnamen sowie alle nicht "
+"gelöschten Aufgaben (Titel, Projekt, Schlagworte, Fälligkeit, Erledigt-"
+"Markierung)."
+msgstr ""
+
+#: app/qml/AiSettingsPage.qml:125
+msgid ""
+"Die KI erhält nur Freitext, Datum sowie vorhandene Projekt- und "
+"Schlagwortnamen — keine Aufgabentitel."
+msgstr ""
+
+#: app/qml/AiSettingsPage.qml:135
 msgid "Hinweis zum Datenschutz"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:112
+#: app/qml/AiSettingsPage.qml:137
+msgid ""
+"Die Basis-URL zeigt nicht auf localhost — Aufgabendaten werden an diesen "
+"Endpunkt übertragen. Beim gewählten Kontextumfang gehören dazu auch Titel "
+"und Metadaten Ihrer Aufgaben."
+msgstr ""
+
+#: app/qml/AiSettingsPage.qml:138
 msgid ""
 "Die Basis-URL zeigt nicht auf localhost — Aufgabendaten werden an diesen "
 "Endpunkt übertragen."
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:118
+#: app/qml/AiSettingsPage.qml:144
 msgid "Modell"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:124
+#: app/qml/AiSettingsPage.qml:150
 msgid "Modelle laden"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:125
+#: app/qml/AiSettingsPage.qml:151
 msgid ""
 "Speichert die Einstellungen und holt die Modellliste des Endpunkts. Ist das "
 "Backend nicht erreichbar, bleibt die manuelle Eingabe möglich."
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:136
+#: app/qml/AiSettingsPage.qml:162
 msgid "API-Key (nur für Cloud-Endpunkte)"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:141
+#: app/qml/AiSettingsPage.qml:167
 msgid "Spracheingabe (Diktat)"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:147
+#: app/qml/AiSettingsPage.qml:173
 msgid "Spracherkennungs-Backend"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:155
+#: app/qml/AiSettingsPage.qml:181
 msgid "Whisper-Modell"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:162
+#: app/qml/AiSettingsPage.qml:188
 msgid "whisper-cli-Programm (Pfad)"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:168
+#: app/qml/AiSettingsPage.qml:194
 msgid "GGML-Modelldatei (Pfad)"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:177
+#: app/qml/AiSettingsPage.qml:203
 msgid "Speichern und testen"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:178
+#: app/qml/AiSettingsPage.qml:204
 msgid ""
 "Speichert alle KI-Einstellungen und prüft die Verbindung über die "
 "Modellliste."
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:194 app/qml/DetailDialog.qml:210
+#: app/qml/AiSettingsPage.qml:220 app/qml/DetailDialog.qml:210
 #: app/qml/SyncSettingsPage.qml:109
 msgid "Status"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:199
+#: app/qml/AiSettingsPage.qml:225
 msgid "Prüfe Verbindung …"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:201
+#: app/qml/AiSettingsPage.qml:227
 msgid "Gespeichert — Verbindung erfolgreich, 1 Modell verfügbar."
 msgid_plural "Gespeichert — Verbindung erfolgreich, %1 Modelle verfügbar."
 msgstr[0] ""
 msgstr[1] ""
 
-#: app/qml/AiSettingsPage.qml:205 app/qml/SyncSettingsPage.qml:119
+#: app/qml/AiSettingsPage.qml:231 app/qml/SyncSettingsPage.qml:119
 msgid "Gespeichert."
 msgstr ""
 

@@ -78,9 +78,12 @@ Oberfläche auf jeder Plattform.
   ein eigener OpenAI-kompatibler Endpunkt), Modellauswahl aus der
   Modellliste des Endpunkts („Modelle laden"; manuelle Eingabe bleibt auch
   offline möglich), API-Key im Secret Service und das
-  Spracherkennungs-Backend. „Speichern und testen" prüft die Verbindung
-  über die Modellliste; bei nicht-lokalen Endpunkten erscheint ein
-  Datenschutzhinweis.
+  Spracherkennungs-Backend. Der Kontextumfang bestimmt, wie viele
+  Aufgabendaten die KI beim Interpretieren sieht: nur Projekt- und
+  Schlagwortnamen (Standard), zusätzlich Titel offener Aufgaben oder alle
+  nicht gelöschten Aufgaben kompakt — Gelöschtes wird nie übertragen.
+  „Speichern und testen" prüft die Verbindung über die Modellliste; bei
+  nicht-lokalen Endpunkten erscheint ein Datenschutzhinweis.
 
   ![Vergissmeinnicht — KI-Einstellungen](docs/screenshots/settings-ai.png)
 - **Lokalisierung** — Deutsch (Quellsprache) und Englisch über

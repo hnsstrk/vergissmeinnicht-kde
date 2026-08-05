@@ -80,8 +80,11 @@ platform.
   OpenAI-compatible endpoint), the model picked from the endpoint's model
   list ("Load models"; manual entry keeps working when the backend is
   offline), the API key in the Secret Service, and the speech-to-text
-  backend. "Save and test" verifies the connection via the model list; a
-  privacy note appears for non-local endpoints.
+  backend. A context-scope setting controls how much task data the AI
+  sees when interpreting input: project and tag names only (default),
+  plus open task titles, or all non-deleted tasks compactly — deleted
+  tasks are never sent. "Save and test" verifies the connection via the
+  model list; a privacy note appears for non-local endpoints.
 
   ![Vergissmeinnicht — AI settings](docs/screenshots/settings-ai.png)
 - **Localization** — German (source) and English via ki18n/gettext, with

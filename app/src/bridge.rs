@@ -319,8 +319,15 @@ mod qobject {
         /// „Mit KI interpretieren" (Story AI-B1): schickt den Freitext mit
         /// Datums- und Taxonomie-Kontext ans Modell und publiziert den
         /// validierten Entwurf in `aiDraftJson` (Schema: `ai::types::AiDraft`).
+        /// Der Aufgaben-Kontext folgt `ai_context_level` (AI-B1b, #31).
         #[qinvokable]
         fn start_ai_interpret(self: Pin<&mut AppContainer>, text: &QString);
+        /// System-Prompt der Interpretation für den aktuellen Bestand und die
+        /// gespeicherte Kontextstufe (AI-B1b): Transparenz- und Testhaken —
+        /// zeigt exakt, was `startAiInterpret` ans Backend schicken würde,
+        /// ohne eine Anfrage auszulösen.
+        #[qinvokable]
+        fn ai_capture_prompt_preview(self: &AppContainer, text: &QString) -> QString;
         /// Abbruch der laufenden KI-Anfrage: erhöht nur den Generationszähler
         /// — das Ergebnis des Worker-Threads verfällt beim Eintreffen.
         #[qinvokable]
@@ -337,8 +344,9 @@ mod qobject {
         #[qinvokable]
         fn ai_api_key(self: &AppContainer) -> QString;
         /// KI-Einstellungen speichern (AI-A4): persistiert Provider,
-        /// Basis-URL, Modell und STT-Felder, verwirft den gecachten
-        /// Llm-Client und aktualisiert `aiConfigured` live.
+        /// Basis-URL, Modell, STT-Felder und Kontextstufe (AI-B1b),
+        /// verwirft den gecachten Llm-Client und aktualisiert
+        /// `aiConfigured` live.
         #[qinvokable]
         fn save_ai_settings(
             self: Pin<&mut AppContainer>,
@@ -349,6 +357,7 @@ mod qobject {
             whisper_model: &QString,
             whisper_cpp_binary: &QString,
             whisper_cpp_model: &QString,
+            context_level: &QString,
         );
         /// Aktuelle KI-Einstellungen als JSON (Feldnamen wie `config.rs`) —
         /// befüllt die Einstellungsseite beim Öffnen.
@@ -1492,11 +1501,18 @@ impl qobject::AppContainer {
     fn start_ai_interpret(mut self: Pin<&mut Self>, text: &QString) {
         let projekte = crate::filters::projects_from(&self.rust().state.tasks);
         let tags = crate::filters::tags_from(&self.rust().state.tasks);
+        // Kontextstufe (AI-B1b, #31): welche Aufgaben der Prompt mitschickt.
+        // `state.tasks` enthält Pending, Completed und Recurring-Master, aber
+        // nie Gelöschte — die Stufen-Auswahl selbst liegt in `prompts.rs`.
+        let stufe =
+            ai::prompts::Kontextstufe::aus_config(&self.rust().state.settings.ai_context_level);
         let nachrichten = ai::prompts::capture_nachrichten(
             &text.to_string(),
             vergissmeinnicht_core::chrono::Local::now(),
             &projekte,
             &tags,
+            stufe,
+            &self.rust().state.tasks,
         );
         let settings = self.rust().state.settings.clone();
         let generationen = std::sync::Arc::clone(&self.rust().ai_generationen);
@@ -1529,6 +1545,25 @@ impl qobject::AppContainer {
                 }
             });
         });
+    }
+
+    /// System-Prompt-Vorschau der Interpretation (AI-B1b): baut den Prompt
+    /// über exakt denselben Pfad wie `start_ai_interpret` (gleiche Stufe,
+    /// gleicher Bestand), löst aber keine Anfrage aus. Testhaken für
+    /// `--test-flow` und Transparenz („was verlässt die Maschine?").
+    fn ai_capture_prompt_preview(&self, text: &QString) -> QString {
+        let projekte = crate::filters::projects_from(&self.state.tasks);
+        let tags = crate::filters::tags_from(&self.state.tasks);
+        let stufe = ai::prompts::Kontextstufe::aus_config(&self.state.settings.ai_context_level);
+        let nachrichten = ai::prompts::capture_nachrichten(
+            &text.to_string(),
+            vergissmeinnicht_core::chrono::Local::now(),
+            &projekte,
+            &tags,
+            stufe,
+            &self.state.tasks,
+        );
+        QString::from(nachrichten[0].content.as_str())
     }
 
     fn cancel_ai_request(mut self: Pin<&mut Self>) {
@@ -1582,6 +1617,7 @@ impl qobject::AppContainer {
         whisper_model: &QString,
         whisper_cpp_binary: &QString,
         whisper_cpp_model: &QString,
+        context_level: &QString,
     ) {
         {
             let state = &mut self.as_mut().rust_mut().state;
@@ -1593,6 +1629,7 @@ impl qobject::AppContainer {
             s.ai_whisper_model = whisper_model.to_string().trim().to_string();
             s.ai_whisper_cpp_binary = whisper_cpp_binary.to_string().trim().to_string();
             s.ai_whisper_cpp_model = whisper_cpp_model.to_string().trim().to_string();
+            s.ai_context_level = context_level.to_string().trim().to_string();
             let _ = s.save();
         }
         self.rust().ai_llm.invalidiere();
@@ -1610,6 +1647,7 @@ impl qobject::AppContainer {
             "ai_whisper_model": s.ai_whisper_model,
             "ai_whisper_cpp_binary": s.ai_whisper_cpp_binary,
             "ai_whisper_cpp_model": s.ai_whisper_cpp_model,
+            "ai_context_level": s.ai_context_level,
         });
         QString::from(json.to_string().as_str())
     }

@@ -41,7 +41,8 @@ FormCard.FormCardPage {
                            sttCombo.keys[sttCombo.currentIndex],
                            whisperModelField.text,
                            whisperCppBinaryField.text,
-                           whisperCppModelField.text)
+                           whisperCppModelField.text,
+                           contextCombo.keys[contextCombo.currentIndex])
         app.setAiApiKey(keyField.text)
     }
 
@@ -56,6 +57,7 @@ FormCard.FormCardPage {
         whisperModelField.text = s.ai_whisper_model
         whisperCppBinaryField.text = s.ai_whisper_cpp_binary
         whisperCppModelField.text = s.ai_whisper_cpp_model
+        contextCombo.currentIndex = Math.max(0, contextCombo.keys.indexOf(s.ai_context_level))
     }
 
     // Geladene Modellliste in die Combo übernehmen. Das konfigurierte
@@ -104,12 +106,36 @@ FormCard.FormCardPage {
             placeholderText: "http://localhost:11434/v1"
         }
 
+        // Kontextumfang der KI-Interpretation (AI-B1b, #31): drei Stufen —
+        // die Beschreibung benennt je Stufe, was die Maschine verlässt.
+        FormCard.FormComboBoxDelegate {
+            id: contextCombo
+            text: i18n("Kontextumfang der Interpretation")
+            readonly property var keys: ["taxonomy", "open_titles", "all"]
+            model: [i18n("Nur Projekt- und Schlagwortnamen"),
+                    i18n("Zusätzlich Titel offener Aufgaben"),
+                    i18n("Alle Aufgaben (kompakt)")]
+            description: {
+                switch (currentIndex) {
+                case 1:
+                    return i18n("Die KI erhält Freitext, Datum, Projekt- und Schlagwortnamen sowie die Titel aller offenen Aufgaben.")
+                case 2:
+                    return i18n("Die KI erhält Freitext, Datum, Projekt- und Schlagwortnamen sowie alle nicht gelöschten Aufgaben (Titel, Projekt, Schlagworte, Fälligkeit, Erledigt-Markierung).")
+                default:
+                    return i18n("Die KI erhält nur Freitext, Datum sowie vorhandene Projekt- und Schlagwortnamen — keine Aufgabentitel.")
+                }
+            }
+        }
+
         // Datenschutz sichtbar machen (Spec §3.3): sobald der Endpunkt
-        // nicht mehr lokal ist, wird die Übertragung benannt.
+        // nicht mehr lokal ist, wird die Übertragung benannt — bei den
+        // Stufen B/C ausdrücklich samt Aufgabeninhalten (AI-B1b).
         FormCard.FormTextDelegate {
             visible: !page.istLokal(baseUrlField.text)
             text: i18n("Hinweis zum Datenschutz")
-            description: i18n("Die Basis-URL zeigt nicht auf localhost — Aufgabendaten werden an diesen Endpunkt übertragen.")
+            description: contextCombo.currentIndex > 0
+                         ? i18n("Die Basis-URL zeigt nicht auf localhost — Aufgabendaten werden an diesen Endpunkt übertragen. Beim gewählten Kontextumfang gehören dazu auch Titel und Metadaten Ihrer Aufgaben.")
+                         : i18n("Die Basis-URL zeigt nicht auf localhost — Aufgabendaten werden an diesen Endpunkt übertragen.")
             descriptionItem.color: Kirigami.Theme.neutralTextColor
         }
 

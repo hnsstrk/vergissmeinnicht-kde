@@ -7,6 +7,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Selectable AI context level (AI-B1b, #31): a new "Context scope for
+  interpretation" combo on the AI settings page controls how much task
+  data the AI sees when interpreting free-form input — project and tag
+  names only (default, previous behavior), plus the titles of all open
+  tasks, or all non-deleted tasks compactly (title, project, tags, due
+  date, completed marker). Deleted tasks are never sent at any level, and
+  each option's description names exactly what leaves the machine; for
+  non-localhost endpoints the privacy note calls out that the larger
+  levels transmit task content. The system prompt now puts volatile
+  content (current date and time) after the stable schema, taxonomy and
+  task list so backends can reuse their prompt prefix cache, and the task
+  list is capped by size — completed tasks are dropped oldest first, open
+  tasks are always kept, and the shortening is stated in the prompt. The
+  new `aiCapturePromptPreview` invokable exposes the exact system prompt
+  for verification and transparency.
+
 - AI settings page (AI-A4, #12): the AI assistant is configured in the UI
   instead of hand-editing `config.json` — provider preset (Ollama /
   OpenRouter / custom, prefilling the base URL), base URL field, **model
