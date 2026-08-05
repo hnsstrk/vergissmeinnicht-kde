@@ -830,6 +830,109 @@ Kirigami.ApplicationWindow {
             const modelle = JSON.parse(app.aiModelsJson || "[]")
             check(modelle.length === 1 && modelle[0] === "vmn-mock",
                   "Modellliste des Mocks publiziert (aiModelsJson)")
+            check(app.aiProbeStatus === 1,
+                  "Erreichbarkeitsanzeige positiv nach Modelllisten-Abruf")
+            // Weiter zum UI-6-Teil (leiser Abruf + Auto-Abruf beim Öffnen).
+            aiProbeSilentTimer.baseFailures = failures
+            aiProbeSilentTimer.start()
+        }
+    }
+
+    // KI-Flow, Schritt 10 (UI-6, #33): leiser Abruf gegen einen
+    // unerreichbaren Endpunkt — der Mock simuliert den Ausfall, wenn die
+    // Basis-URL den Marker unerreichbar.invalid trägt. Erwartung: Anzeige
+    // negativ samt Grund, aiError bleibt leer, Modellliste unangetastet.
+    Timer {
+        id: aiProbeSilentTimer
+        property int baseFailures: 0
+        interval: 100
+        onTriggered: {
+            const s = JSON.parse(app.aiSettingsJson())
+            aiProbeSilentWaiter.settingsVorher = s
+            app.saveAiSettings(s.ai_provider, "http://unerreichbar.invalid/v1", s.ai_model,
+                               s.ai_stt_backend, s.ai_whisper_model, s.ai_whisper_cpp_binary,
+                               s.ai_whisper_cpp_model, s.ai_context_level)
+            app.startAiListModelsAuto()
+            aiProbeSilentWaiter.baseFailures = baseFailures
+            aiProbeSilentWaiter.start()
+        }
+    }
+
+    Timer {
+        id: aiProbeSilentWaiter
+        property int baseFailures: 0
+        property var settingsVorher: null
+        property int versuche: 0
+        interval: 200
+        repeat: true
+        onTriggered: {
+            versuche++
+            if (app.aiBusy && versuche < 25)
+                return
+            aiProbeSilentWaiter.running = false
+            let failures = baseFailures
+            function check(cond, label) {
+                console.log((cond ? "FLOW-OK  " : "FLOW-FAIL ") + label)
+                if (!cond) failures++
+            }
+            check(!app.aiBusy, "leiser Abruf meldet fertig (aiBusy false)")
+            check(app.aiProbeStatus === 2,
+                  "Erreichbarkeitsanzeige negativ bei unerreichbarem Endpunkt")
+            check(app.aiProbeDetail.length > 0, "aiProbeDetail nennt den Grund")
+            check(app.aiError.length === 0, "leiser Abruf setzt keinen aiError")
+            const modelle = JSON.parse(app.aiModelsJson || "[]")
+            check(modelle.length === 1 && modelle[0] === "vmn-mock",
+                  "Modellliste bleibt bei Fehlschlag unangetastet")
+            // Basis-URL wiederherstellen, dann der Seitenöffnungs-Test.
+            const s = settingsVorher
+            app.saveAiSettings(s.ai_provider, s.ai_base_url, s.ai_model, s.ai_stt_backend,
+                               s.ai_whisper_model, s.ai_whisper_cpp_binary,
+                               s.ai_whisper_cpp_model, s.ai_context_level)
+            aiPageOpenTimer.baseFailures = failures
+            aiPageOpenTimer.start()
+        }
+    }
+
+    // KI-Flow, Schritt 11 (UI-6, #33): Das Öffnen der KI-Einstellungsseite
+    // stößt den Modelllisten-Abruf selbst an — die Anzeige springt vom
+    // negativen Stand aus Schritt 10 zurück auf „erreichbar", ohne dass
+    // jemand einen Knopf drückt.
+    Timer {
+        id: aiPageOpenTimer
+        property int baseFailures: 0
+        interval: 100
+        onTriggered: {
+            settingsDialog.openSettings("ai")
+            aiPageOpenWaiter.baseFailures = baseFailures
+            aiPageOpenWaiter.start()
+        }
+    }
+
+    Timer {
+        id: aiPageOpenWaiter
+        property int baseFailures: 0
+        property int versuche: 0
+        interval: 200
+        repeat: true
+        onTriggered: {
+            versuche++
+            // Warten, bis die Seite entstanden ist und ihr Auto-Abruf
+            // durchgelaufen ist (Fensterbau ist asynchron).
+            if ((app.aiBusy || app.aiProbeStatus !== 1) && versuche < 25)
+                return
+            aiPageOpenWaiter.running = false
+            let failures = baseFailures
+            function check(cond, label) {
+                console.log((cond ? "FLOW-OK  " : "FLOW-FAIL ") + label)
+                if (!cond) failures++
+            }
+            check(app.aiProbeStatus === 1,
+                  "Seitenöffnung stößt Auto-Abruf an (Anzeige wieder positiv)")
+            check(app.aiError.length === 0, "kein aiError beim Auto-Abruf")
+            const modelle = JSON.parse(app.aiModelsJson || "[]")
+            check(modelle.length === 1 && modelle[0] === "vmn-mock",
+                  "Auto-Abruf füllt die Modellliste")
+            settingsDialog.close()
             console.log(failures === 0 ? "FLOW-ENDE: alles grün" : `FLOW-ENDE: ${failures} Fehler`)
             Qt.quit()
         }
@@ -857,8 +960,11 @@ Kirigami.ApplicationWindow {
                 testHoverTimer.start()
                 break
             case "settings-ai":
-                // KI-Seite direkt öffnen (Screenshot AI-A4).
+                // KI-Seite direkt öffnen (Screenshot AI-A4); höheres Fenster,
+                // damit Modell-Combo samt Erreichbarkeitszeile (UI-6) sichtbar
+                // sind.
                 settingsDialog.openSettings("ai")
+                settingsDialog.configViewItem.height = 760
                 testHoverTimer.start()
                 break
             case "settings-maintenance":

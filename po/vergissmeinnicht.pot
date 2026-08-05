@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-06 00:12+0200\n"
+"POT-Creation-Date: 2026-08-06 00:46+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -36,161 +36,179 @@ msgstr ""
 msgid "MIT-Lizenz"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:16 app/qml/SettingsDialog.qml:41
+#: app/qml/AiSettingsPage.qml:20 app/qml/SettingsDialog.qml:48
 msgid "KI-Assistent"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:80
+#: app/qml/AiSettingsPage.qml:109
 msgid "KI-Backend"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:85
+#: app/qml/AiSettingsPage.qml:114
 msgid "OpenAI-kompatibler Endpunkt"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:86
+#: app/qml/AiSettingsPage.qml:115
 msgid ""
 "Vorgabe ist Ollama auf dieser Maschine — dabei verlassen keine Daten den "
 "Rechner. Der API-Key wird im Passwortspeicher des Systems (KWallet/Secret "
 "Service) abgelegt."
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:91
+#: app/qml/AiSettingsPage.qml:120
 msgid "Provider"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:93
+#: app/qml/AiSettingsPage.qml:122
 msgid "Ollama (lokal)"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:93
+#: app/qml/AiSettingsPage.qml:122
 msgid "OpenRouter (Cloud)"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:93
+#: app/qml/AiSettingsPage.qml:122
 msgid "Benutzerdefiniert"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:105
+#: app/qml/AiSettingsPage.qml:134
 msgid "Basis-URL (inklusive /v1)"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:113
+#: app/qml/AiSettingsPage.qml:142
 msgid "Kontextumfang der Interpretation"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:115
+#: app/qml/AiSettingsPage.qml:144
 msgid "Nur Projekt- und Schlagwortnamen"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:116
+#: app/qml/AiSettingsPage.qml:145
 msgid "Zusätzlich Titel offener Aufgaben"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:117
+#: app/qml/AiSettingsPage.qml:146
 msgid "Alle Aufgaben (kompakt)"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:121
+#: app/qml/AiSettingsPage.qml:150
 msgid ""
 "Die KI erhält Freitext, Datum, Projekt- und Schlagwortnamen sowie die Titel "
 "aller offenen Aufgaben."
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:123
+#: app/qml/AiSettingsPage.qml:152
 msgid ""
 "Die KI erhält Freitext, Datum, Projekt- und Schlagwortnamen sowie alle nicht "
 "gelöschten Aufgaben (Titel, Projekt, Schlagworte, Fälligkeit, Erledigt-"
 "Markierung)."
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:125
+#: app/qml/AiSettingsPage.qml:154
 msgid ""
 "Die KI erhält nur Freitext, Datum sowie vorhandene Projekt- und "
 "Schlagwortnamen — keine Aufgabentitel."
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:135
+#: app/qml/AiSettingsPage.qml:164
 msgid "Hinweis zum Datenschutz"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:137
+#: app/qml/AiSettingsPage.qml:166
 msgid ""
 "Die Basis-URL zeigt nicht auf localhost — Aufgabendaten werden an diesen "
 "Endpunkt übertragen. Beim gewählten Kontextumfang gehören dazu auch Titel "
 "und Metadaten Ihrer Aufgaben."
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:138
+#: app/qml/AiSettingsPage.qml:167
 msgid ""
 "Die Basis-URL zeigt nicht auf localhost — Aufgabendaten werden an diesen "
 "Endpunkt übertragen."
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:144
+#: app/qml/AiSettingsPage.qml:173
 msgid "Modell"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:150
+#: app/qml/AiSettingsPage.qml:185
+msgid "Erreichbarkeit"
+msgstr ""
+
+#: app/qml/AiSettingsPage.qml:188
+msgid "Prüfe Erreichbarkeit …"
+msgstr ""
+
+#: app/qml/AiSettingsPage.qml:190
+msgid "Backend erreichbar — 1 Modell gefunden."
+msgid_plural "Backend erreichbar — %1 Modelle gefunden."
+msgstr[0] ""
+msgstr[1] ""
+
+#: app/qml/AiSettingsPage.qml:194
+msgid "Backend nicht erreichbar: %1"
+msgstr ""
+
+#: app/qml/AiSettingsPage.qml:209
 msgid "Modelle laden"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:151
+#: app/qml/AiSettingsPage.qml:210
 msgid ""
 "Speichert die Einstellungen und holt die Modellliste des Endpunkts. Ist das "
 "Backend nicht erreichbar, bleibt die manuelle Eingabe möglich."
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:162
+#: app/qml/AiSettingsPage.qml:221
 msgid "API-Key (nur für Cloud-Endpunkte)"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:167
+#: app/qml/AiSettingsPage.qml:226
 msgid "Spracheingabe (Diktat)"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:173
+#: app/qml/AiSettingsPage.qml:232
 msgid "Spracherkennungs-Backend"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:181
+#: app/qml/AiSettingsPage.qml:240
 msgid "Whisper-Modell"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:188
+#: app/qml/AiSettingsPage.qml:247
 msgid "whisper-cli-Programm (Pfad)"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:194
+#: app/qml/AiSettingsPage.qml:253
 msgid "GGML-Modelldatei (Pfad)"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:203
+#: app/qml/AiSettingsPage.qml:262
 msgid "Speichern und testen"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:204
+#: app/qml/AiSettingsPage.qml:263
 msgid ""
 "Speichert alle KI-Einstellungen und prüft die Verbindung über die "
 "Modellliste."
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:220 app/qml/DetailDialog.qml:210
+#: app/qml/AiSettingsPage.qml:279 app/qml/DetailDialog.qml:210
 #: app/qml/SyncSettingsPage.qml:109
 msgid "Status"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:225
+#: app/qml/AiSettingsPage.qml:284
 msgid "Prüfe Verbindung …"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:227
+#: app/qml/AiSettingsPage.qml:286
 msgid "Gespeichert — Verbindung erfolgreich, 1 Modell verfügbar."
 msgid_plural "Gespeichert — Verbindung erfolgreich, %1 Modelle verfügbar."
 msgstr[0] ""
 msgstr[1] ""
 
-#: app/qml/AiSettingsPage.qml:231 app/qml/SyncSettingsPage.qml:119
+#: app/qml/AiSettingsPage.qml:290 app/qml/SyncSettingsPage.qml:119
 msgid "Gespeichert."
 msgstr ""
 
@@ -396,7 +414,7 @@ msgstr ""
 msgid "Zuletzt geändert"
 msgstr ""
 
-#: app/qml/GeneralSettingsPage.qml:16 app/qml/SettingsDialog.qml:27
+#: app/qml/GeneralSettingsPage.qml:16 app/qml/SettingsDialog.qml:34
 msgid "Allgemein"
 msgstr ""
 
@@ -548,7 +566,7 @@ msgstr ""
 msgid "Aktualisieren"
 msgstr ""
 
-#: app/qml/HelpDialog.qml:61 app/qml/SettingsDialog.qml:22
+#: app/qml/HelpDialog.qml:61 app/qml/SettingsDialog.qml:29
 msgid "Einstellungen"
 msgstr ""
 
@@ -655,144 +673,144 @@ msgstr ""
 msgid "Nicht blockiert"
 msgstr ""
 
-#: app/qml/MaintenanceSettingsPage.qml:15 app/qml/SettingsDialog.qml:48
+#: app/qml/MaintenanceSettingsPage.qml:20 app/qml/SettingsDialog.qml:55
 msgid "Wartung"
 msgstr ""
 
-#: app/qml/MaintenanceSettingsPage.qml:26
+#: app/qml/MaintenanceSettingsPage.qml:50
 msgid "Wartung — Datensicherung"
 msgstr ""
 
-#: app/qml/MaintenanceSettingsPage.qml:31
+#: app/qml/MaintenanceSettingsPage.qml:55
 msgid "Automatische Backups"
 msgstr ""
 
-#: app/qml/MaintenanceSettingsPage.qml:32
+#: app/qml/MaintenanceSettingsPage.qml:56
 msgid ""
 "Vor jeder Synchronisierung wird ein Backup erstellt; die letzten 10 werden "
 "aufbewahrt."
 msgstr ""
 
-#: app/qml/MaintenanceSettingsPage.qml:36
+#: app/qml/MaintenanceSettingsPage.qml:60
 msgid "Backup jetzt erstellen"
 msgstr ""
 
-#: app/qml/MaintenanceSettingsPage.qml:45
+#: app/qml/MaintenanceSettingsPage.qml:69
 msgid "Alle Aufgaben exportieren (JSON) …"
 msgstr ""
 
-#: app/qml/MaintenanceSettingsPage.qml:46
+#: app/qml/MaintenanceSettingsPage.qml:70
 msgid "Taskwarrior-Exportformat, inklusive UDAs."
 msgstr ""
 
-#: app/qml/MaintenanceSettingsPage.qml:52
+#: app/qml/MaintenanceSettingsPage.qml:76
 msgid "Backup-Ordner öffnen"
 msgstr ""
 
-#: app/qml/MaintenanceSettingsPage.qml:59
-#: app/qml/MaintenanceSettingsPage.qml:176
+#: app/qml/MaintenanceSettingsPage.qml:83
+#: app/qml/MaintenanceSettingsPage.qml:208
 msgid "Backup wiederherstellen"
 msgstr ""
 
-#: app/qml/MaintenanceSettingsPage.qml:66
+#: app/qml/MaintenanceSettingsPage.qml:90
 msgid "Noch keine Backups vorhanden."
 msgstr ""
 
-#: app/qml/MaintenanceSettingsPage.qml:71
+#: app/qml/MaintenanceSettingsPage.qml:95
 msgid "Wartung — Aufräumen"
 msgstr ""
 
-#: app/qml/MaintenanceSettingsPage.qml:77
+#: app/qml/MaintenanceSettingsPage.qml:101
 msgid "Mindestalter erledigter Aufgaben"
 msgstr ""
 
-#: app/qml/MaintenanceSettingsPage.qml:78
+#: app/qml/MaintenanceSettingsPage.qml:102
 msgid ""
 "Alter ab letzter Änderung; Wiederholungs-Aufgaben der Taskwarrior-CLI "
 "bleiben unberührt."
 msgstr ""
 
-#: app/qml/MaintenanceSettingsPage.qml:79
+#: app/qml/MaintenanceSettingsPage.qml:103
 msgid "1 Monat"
 msgstr ""
 
-#: app/qml/MaintenanceSettingsPage.qml:79
+#: app/qml/MaintenanceSettingsPage.qml:103
 msgid "1 Quartal"
 msgstr ""
 
-#: app/qml/MaintenanceSettingsPage.qml:79
+#: app/qml/MaintenanceSettingsPage.qml:103
 msgid "6 Monate"
 msgstr ""
 
-#: app/qml/MaintenanceSettingsPage.qml:79
+#: app/qml/MaintenanceSettingsPage.qml:103
 msgid "1 Jahr"
 msgstr ""
 
-#: app/qml/MaintenanceSettingsPage.qml:88
+#: app/qml/MaintenanceSettingsPage.qml:112
 msgid "Erledigte Aufgaben löschen …"
 msgstr ""
 
-#: app/qml/MaintenanceSettingsPage.qml:92
+#: app/qml/MaintenanceSettingsPage.qml:116
 msgid ""
 "Zeigt vor dem Löschen die genaue Anzahl; vorher wird automatisch ein Backup "
 "angelegt."
 msgstr ""
 
-#: app/qml/MaintenanceSettingsPage.qml:95
+#: app/qml/MaintenanceSettingsPage.qml:119
 msgid "Löschen fehlgeschlagen: %1"
 msgstr ""
 
-#: app/qml/MaintenanceSettingsPage.qml:96
+#: app/qml/MaintenanceSettingsPage.qml:120
 msgid "Löschen fehlgeschlagen."
 msgstr ""
 
-#: app/qml/MaintenanceSettingsPage.qml:97
+#: app/qml/MaintenanceSettingsPage.qml:121
 msgid "1 erledigte Aufgabe gelöscht — mit Strg+Z umkehrbar."
 msgid_plural "%1 erledigte Aufgaben gelöscht — mit Strg+Z umkehrbar."
 msgstr[0] ""
 msgstr[1] ""
 
-#: app/qml/MaintenanceSettingsPage.qml:112
+#: app/qml/MaintenanceSettingsPage.qml:136
 msgid "Wartung — Reparatur"
 msgstr ""
 
-#: app/qml/MaintenanceSettingsPage.qml:119
+#: app/qml/MaintenanceSettingsPage.qml:143
 msgid "Legacy-Aufgaben reparieren"
 msgstr ""
 
-#: app/qml/MaintenanceSettingsPage.qml:122
+#: app/qml/MaintenanceSettingsPage.qml:146
 msgid ""
 "Überführt Token-Syntax in Titeln (+tag, project:, due:, priority:) in echte "
 "Eigenschaften."
 msgstr ""
 
-#: app/qml/MaintenanceSettingsPage.qml:125
+#: app/qml/MaintenanceSettingsPage.qml:149
 msgid "Reparatur fehlgeschlagen: %1"
 msgstr ""
 
-#: app/qml/MaintenanceSettingsPage.qml:126
+#: app/qml/MaintenanceSettingsPage.qml:150
 msgid "Reparatur fehlgeschlagen."
 msgstr ""
 
-#: app/qml/MaintenanceSettingsPage.qml:127
+#: app/qml/MaintenanceSettingsPage.qml:151
 msgid "1 Aufgabe repariert."
 msgid_plural "%1 Aufgaben repariert."
 msgstr[0] ""
 msgstr[1] ""
 
-#: app/qml/MaintenanceSettingsPage.qml:136
+#: app/qml/MaintenanceSettingsPage.qml:160
 msgid "Aufgaben exportieren"
 msgstr ""
 
-#: app/qml/MaintenanceSettingsPage.qml:138
+#: app/qml/MaintenanceSettingsPage.qml:162
 msgid "JSON-Dateien (*.json)"
 msgstr ""
 
-#: app/qml/MaintenanceSettingsPage.qml:152
+#: app/qml/MaintenanceSettingsPage.qml:182
 msgid "Erledigte Aufgaben löschen"
 msgstr ""
 
-#: app/qml/MaintenanceSettingsPage.qml:154
+#: app/qml/MaintenanceSettingsPage.qml:184
 msgid ""
 "1 erledigte Aufgabe ist älter als „%2“ und wird endgültig gelöscht. Vorher "
 "wird automatisch ein Backup angelegt; Strg+Z macht die Aktion rückgängig."
@@ -803,22 +821,22 @@ msgid_plural ""
 msgstr[0] ""
 msgstr[1] ""
 
-#: app/qml/MaintenanceSettingsPage.qml:157
+#: app/qml/MaintenanceSettingsPage.qml:187
 msgid "Keine erledigte Aufgabe ist älter als „%1“ — es gibt nichts zu löschen."
 msgstr ""
 
-#: app/qml/MaintenanceSettingsPage.qml:161 app/qml/Sidebar.qml:257
+#: app/qml/MaintenanceSettingsPage.qml:191 app/qml/Sidebar.qml:257
 #: app/qml/TasksPage.qml:181 app/qml/TasksPage.qml:515
 msgid "Löschen"
 msgstr ""
 
-#: app/qml/MaintenanceSettingsPage.qml:178
+#: app/qml/MaintenanceSettingsPage.qml:210
 msgid ""
 "Die aktuelle Replica wird durch „%1“ ersetzt. Vorher wird automatisch ein "
 "Sicherheits-Backup angelegt."
 msgstr ""
 
-#: app/qml/MaintenanceSettingsPage.qml:183
+#: app/qml/MaintenanceSettingsPage.qml:215
 msgid "Wiederherstellen"
 msgstr ""
 
@@ -904,7 +922,7 @@ msgstr ""
 msgid "Nicht erkannter Ausdruck"
 msgstr ""
 
-#: app/qml/SettingsDialog.qml:34 app/qml/SyncSettingsPage.qml:17
+#: app/qml/SettingsDialog.qml:41 app/qml/SyncSettingsPage.qml:17
 msgid "Synchronisation"
 msgstr ""
 

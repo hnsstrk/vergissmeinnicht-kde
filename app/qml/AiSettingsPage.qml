@@ -81,6 +81,12 @@ FormCard.FormCardPage {
         whisperCppBinaryField.text = s.ai_whisper_cpp_binary
         whisperCppModelField.text = s.ai_whisper_cpp_model
         contextCombo.currentIndex = Math.max(0, contextCombo.keys.indexOf(s.ai_context_level))
+        // Automatischer Modelllisten-Abruf beim Öffnen der Seite (UI-6,
+        // #33): einmal pro Seitenaufbau, nur mit konfigurierter Basis-URL.
+        // Der leise Weg meldet Fehler nur in die Erreichbarkeitszeile —
+        // wer kein Backend laufen hat, bekommt kein Fehlerbanner.
+        if (s.ai_base_url.trim().length > 0)
+            app.startAiListModelsAuto()
     }
 
     // Geladene Modellliste in die Combo übernehmen. Das konfigurierte
@@ -167,6 +173,36 @@ FormCard.FormCardPage {
             text: i18n("Modell")
             editable: true
             model: page.modelle
+        }
+
+        // Erreichbarkeitszeile (UI-6, #33): Ergebnis des jüngsten
+        // Modelllisten-Abrufs — automatisch wie manuell —, sichtbar ohne
+        // weiteren Dialog. 0 = noch nicht geprüft, 1 = erreichbar,
+        // 2 = nicht erreichbar (Grund aus aiProbeDetail).
+        FormCard.FormTextDelegate {
+            id: erreichbarkeitszeile
+            visible: page.app.aiBusy || page.app.aiProbeStatus !== 0
+            text: i18n("Erreichbarkeit")
+            description: {
+                if (page.app.aiBusy)
+                    return i18n("Prüfe Erreichbarkeit …")
+                if (page.app.aiProbeStatus === 1)
+                    return i18np("Backend erreichbar — 1 Modell gefunden.",
+                                 "Backend erreichbar — %1 Modelle gefunden.",
+                                 page.modelle.length)
+                if (page.app.aiProbeStatus === 2)
+                    return i18n("Backend nicht erreichbar: %1", page.app.aiProbeDetail)
+                return ""
+            }
+            descriptionItem.color: {
+                if (page.app.aiBusy)
+                    return Kirigami.Theme.textColor
+                if (page.app.aiProbeStatus === 2)
+                    return Kirigami.Theme.negativeTextColor
+                if (page.app.aiProbeStatus === 1)
+                    return Kirigami.Theme.positiveTextColor
+                return Kirigami.Theme.textColor
+            }
         }
 
         FormCard.FormButtonDelegate {

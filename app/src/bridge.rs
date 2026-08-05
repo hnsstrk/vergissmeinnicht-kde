@@ -131,6 +131,11 @@ mod qobject {
         // Modellliste des Endpunkts als JSON-Array (AI-A4) — gefüllt von
         // `startAiListModels`, konsumiert von der KI-Einstellungsseite.
         #[qproperty(QString, ai_models_json, cxx_name = "aiModelsJson")]
+        // Erreichbarkeit des KI-Endpunkts (UI-6, #33), gespeist vom
+        // Modelllisten-Abruf: 0 = noch nicht geprüft, 1 = erreichbar,
+        // 2 = nicht erreichbar (Grund in aiProbeDetail).
+        #[qproperty(i32, ai_probe_status, cxx_name = "aiProbeStatus")]
+        #[qproperty(QString, ai_probe_detail, cxx_name = "aiProbeDetail")]
         // Stufen-Ergebnis der NL-Erfassung (AI-B1): validierter Entwurf als
         // JSON, siehe `ai::types::AiDraft`.
         #[qproperty(QString, ai_draft_json, cxx_name = "aiDraftJson")]
@@ -370,6 +375,13 @@ mod qobject {
         /// `startAiRequest`) und in `aiModelsJson` publizieren.
         #[qinvokable]
         fn start_ai_list_models(self: Pin<&mut AppContainer>);
+        /// Leiser Modelllisten-Abruf beim Öffnen der KI-Einstellungsseite
+        /// (UI-6, #33): gleicher Weg wie `startAiListModels`, aber Fehler
+        /// erreichen nur die Erreichbarkeitsanzeige (`aiProbeStatus`/
+        /// `aiProbeDetail`), nie den aiError-Kanal — wer kein Backend
+        /// laufen hat, wird beim Öffnen nicht angemeckert.
+        #[qinvokable]
+        fn start_ai_list_models_auto(self: Pin<&mut AppContainer>);
 
         /// Legacy-Reparatur: Token-Syntax in Descriptions → echte Properties.
         /// Rückgabe: Anzahl reparierter Aufgaben, -1 bei Fehler.
@@ -464,6 +476,8 @@ pub struct AppContainerRust {
     ai_error: QString,
     ai_response_json: QString,
     ai_models_json: QString,
+    ai_probe_status: i32,
+    ai_probe_detail: QString,
     ai_draft_json: QString,
     dictation_available: bool,
     /// Generationszähler der KI-Anfragen — geteilt mit den Worker-Threads,
@@ -510,6 +524,8 @@ impl Default for AppContainerRust {
             ai_error: QString::default(),
             ai_response_json: QString::default(),
             ai_models_json: QString::default(),
+            ai_probe_status: 0,
+            ai_probe_detail: QString::default(),
             ai_draft_json: QString::default(),
             dictation_available: false,
             ai_generationen: std::sync::Arc::new(ai::Generationen::default()),
@@ -1679,36 +1695,14 @@ impl qobject::AppContainer {
     /// `start_ai_request` — Busy-Flag, Generationszähler mit doppelter
     /// Aktualitätsprüfung, Fehler nur in den KI-Kanal. Das Ergebnis landet
     /// als JSON-Array in `aiModelsJson`.
-    fn start_ai_list_models(mut self: Pin<&mut Self>) {
-        let settings = self.rust().state.settings.clone();
-        let generationen = std::sync::Arc::clone(&self.rust().ai_generationen);
-        let llm = std::sync::Arc::clone(&self.rust().ai_llm);
-        self.as_mut().set_ai_busy(true);
-        self.as_mut().set_ai_error(QString::default());
-        let qt_thread = self.qt_thread();
-        ai::starte_modellliste(&generationen, &llm, settings, move |generation, ergebnis| {
-            let _ = qt_thread.queue(move |mut qobject| {
-                // Zweite Aktualitätsprüfung auf dem Qt-Thread (siehe
-                // `start_ai_request`).
-                if !qobject.rust().ai_generationen.ist_aktuell(generation) {
-                    return;
-                }
-                qobject.as_mut().set_ai_busy(false);
-                match ergebnis {
-                    Ok(modelle) => {
-                        let json = serde_json::to_string(&modelle)
-                            .unwrap_or_else(|_| "[]".into());
-                        qobject
-                            .as_mut()
-                            .set_ai_models_json(QString::from(json.as_str()));
-                    }
-                    // Fehler in den KI-eigenen Kanal, nie in `errorMessage`.
-                    Err(e) => qobject
-                        .as_mut()
-                        .set_ai_error(QString::from(e.to_string().as_str())),
-                }
-            });
-        });
+    fn start_ai_list_models(self: Pin<&mut Self>) {
+        self.modellliste_abrufen(false);
+    }
+
+    /// Leiser Abruf beim Öffnen der KI-Einstellungsseite (UI-6, #33) —
+    /// Kontrakt siehe Bridge-Deklaration.
+    fn start_ai_list_models_auto(self: Pin<&mut Self>) {
+        self.modellliste_abrufen(true);
     }
 
     fn repair_legacy_tasks(mut self: Pin<&mut Self>) -> i32 {
@@ -1913,6 +1907,56 @@ impl qobject::AppContainer {
 }
 
 impl qobject::AppContainer {
+    /// Gemeinsamer Modelllisten-Abruf (AI-A4 / UI-6): Busy-Flag,
+    /// Generationszähler mit doppelter Aktualitätsprüfung, Ergebnis in
+    /// `aiModelsJson` plus Erreichbarkeitsanzeige (`aiProbeStatus` /
+    /// `aiProbeDetail`). `leise` unterscheidet den automatischen Abruf beim
+    /// Seitenöffnen vom manuellen: leise Fehler erreichen NUR die
+    /// Erreichbarkeitsanzeige, nie den aiError-Kanal.
+    fn modellliste_abrufen(mut self: Pin<&mut Self>, leise: bool) {
+        let settings = self.rust().state.settings.clone();
+        let generationen = std::sync::Arc::clone(&self.rust().ai_generationen);
+        let llm = std::sync::Arc::clone(&self.rust().ai_llm);
+        self.as_mut().set_ai_busy(true);
+        if !leise {
+            self.as_mut().set_ai_error(QString::default());
+        }
+        let qt_thread = self.qt_thread();
+        ai::starte_modellliste(&generationen, &llm, settings, move |generation, ergebnis| {
+            let _ = qt_thread.queue(move |mut qobject| {
+                // Zweite Aktualitätsprüfung auf dem Qt-Thread (siehe
+                // `start_ai_request`).
+                if !qobject.rust().ai_generationen.ist_aktuell(generation) {
+                    return;
+                }
+                qobject.as_mut().set_ai_busy(false);
+                match ergebnis {
+                    Ok(modelle) => {
+                        let json = serde_json::to_string(&modelle)
+                            .unwrap_or_else(|_| "[]".into());
+                        qobject
+                            .as_mut()
+                            .set_ai_models_json(QString::from(json.as_str()));
+                        qobject.as_mut().set_ai_probe_status(1);
+                        qobject.as_mut().set_ai_probe_detail(QString::default());
+                    }
+                    // Fehler in den KI-eigenen Kanal, nie in `errorMessage` —
+                    // und beim leisen Abruf nur in die Erreichbarkeitsanzeige.
+                    Err(e) => {
+                        let text = e.to_string();
+                        qobject.as_mut().set_ai_probe_status(2);
+                        qobject
+                            .as_mut()
+                            .set_ai_probe_detail(QString::from(text.as_str()));
+                        if !leise {
+                            qobject.as_mut().set_ai_error(QString::from(text.as_str()));
+                        }
+                    }
+                }
+            });
+        });
+    }
+
     /// Gemeinsamer Bulk-Pfad: Operation je UUID, ein Refresh, Teilfehler-Report.
     fn bulk_apply<F>(self: Pin<&mut Self>, uuids: Vec<String>, op: F)
     where

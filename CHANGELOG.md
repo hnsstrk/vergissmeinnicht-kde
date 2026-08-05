@@ -7,6 +7,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- The AI settings page now fetches the endpoint's model list
+  automatically when it opens (UI-6, #33, customer report) — no "Load
+  models" click needed in the normal case; the button stays as an
+  explicit refresh. A reachability line under the model combo shows the
+  result of the latest fetch: reachable with the number of models found,
+  or not reachable with the reason (e.g. connection refused). The
+  automatic fetch is deliberately quiet — a failure only updates the
+  reachability line and never raises an error banner, so users without a
+  running backend are not scolded on every visit, while manual actions
+  ("Load models", "Save and test") keep reporting errors as before. The
+  fetch runs once per page open, a hand-typed model name still survives,
+  and a configured model missing from the list stays selected. The
+  headless `--test-flow` covers the quiet failure path (via a mock
+  endpoint marked unreachable) and the page-open auto-fetch.
+
 - Delete old completed tasks from the maintenance settings page (UI-5,
   #32): a new "Maintenance — Cleanup" card offers an age threshold
   (1 month / 1 quarter / 6 months / 1 year, measured from the last

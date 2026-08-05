@@ -78,9 +78,11 @@ platform.
 - **AI assistant (opt-in)** — configured under Settings → AI Assistant:
   provider preset (Ollama local by default, OpenRouter, or a custom
   OpenAI-compatible endpoint), the model picked from the endpoint's model
-  list ("Load models"; manual entry keeps working when the backend is
-  offline), the API key in the Secret Service, and the speech-to-text
-  backend. A context-scope setting controls how much task data the AI
+  list (fetched automatically when the page opens; a reachability line
+  shows whether the endpoint answered and how many models it offers, and
+  "Load models" stays as an explicit refresh — manual entry keeps working
+  when the backend is offline), the API key in the Secret Service, and
+  the speech-to-text backend. A context-scope setting controls how much task data the AI
   sees when interpreting input: project and tag names only (default),
   plus open task titles, or all non-deleted tasks compactly — deleted
   tasks are never sent. "Save and test" verifies the connection via the

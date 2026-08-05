@@ -76,9 +76,11 @@ Oberfläche auf jeder Plattform.
 - **KI-Assistent (opt-in)** — konfiguriert unter Einstellungen →
   KI-Assistent: Provider-Preset (Standard Ollama lokal, OpenRouter oder
   ein eigener OpenAI-kompatibler Endpunkt), Modellauswahl aus der
-  Modellliste des Endpunkts („Modelle laden"; manuelle Eingabe bleibt auch
-  offline möglich), API-Key im Secret Service und das
-  Spracherkennungs-Backend. Der Kontextumfang bestimmt, wie viele
+  Modellliste des Endpunkts (wird beim Öffnen der Seite automatisch
+  geladen; eine Erreichbarkeitszeile zeigt, ob der Endpunkt antwortet und
+  wie viele Modelle er anbietet, „Modelle laden" bleibt als manuelle
+  Aktualisierung — manuelle Eingabe bleibt auch offline möglich), API-Key
+  im Secret Service und das Spracherkennungs-Backend. Der Kontextumfang bestimmt, wie viele
   Aufgabendaten die KI beim Interpretieren sieht: nur Projekt- und
   Schlagwortnamen (Standard), zusätzlich Titel offener Aufgaben oder alle
   nicht gelöschten Aufgaben kompakt — Gelöschtes wird nie übertragen.

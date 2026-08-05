@@ -47,7 +47,12 @@ pub fn make_llm(
     settings: &crate::config::Settings,
 ) -> Result<Box<dyn Llm + Send + Sync>, AiError> {
     match mock::CannedLlm::from_env()? {
-        Some(canned) => Ok(Box::new(canned)),
+        Some(mut canned) => {
+            // Simulierter Ausfall (UI-6, #33): trägt die Basis-URL den
+            // Marker, meldet der Mock „nicht erreichbar" statt Konserven.
+            canned.setze_unerreichbar(settings.ai_base_url.contains(mock::MOCK_UNERREICHBAR));
+            Ok(Box::new(canned))
+        }
         None => Ok(Box::new(client::LlmClient::from_settings(settings)?)),
     }
 }

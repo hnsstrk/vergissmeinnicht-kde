@@ -37,6 +37,13 @@ pub const ENV_MOCK: &str = "VMN_AI_MOCK";
 /// Umgebungsvariable: Grundlatenz je Antwort in Millisekunden.
 pub const ENV_MOCK_DELAY: &str = "VMN_AI_MOCK_DELAY_MS";
 
+/// URL-Marker für den simulierten Ausfall (UI-6, #33): Enthält die
+/// konfigurierte Basis-URL diesen Host, meldet der Mock „nicht erreichbar"
+/// statt Konserven — so testet der `--test-flow` den Fehlerpfad der
+/// Erreichbarkeitsanzeige, ohne echte Verbindungsversuche. `.invalid` ist
+/// als TLD reserviert und kollidiert nie mit einem echten Endpunkt.
+pub const MOCK_UNERREICHBAR: &str = "unerreichbar.invalid";
+
 /// Roh-Eintrag der Konserven-Datei. `deny_unknown_fields`, damit Tippfehler
 /// (z. B. `dely_ms`) laut scheitern statt still die Grundlatenz zu nutzen.
 #[derive(Deserialize)]
@@ -61,6 +68,9 @@ pub struct CannedLlm {
     antworten: Vec<Antwort>,
     position: Mutex<usize>,
     basis_verzoegerung: Duration,
+    /// Simulierter Ausfall (siehe [`MOCK_UNERREICHBAR`]): beide
+    /// Trait-Methoden melden dann einen Netzwerkfehler.
+    unerreichbar: bool,
 }
 
 impl CannedLlm {
@@ -109,12 +119,23 @@ impl CannedLlm {
                 verzoegerung: e.delay_ms.map(Duration::from_millis),
             })
             .collect();
-        Ok(Self { antworten, position: Mutex::new(0), basis_verzoegerung })
+        Ok(Self { antworten, position: Mutex::new(0), basis_verzoegerung, unerreichbar: false })
+    }
+
+    /// Markiert den Mock als „nicht erreichbar" — gesetzt von `make_llm`,
+    /// wenn die Basis-URL den [`MOCK_UNERREICHBAR`]-Marker trägt.
+    pub fn setze_unerreichbar(&mut self, unerreichbar: bool) {
+        self.unerreichbar = unerreichbar;
     }
 }
 
 impl Llm for CannedLlm {
     fn chat(&self, _messages: &[ChatMessage]) -> Result<String, AiError> {
+        if self.unerreichbar {
+            return Err(AiError::Network(format!(
+                "Mock: Endpunkt {MOCK_UNERREICHBAR} nicht erreichbar"
+            )));
+        }
         // Antwort unter dem Lock ziehen, aber außerhalb schlafen — sonst
         // serialisiert der Mutex die Anfragen und nichts kann sich überholen.
         let antwort = {
@@ -131,6 +152,11 @@ impl Llm for CannedLlm {
     }
 
     fn list_models(&self) -> Result<Vec<String>, AiError> {
+        if self.unerreichbar {
+            return Err(AiError::Network(format!(
+                "Mock: Endpunkt {MOCK_UNERREICHBAR} nicht erreichbar"
+            )));
+        }
         Ok(vec!["vmn-mock".into()])
     }
 }
@@ -176,7 +202,12 @@ pub mod tests {
     }
 
     fn mock(antworten: Vec<Antwort>, basis: Duration) -> CannedLlm {
-        CannedLlm { antworten, position: Mutex::new(0), basis_verzoegerung: basis }
+        CannedLlm {
+            antworten,
+            position: Mutex::new(0),
+            basis_verzoegerung: basis,
+            unerreichbar: false,
+        }
     }
 
     // ─── Konserven-Laden ────────────────────────────────────────────────────
@@ -252,6 +283,34 @@ pub mod tests {
     fn list_models_liefert_mock_modell() {
         let mock = mock(vec![antwort("x", None)], Duration::ZERO);
         assert_eq!(mock.list_models().unwrap(), vec!["vmn-mock".to_string()]);
+    }
+
+    #[test]
+    fn unerreichbar_meldet_netzwerkfehler() {
+        // Simulierter Ausfall (UI-6, #33): beide Trait-Methoden scheitern
+        // mit Netzwerkfehler statt Konserven zu servieren.
+        let mut mock = mock(vec![antwort("x", None)], Duration::ZERO);
+        mock.setze_unerreichbar(true);
+        assert!(matches!(mock.list_models(), Err(AiError::Network(_))));
+        assert!(matches!(mock.chat(&[]), Err(AiError::Network(_))));
+        // Zurückgenommen serviert er wieder normal.
+        mock.setze_unerreichbar(false);
+        assert_eq!(mock.list_models().unwrap(), vec!["vmn-mock".to_string()]);
+    }
+
+    #[test]
+    fn fabrik_markiert_unerreichbare_basis_url() {
+        // `make_llm` setzt den Ausfall-Marker anhand der Basis-URL.
+        let datei = schreibe_konserven(r#"[{"content": "x"}]"#);
+        let pfad = datei.path().to_str().unwrap().to_string();
+        mit_env(&[(ENV_MOCK, &pfad)], || {
+            let settings = crate::config::Settings {
+                ai_base_url: format!("http://{MOCK_UNERREICHBAR}/v1"),
+                ..Default::default()
+            };
+            let llm = crate::ai::make_llm(&settings).unwrap();
+            assert!(matches!(llm.list_models(), Err(AiError::Network(_))));
+        });
     }
 
     // ─── Latenz ─────────────────────────────────────────────────────────────
