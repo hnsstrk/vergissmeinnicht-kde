@@ -32,7 +32,11 @@ platform.
   and annotations across the entire store (pending, completed, recurring).
   Supports AND terms, quoted phrases, and `project:`, `tag:`, `status:`
   operators (German and English aliases). While a search is active the
-  sidebar filter is ignored.
+  sidebar filter is ignored. Free-text terms are typo-tolerant: German
+  spelling variants are folded (`pruefen` finds `prüfen`, `strasse` finds
+  `Straße`) and a small edit distance covers slips such as `prüfem`. Words
+  of three letters or less must match exactly, and the operators above stay
+  exact.
 - **Saved searches** (Ctrl+Shift+D) — name a search and pin it to the sidebar
   between system filters and projects. Right-click to rename or delete.
 - **Quick capture** (Ctrl+N) — capture window with title, notes, project,

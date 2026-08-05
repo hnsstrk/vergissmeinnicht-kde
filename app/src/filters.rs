@@ -400,6 +400,76 @@ fn ci_contains(haystack: &str, needle: &str) -> bool {
     haystack.to_lowercase().contains(&needle.to_lowercase())
 }
 
+/// Faltet deutsche Schreibvarianten auf eine gemeinsame Normalform: kleingeschrieben
+/// und `ä→ae`, `ö→oe`, `ü→ue`, `ß→ss`. Weil beide Seiten (Suchbegriff und Haystack)
+/// gefaltet werden, treffen sich `pruefen`/`prüfen` und `strasse`/`Straße` in der Mitte.
+fn fold_variants(text: &str) -> String {
+    let mut out = String::with_capacity(text.len() + 4);
+    for ch in text.chars().flat_map(char::to_lowercase) {
+        match ch {
+            'ä' => out.push_str("ae"),
+            'ö' => out.push_str("oe"),
+            'ü' => out.push_str("ue"),
+            'ß' => out.push_str("ss"),
+            other => out.push(other),
+        }
+    }
+    out
+}
+
+/// Erlaubte Editierdistanz, längenrelativ: sehr kurze Wörter bekommen keine
+/// Toleranz (sonst trifft „tag" auf „tor"), mittlere eine, lange zwei.
+fn max_edit_distance(len: usize) -> usize {
+    match len {
+        0..=3 => 0,
+        4..=7 => 1,
+        _ => 2,
+    }
+}
+
+/// Levenshtein-Distanz mit Obergrenze — bricht ab, sobald die Distanz `max`
+/// sicher überschreitet. Handgerollt (zwei Zeilen statt voller Matrix), damit
+/// keine neue Abhängigkeit nötig ist.
+fn within_edit_distance(word: &str, term: &str, max: usize) -> bool {
+    if max == 0 {
+        return word == term;
+    }
+    let a: Vec<char> = word.chars().collect();
+    let b: Vec<char> = term.chars().collect();
+    // Längenunterschied ist eine untere Schranke der Distanz — billiger Vorfilter.
+    if a.len().abs_diff(b.len()) > max {
+        return false;
+    }
+    let mut prev: Vec<usize> = (0..=b.len()).collect();
+    let mut curr = vec![0usize; b.len() + 1];
+    for (i, ca) in a.iter().enumerate() {
+        curr[0] = i + 1;
+        let mut row_min = curr[0];
+        for (j, cb) in b.iter().enumerate() {
+            let cost = usize::from(ca != cb);
+            curr[j + 1] = (prev[j] + cost).min(prev[j + 1] + 1).min(curr[j] + 1);
+            row_min = row_min.min(curr[j + 1]);
+        }
+        // Alle Werte der Zeile über der Grenze → die Distanz kann nicht mehr sinken.
+        if row_min > max {
+            return false;
+        }
+        std::mem::swap(&mut prev, &mut curr);
+    }
+    prev[b.len()] <= max
+}
+
+/// Zerlegt die gefalteten Haystacks in Wörter. Die Editierdistanz arbeitet
+/// wortweise, weil sie sonst bei jedem längeren Feld allein durch die Restlänge
+/// über die Grenze liefe.
+fn word_tokens(folded: &[String]) -> Vec<&str> {
+    folded
+        .iter()
+        .flat_map(|h| h.split(|c: char| !c.is_alphanumeric()))
+        .filter(|w| !w.is_empty())
+        .collect()
+}
+
 /// Virtuelle Taskwarrior-Tags (Teilmenge, auf vorhandene Felder gemappt).
 fn matches_virtual_tag(task: &TaskInfo, tag: &str, now: i64) -> bool {
     use vergissmeinnicht_core::chrono::TimeZone;
@@ -511,8 +581,40 @@ pub fn query_matches(task: &TaskInfo, query: &ParsedQuery) -> bool {
                 .join(" "),
         );
     }
-    for term in &query.free_terms {
-        if !haystacks.iter().any(|h| ci_contains(h, term)) {
+    // Stufe 1: exakte, case-insensitive Substring-Suche — bisheriges Verhalten,
+    // unverändert. Nur was hier durchfällt, kommt in die weiteren Stufen.
+    let unmatched: Vec<&String> = query
+        .free_terms
+        .iter()
+        .filter(|term| !haystacks.iter().any(|h| ci_contains(h, term)))
+        .collect();
+    if unmatched.is_empty() {
+        return true;
+    }
+    // Stufe 2: Variantenfaltung. Die Faltung kostet eine Allokation pro Haystack
+    // und wird deshalb genau einmal berechnet, nicht je Suchbegriff.
+    let folded_haystacks: Vec<String> = haystacks.iter().map(|h| fold_variants(h)).collect();
+    let mut fuzzy_terms: Vec<String> = Vec::new();
+    for term in unmatched {
+        let folded_term = fold_variants(term);
+        if !folded_haystacks.iter().any(|h| h.contains(&folded_term)) {
+            fuzzy_terms.push(folded_term);
+        }
+    }
+    if fuzzy_terms.is_empty() {
+        return true;
+    }
+    // Stufe 3: begrenzte Editierdistanz gegen die Wörter der Haystacks. Auch die
+    // Tokenisierung läuft einmal für alle verbliebenen Begriffe.
+    let words = word_tokens(&folded_haystacks);
+    for term in &fuzzy_terms {
+        let max = max_edit_distance(term.chars().count());
+        if max == 0 {
+            // Ohne Toleranz bliebe nur Wortgleichheit — die hätte Stufe 2 schon
+            // als Substring gefunden. Also: kein Treffer.
+            return false;
+        }
+        if !words.iter().any(|w| within_edit_distance(w, term, max)) {
             return false;
         }
     }
@@ -761,6 +863,66 @@ mod tests {
         assert!(!query_matches(&t, &q));
         let q = parse_search_query("status:erledigt").unwrap();
         assert!(!query_matches(&t, &q));
+    }
+
+    #[test]
+    fn search_folds_german_variants() {
+        let mut t = task(TaskStatus::Pending);
+        t.description = "Rechnung prüfen".into();
+        // Variante ohne Umlaut findet die Umlaut-Schreibung …
+        assert!(query_matches(&t, &parse_search_query("pruefen").unwrap()));
+        // … und umgekehrt.
+        let mut s = task(TaskStatus::Pending);
+        s.description = "Straße kehren".into();
+        assert!(query_matches(&s, &parse_search_query("strasse").unwrap()));
+        assert!(query_matches(&s, &parse_search_query("Strasse").unwrap()));
+        let mut u = task(TaskStatus::Pending);
+        u.description = "Hauptstrasse".into();
+        assert!(query_matches(&u, &parse_search_query("hauptstraße").unwrap()));
+    }
+
+    #[test]
+    fn search_tolerates_single_typo() {
+        let mut t = task(TaskStatus::Pending);
+        t.description = "Rechnung prüfen".into();
+        // Nachbartaste n→m.
+        assert!(query_matches(&t, &parse_search_query("prüfem").unwrap()));
+        // Auch in Kombination mit der Faltung.
+        assert!(query_matches(&t, &parse_search_query("pruefem").unwrap()));
+    }
+
+    #[test]
+    fn search_rejects_different_word() {
+        let mut t = task(TaskStatus::Pending);
+        t.description = "Rechnung prüfen".into();
+        assert!(!query_matches(&t, &parse_search_query("streichen").unwrap()));
+        assert!(!query_matches(&t, &parse_search_query("hausboot").unwrap()));
+    }
+
+    #[test]
+    fn search_short_words_have_no_typo_tolerance() {
+        let mut t = task(TaskStatus::Pending);
+        t.description = "Tor streichen".into();
+        t.tags = vec!["abc".into()];
+        // Drei Buchstaben: keine Distanz erlaubt, sonst träfe jedes Kurzwort.
+        assert!(!query_matches(&t, &parse_search_query("tag").unwrap()));
+        assert!(!query_matches(&t, &parse_search_query("abd").unwrap()));
+        // Exakt bleibt exakt.
+        assert!(query_matches(&t, &parse_search_query("tor").unwrap()));
+        assert!(query_matches(&t, &parse_search_query("abc").unwrap()));
+    }
+
+    #[test]
+    fn search_operators_stay_exact() {
+        let mut t = task(TaskStatus::Pending);
+        t.description = "Rechnung prüfen".into();
+        t.project = Some("Büro".into());
+        t.tags = vec!["finanzen".into()];
+        // Projekt-, Tag- und Status-Operatoren dürfen nicht unscharf werden.
+        assert!(!query_matches(&t, &parse_search_query("projekt:buero").unwrap()));
+        assert!(!query_matches(&t, &parse_search_query("projekt:Bür").unwrap()));
+        assert!(!query_matches(&t, &parse_search_query("tag:finanzem").unwrap()));
+        assert!(query_matches(&t, &parse_search_query("projekt:büro").unwrap()));
     }
 
     #[test]

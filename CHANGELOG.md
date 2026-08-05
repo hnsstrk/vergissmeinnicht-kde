@@ -12,6 +12,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   expression (`+3d`, `eow`, ISO date) in a validated text field;
   recurrence accepts free intervals such as `3d`, `2w` or `quarterly`
   (AI-B0, #6).
+- Search: free-text terms are now typo-tolerant. German spelling variants
+  are folded (`ue↔ü`, `ae↔ä`, `oe↔ö`, `ss↔ß`), so `pruefen` finds "prüfen"
+  and `strasse` finds "Straße"; a bounded edit distance (1 for words of
+  four to seven letters, 2 beyond that, none for shorter ones) catches
+  slips such as `prüfem`. Exact substring matching runs first and is
+  unchanged, and `project:`/`tag:`/`status:` stay exact (UI-3, #29).
 
 ## [0.3.2] - 2026-07-17
 

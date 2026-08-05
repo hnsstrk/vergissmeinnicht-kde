@@ -31,7 +31,11 @@ Oberfläche auf jeder Plattform.
   und Notizen über den gesamten Bestand (offen, erledigt, wiederkehrend).
   UND-Verknüpfung, Phrasen in Anführungszeichen sowie `projekt:`, `tag:`,
   `status:` (deutsche und englische Aliase). Bei aktiver Suche wird der
-  Seitenleisten-Filter ignoriert.
+  Seitenleisten-Filter ignoriert. Freitext ist tippfehlertolerant: deutsche
+  Schreibvarianten werden gefaltet (`pruefen` findet „prüfen", `strasse`
+  findet „Straße"), eine kleine Editierdistanz fängt Vertipper wie `prüfem`
+  ab. Wörter mit höchstens drei Buchstaben müssen exakt stimmen, die
+  Operatoren oben bleiben ebenfalls exakt.
 - **Gespeicherte Suchen** (Strg+Umschalt+D) — Suche benennen und in der
   Seitenleiste anheften. Rechtsklick zum Umbenennen oder Löschen.
 - **Schnelleingabe** (Strg+N) — Fenster mit Titel, Notizen, Projekt, Tags,
