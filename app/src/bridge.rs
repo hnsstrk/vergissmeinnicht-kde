@@ -128,6 +128,9 @@ mod qobject {
         #[qproperty(bool, ai_busy, cxx_name = "aiBusy")]
         #[qproperty(QString, ai_error, cxx_name = "aiError")]
         #[qproperty(QString, ai_response_json, cxx_name = "aiResponseJson")]
+        // Modellliste des Endpunkts als JSON-Array (AI-A4) — gefüllt von
+        // `startAiListModels`, konsumiert von der KI-Einstellungsseite.
+        #[qproperty(QString, ai_models_json, cxx_name = "aiModelsJson")]
         // Stufen-Ergebnis der NL-Erfassung (AI-B1): validierter Entwurf als
         // JSON, siehe `ai::types::AiDraft`.
         #[qproperty(QString, ai_draft_json, cxx_name = "aiDraftJson")]
@@ -329,6 +332,35 @@ mod qobject {
         /// KI-API-Key im Secret Service speichern (leer = löschen).
         #[qinvokable]
         fn set_ai_api_key(self: Pin<&mut AppContainer>, key: &QString) -> bool;
+        /// KI-API-Key aus dem Secret Service lesen — Vorbefüllung des
+        /// Passwortfelds der Einstellungsseite (Pendant zu `syncSecret`).
+        #[qinvokable]
+        fn ai_api_key(self: &AppContainer) -> QString;
+        /// KI-Einstellungen speichern (AI-A4): persistiert Provider,
+        /// Basis-URL, Modell und STT-Felder, verwirft den gecachten
+        /// Llm-Client und aktualisiert `aiConfigured` live.
+        #[qinvokable]
+        fn save_ai_settings(
+            self: Pin<&mut AppContainer>,
+            provider: &QString,
+            base_url: &QString,
+            model: &QString,
+            stt_backend: &QString,
+            whisper_model: &QString,
+            whisper_cpp_binary: &QString,
+            whisper_cpp_model: &QString,
+        );
+        /// Aktuelle KI-Einstellungen als JSON (Feldnamen wie `config.rs`) —
+        /// befüllt die Einstellungsseite beim Öffnen.
+        #[qinvokable]
+        fn ai_settings_json(self: &AppContainer) -> QString;
+        /// Basis-URL-Vorgabe je Provider-Preset; leer für „custom".
+        #[qinvokable]
+        fn ai_provider_default_url(self: &AppContainer, provider: &QString) -> QString;
+        /// Modellliste des Endpunkts im Worker-Thread holen (Kontrakt wie
+        /// `startAiRequest`) und in `aiModelsJson` publizieren.
+        #[qinvokable]
+        fn start_ai_list_models(self: Pin<&mut AppContainer>);
 
         /// Legacy-Reparatur: Token-Syntax in Descriptions → echte Properties.
         /// Rückgabe: Anzahl reparierter Aufgaben, -1 bei Fehler.
@@ -403,6 +435,7 @@ pub struct AppContainerRust {
     ai_busy: bool,
     ai_error: QString,
     ai_response_json: QString,
+    ai_models_json: QString,
     ai_draft_json: QString,
     dictation_available: bool,
     /// Generationszähler der KI-Anfragen — geteilt mit den Worker-Threads,
@@ -448,6 +481,7 @@ impl Default for AppContainerRust {
             ai_busy: false,
             ai_error: QString::default(),
             ai_response_json: QString::default(),
+            ai_models_json: QString::default(),
             ai_draft_json: QString::default(),
             dictation_available: false,
             ai_generationen: std::sync::Arc::new(ai::Generationen::default()),
@@ -1507,10 +1541,12 @@ impl qobject::AppContainer {
     }
 
     /// KI-API-Key im Secret Service ablegen (leer = löschen). Fehler landen
-    /// im KI-eigenen Kanal `aiError`.
+    /// im KI-eigenen Kanal `aiError`. Ein geänderter Key invalidiert den
+    /// gecachten Llm-Client — der trägt den Key als Bearer-Header.
     fn set_ai_api_key(mut self: Pin<&mut Self>, key: &QString) -> bool {
         match secrets::set_ai_api_key(key.to_string().trim()) {
             Ok(()) => {
+                self.rust().ai_llm.invalidiere();
                 self.as_mut().set_ai_error(QString::default());
                 true
             }
@@ -1520,6 +1556,102 @@ impl qobject::AppContainer {
                 false
             }
         }
+    }
+
+    fn ai_api_key(&self) -> QString {
+        QString::from(
+            secrets::get_ai_api_key()
+                .ok()
+                .flatten()
+                .unwrap_or_default()
+                .as_str(),
+        )
+    }
+
+    /// KI-Einstellungen persistieren (AI-A4). Invalidiert immer den
+    /// gecachten Llm-Client (deckt Provider-, URL- und Modellwechsel ab —
+    /// der nächste Zugriff baut ohnehin lazy neu) und publiziert
+    /// `aiConfigured` sofort, damit die KI-Bedienelemente ohne Neustart
+    /// erscheinen bzw. verschwinden.
+    fn save_ai_settings(
+        mut self: Pin<&mut Self>,
+        provider: &QString,
+        base_url: &QString,
+        model: &QString,
+        stt_backend: &QString,
+        whisper_model: &QString,
+        whisper_cpp_binary: &QString,
+        whisper_cpp_model: &QString,
+    ) {
+        {
+            let state = &mut self.as_mut().rust_mut().state;
+            let s = &mut state.settings;
+            s.ai_provider = provider.to_string().trim().to_string();
+            s.ai_base_url = base_url.to_string().trim().to_string();
+            s.ai_model = model.to_string().trim().to_string();
+            s.ai_stt_backend = stt_backend.to_string().trim().to_string();
+            s.ai_whisper_model = whisper_model.to_string().trim().to_string();
+            s.ai_whisper_cpp_binary = whisper_cpp_binary.to_string().trim().to_string();
+            s.ai_whisper_cpp_model = whisper_cpp_model.to_string().trim().to_string();
+            let _ = s.save();
+        }
+        self.rust().ai_llm.invalidiere();
+        let configured = compute_ai_configured(&self.rust().state.settings);
+        self.as_mut().set_ai_configured(configured);
+    }
+
+    fn ai_settings_json(&self) -> QString {
+        let s = &self.state.settings;
+        let json = serde_json::json!({
+            "ai_provider": s.ai_provider,
+            "ai_base_url": s.ai_base_url,
+            "ai_model": s.ai_model,
+            "ai_stt_backend": s.ai_stt_backend,
+            "ai_whisper_model": s.ai_whisper_model,
+            "ai_whisper_cpp_binary": s.ai_whisper_cpp_binary,
+            "ai_whisper_cpp_model": s.ai_whisper_cpp_model,
+        });
+        QString::from(json.to_string().as_str())
+    }
+
+    fn ai_provider_default_url(&self, provider: &QString) -> QString {
+        QString::from(crate::config::ai_provider_default_url(&provider.to_string()))
+    }
+
+    /// Modellliste im Worker holen (AI-A4): gleicher Kontrakt wie
+    /// `start_ai_request` — Busy-Flag, Generationszähler mit doppelter
+    /// Aktualitätsprüfung, Fehler nur in den KI-Kanal. Das Ergebnis landet
+    /// als JSON-Array in `aiModelsJson`.
+    fn start_ai_list_models(mut self: Pin<&mut Self>) {
+        let settings = self.rust().state.settings.clone();
+        let generationen = std::sync::Arc::clone(&self.rust().ai_generationen);
+        let llm = std::sync::Arc::clone(&self.rust().ai_llm);
+        self.as_mut().set_ai_busy(true);
+        self.as_mut().set_ai_error(QString::default());
+        let qt_thread = self.qt_thread();
+        ai::starte_modellliste(&generationen, &llm, settings, move |generation, ergebnis| {
+            let _ = qt_thread.queue(move |mut qobject| {
+                // Zweite Aktualitätsprüfung auf dem Qt-Thread (siehe
+                // `start_ai_request`).
+                if !qobject.rust().ai_generationen.ist_aktuell(generation) {
+                    return;
+                }
+                qobject.as_mut().set_ai_busy(false);
+                match ergebnis {
+                    Ok(modelle) => {
+                        let json = serde_json::to_string(&modelle)
+                            .unwrap_or_else(|_| "[]".into());
+                        qobject
+                            .as_mut()
+                            .set_ai_models_json(QString::from(json.as_str()));
+                    }
+                    // Fehler in den KI-eigenen Kanal, nie in `errorMessage`.
+                    Err(e) => qobject
+                        .as_mut()
+                        .set_ai_error(QString::from(e.to_string().as_str())),
+                }
+            });
+        });
     }
 
     fn repair_legacy_tasks(mut self: Pin<&mut Self>) -> i32 {

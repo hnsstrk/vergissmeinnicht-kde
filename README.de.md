@@ -69,10 +69,20 @@ Oberfläche auf jeder Plattform.
 - **Benachrichtigungen** — Opt-in-Zusammenfassung beim Start, wenn
   überfällige Aufgaben vorliegen.
 - **Einstellungen in Kategorien** — Allgemein, Synchronisation,
-  KI-Assistent (kommt mit der KI-Integration) und Wartung als eigene
-  Seiten in einem Einstellungsfenster mit Kategorien-Seitenleiste.
+  KI-Assistent und Wartung als eigene Seiten in einem Einstellungsfenster
+  mit Kategorien-Seitenleiste.
 
   ![Vergissmeinnicht — Einstellungen](docs/screenshots/settings.png)
+- **KI-Assistent (opt-in)** — konfiguriert unter Einstellungen →
+  KI-Assistent: Provider-Preset (Standard Ollama lokal, OpenRouter oder
+  ein eigener OpenAI-kompatibler Endpunkt), Modellauswahl aus der
+  Modellliste des Endpunkts („Modelle laden"; manuelle Eingabe bleibt auch
+  offline möglich), API-Key im Secret Service und das
+  Spracherkennungs-Backend. „Speichern und testen" prüft die Verbindung
+  über die Modellliste; bei nicht-lokalen Endpunkten erscheint ein
+  Datenschutzhinweis.
+
+  ![Vergissmeinnicht — KI-Einstellungen](docs/screenshots/settings-ai.png)
 - **Lokalisierung** — Deutsch (Quellsprache) und Englisch über
   ki18n/gettext, mit manueller Umschaltung in den Einstellungen.
 - **Synchronisierung** gegen einen beliebigen

@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: vergissmeinnicht 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-05 21:37+0200\n"
+"POT-Creation-Date: 2026-08-05 21:38+0200\n"
 "Language: en\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -29,18 +29,127 @@ msgstr ""
 msgid "MIT-Lizenz"
 msgstr "MIT license"
 
-#: app/qml/AiSettingsPage.qml:14 app/qml/AiSettingsPage.qml:20
-#: app/qml/SettingsDialog.qml:41
+#: app/qml/AiSettingsPage.qml:16 app/qml/SettingsDialog.qml:41
 msgid "KI-Assistent"
 msgstr "AI Assistant"
 
-#: app/qml/AiSettingsPage.qml:21
+#: app/qml/AiSettingsPage.qml:78
+msgid "KI-Backend"
+msgstr "AI backend"
+
+#: app/qml/AiSettingsPage.qml:83
+msgid "OpenAI-kompatibler Endpunkt"
+msgstr "OpenAI-compatible endpoint"
+
+#: app/qml/AiSettingsPage.qml:84
 msgid ""
-"Die KI-Einstellungen (Provider, Modell, Spracheingabe) folgen mit der KI-"
-"Integration."
+"Vorgabe ist Ollama auf dieser Maschine — dabei verlassen keine Daten den "
+"Rechner. Der API-Key wird im Passwortspeicher des Systems (KWallet/Secret "
+"Service) abgelegt."
 msgstr ""
-"The AI settings (provider, model, speech input) arrive with the AI "
-"integration."
+"The default is Ollama on this machine — no data leaves the computer. The API "
+"key is stored in the system password store (KWallet/Secret Service)."
+
+#: app/qml/AiSettingsPage.qml:89
+msgid "Provider"
+msgstr "Provider"
+
+#: app/qml/AiSettingsPage.qml:91
+msgid "Ollama (lokal)"
+msgstr "Ollama (local)"
+
+#: app/qml/AiSettingsPage.qml:91
+msgid "OpenRouter (Cloud)"
+msgstr "OpenRouter (cloud)"
+
+#: app/qml/AiSettingsPage.qml:91
+msgid "Benutzerdefiniert"
+msgstr "Custom"
+
+#: app/qml/AiSettingsPage.qml:103
+msgid "Basis-URL (inklusive /v1)"
+msgstr "Base URL (including /v1)"
+
+#: app/qml/AiSettingsPage.qml:111
+msgid "Hinweis zum Datenschutz"
+msgstr "Privacy note"
+
+#: app/qml/AiSettingsPage.qml:112
+msgid ""
+"Die Basis-URL zeigt nicht auf localhost — Aufgabendaten werden an diesen "
+"Endpunkt übertragen."
+msgstr ""
+"The base URL does not point at localhost — task data is transmitted to this "
+"endpoint."
+
+#: app/qml/AiSettingsPage.qml:118
+msgid "Modell"
+msgstr "Model"
+
+#: app/qml/AiSettingsPage.qml:124
+msgid "Modelle laden"
+msgstr "Load models"
+
+#: app/qml/AiSettingsPage.qml:125
+msgid ""
+"Speichert die Einstellungen und holt die Modellliste des Endpunkts. Ist das "
+"Backend nicht erreichbar, bleibt die manuelle Eingabe möglich."
+msgstr ""
+"Saves the settings and fetches the endpoint's model list. If the backend is "
+"unreachable, manual entry remains possible."
+
+#: app/qml/AiSettingsPage.qml:136
+msgid "API-Key (nur für Cloud-Endpunkte)"
+msgstr "API key (cloud endpoints only)"
+
+#: app/qml/AiSettingsPage.qml:141
+msgid "Spracheingabe (Diktat)"
+msgstr "Speech input (dictation)"
+
+#: app/qml/AiSettingsPage.qml:147
+msgid "Spracherkennungs-Backend"
+msgstr "Speech recognition backend"
+
+#: app/qml/AiSettingsPage.qml:155
+msgid "Whisper-Modell"
+msgstr "Whisper model"
+
+#: app/qml/AiSettingsPage.qml:162
+msgid "whisper-cli-Programm (Pfad)"
+msgstr "whisper-cli binary (path)"
+
+#: app/qml/AiSettingsPage.qml:168
+msgid "GGML-Modelldatei (Pfad)"
+msgstr "GGML model file (path)"
+
+#: app/qml/AiSettingsPage.qml:177
+msgid "Speichern und testen"
+msgstr "Save and test"
+
+#: app/qml/AiSettingsPage.qml:178
+msgid ""
+"Speichert alle KI-Einstellungen und prüft die Verbindung über die "
+"Modellliste."
+msgstr "Saves all AI settings and verifies the connection via the model list."
+
+#: app/qml/AiSettingsPage.qml:194 app/qml/DetailDialog.qml:210
+#: app/qml/SyncSettingsPage.qml:109
+msgid "Status"
+msgstr "Status"
+
+#: app/qml/AiSettingsPage.qml:199
+msgid "Prüfe Verbindung …"
+msgstr "Checking connection …"
+
+#: app/qml/AiSettingsPage.qml:201
+msgid "Gespeichert — Verbindung erfolgreich, 1 Modell verfügbar."
+msgid_plural "Gespeichert — Verbindung erfolgreich, %1 Modelle verfügbar."
+msgstr[0] "Saved — connection successful, 1 model available."
+msgstr[1] "Saved — connection successful, %1 models available."
+
+#: app/qml/AiSettingsPage.qml:205 app/qml/SyncSettingsPage.qml:119
+msgid "Gespeichert."
+msgstr "Saved."
 
 #: app/qml/DetailDialog.qml:16
 msgid "Aufgabe bearbeiten"
@@ -165,10 +274,6 @@ msgstr "e.g. 3d or 2w"
 #: app/qml/DetailDialog.qml:202 app/qml/QuickCaptureDialog.qml:344
 msgid "Nicht erkanntes Intervall"
 msgstr "Unrecognized interval"
-
-#: app/qml/DetailDialog.qml:210 app/qml/SyncSettingsPage.qml:109
-msgid "Status"
-msgstr "Status"
 
 #: app/qml/DetailDialog.qml:214 app/qml/DetailDialog.qml:263
 #: app/qml/TaskDelegate.qml:59 app/qml/TasksPage.qml:174
@@ -790,10 +895,6 @@ msgstr "Synchronizing …"
 msgid "Gespeichert — zuletzt synchronisiert: %1"
 msgstr "Saved — last synchronized: %1"
 
-#: app/qml/SyncSettingsPage.qml:119
-msgid "Gespeichert."
-msgstr "Saved."
-
 #: app/qml/SyncSettingsPage.qml:121 app/qml/TasksPage.qml:157
 msgid "Zuletzt synchronisiert: %1"
 msgstr "Last synchronized: %1"
@@ -1025,6 +1126,13 @@ msgstr "Tag (no spaces)"
 
 #~ msgid "Füllt die Felder aus dem Titeltext (Strg+J)"
 #~ msgstr "Fills the fields from the title text (Ctrl+J)"
+
+#~ msgid ""
+#~ "Die KI-Einstellungen (Provider, Modell, Spracheingabe) folgen mit der KI-"
+#~ "Integration."
+#~ msgstr ""
+#~ "The AI settings (provider, model, speech input) arrive with the AI "
+#~ "integration."
 
 #~ msgid "Schließen"
 #~ msgstr "Close"

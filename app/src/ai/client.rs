@@ -81,10 +81,9 @@ pub trait Llm {
     /// Ein einzelner Chat-Aufruf; liefert den rohen Antworttext des Modells.
     fn chat(&self, messages: &[ChatMessage]) -> Result<String, AiError>;
 
-    /// Modellliste des Endpunkts (`/v1/models`) — für „Speichern und testen".
-    /// Produktiv verdrahtet ab Story AI-A4 (Einstellungs-UI); bis dahin nur
-    /// von Tests aufgerufen.
-    #[allow(dead_code)]
+    /// Modellliste des Endpunkts (`/v1/models`) — füllt die Modellauswahl
+    /// der Einstellungsseite und dient „Speichern und testen" als billiger
+    /// Verbindungscheck (Story AI-A4).
     fn list_models(&self) -> Result<Vec<String>, AiError>;
 
     /// Chat-Aufruf mit JSON-Erzwingung im Prompt und Validierung der Antwort.
@@ -273,9 +272,6 @@ fn parse_chat_response(body: &str) -> Result<String, AiError> {
         .ok_or_else(|| AiError::Api("Antwort ohne Inhalt".into()))
 }
 
-// Die drei Modelllisten-Helfer hängen an `list_models` und sind wie dieses
-// erst ab Story AI-A4 produktiv erreichbar — daher dieselben Vermerke.
-#[allow(dead_code)]
 #[derive(Deserialize)]
 struct ModelsResponse {
     #[serde(default)]
@@ -283,7 +279,6 @@ struct ModelsResponse {
     error: Option<ApiErrorBody>,
 }
 
-#[allow(dead_code)]
 #[derive(Deserialize)]
 struct ModelEntry {
     id: String,
@@ -291,7 +286,6 @@ struct ModelEntry {
 
 /// Zieht die Modellnamen aus einer `/v1/models`-Antwort (OpenAI-Listenform,
 /// bei Ollama wie OpenRouter: `{"data": [{"id": …}, …]}`).
-#[allow(dead_code)]
 fn parse_models_response(body: &str) -> Result<Vec<String>, AiError> {
     let parsed: ModelsResponse = serde_json::from_str(body)
         .map_err(|_| AiError::Api(format!("Unerwartete Antwortform: {}", excerpt(body))))?;

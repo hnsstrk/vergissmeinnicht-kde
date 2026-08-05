@@ -698,6 +698,70 @@ Kirigami.ApplicationWindow {
             check(draft.title === "Kaputt-Werte", "zweiter Entwurf publiziert")
             check(draft.due === "" && draft.priority === "" && draft.recur === "",
                   "ungültige due/priority/recur kommen leer an (Validierung)")
+            // Weiter zum AI-A4-Teil (Einstellungs-Invokables).
+            aiSettingsTimer.baseFailures = failures
+            aiSettingsTimer.start()
+        }
+    }
+
+    // KI-Flow, Schritt 8 (AI-A4): Einstellungs-Invokables — Provider-Presets,
+    // aiConfigured-Live-Update beim Speichern, Modellliste über den Mock
+    // (list_models verbraucht keine Konserve).
+    Timer {
+        id: aiSettingsTimer
+        property int baseFailures: 0
+        interval: 100
+        onTriggered: {
+            let failures = baseFailures
+            function check(cond, label) {
+                console.log((cond ? "FLOW-OK  " : "FLOW-FAIL ") + label)
+                if (!cond) failures++
+            }
+            check(app.aiProviderDefaultUrl("ollama") === "http://localhost:11434/v1",
+                  "Provider-Preset ollama")
+            check(app.aiProviderDefaultUrl("openrouter") === "https://openrouter.ai/api/v1",
+                  "Provider-Preset openrouter")
+            check(app.aiProviderDefaultUrl("custom") === "", "Provider-Preset custom leer")
+            const s = JSON.parse(app.aiSettingsJson())
+            check(s.ai_model.length > 0, "aiSettingsJson liefert konfiguriertes Modell")
+            // aiConfigured folgt dem Speichern live (kein Neustart nötig).
+            app.saveAiSettings(s.ai_provider, s.ai_base_url, "", s.ai_stt_backend,
+                               s.ai_whisper_model, s.ai_whisper_cpp_binary, s.ai_whisper_cpp_model)
+            check(!app.aiConfigured, "aiConfigured false ohne Modell (live)")
+            app.saveAiSettings(s.ai_provider, s.ai_base_url, s.ai_model, s.ai_stt_backend,
+                               s.ai_whisper_model, s.ai_whisper_cpp_binary, s.ai_whisper_cpp_model)
+            check(app.aiConfigured, "aiConfigured true nach Wiederherstellen (live)")
+            check(JSON.parse(app.aiModelsJson || "[]").length === 0, "aiModelsJson anfangs leer")
+            app.startAiListModels()
+            check(app.aiBusy, "aiBusy während Modelllisten-Abruf")
+            aiModelsWaiter.baseFailures = failures
+            aiModelsWaiter.start()
+        }
+    }
+
+    // KI-Flow, Schritt 9: Modellliste abwarten — der Mock liefert
+    // ["vmn-mock"] aus dem Llm-Trait.
+    Timer {
+        id: aiModelsWaiter
+        property int baseFailures: 0
+        property int versuche: 0
+        interval: 200
+        repeat: true
+        onTriggered: {
+            versuche++
+            if (app.aiBusy && versuche < 25)
+                return
+            aiModelsWaiter.running = false
+            let failures = baseFailures
+            function check(cond, label) {
+                console.log((cond ? "FLOW-OK  " : "FLOW-FAIL ") + label)
+                if (!cond) failures++
+            }
+            check(!app.aiBusy, "Modelllisten-Abruf meldet fertig (aiBusy false)")
+            check(app.aiError.length === 0, "kein aiError beim Modelllisten-Abruf")
+            const modelle = JSON.parse(app.aiModelsJson || "[]")
+            check(modelle.length === 1 && modelle[0] === "vmn-mock",
+                  "Modellliste des Mocks publiziert (aiModelsJson)")
             console.log(failures === 0 ? "FLOW-ENDE: alles grün" : `FLOW-ENDE: ${failures} Fehler`)
             Qt.quit()
         }
@@ -722,6 +786,11 @@ Kirigami.ApplicationWindow {
             case "quickcapture": quickCaptureDialog.openCapture(); break
             case "settings":
                 settingsDialog.openSettings()
+                testHoverTimer.start()
+                break
+            case "settings-ai":
+                // KI-Seite direkt öffnen (Screenshot AI-A4).
+                settingsDialog.openSettings("ai")
                 testHoverTimer.start()
                 break
             case "help": helpDialog.open(); break

@@ -7,6 +7,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- AI settings page (AI-A4, #12): the AI assistant is configured in the UI
+  instead of hand-editing `config.json` — provider preset (Ollama /
+  OpenRouter / custom, prefilling the base URL), base URL field, **model
+  selection from the endpoint's model list** ("Load models" fetches
+  `/v1/models` on a worker thread; the configured model stays selected
+  even when it is missing from the list, and manual entry keeps working
+  when the backend is offline), API key stored in the Secret Service, and
+  the speech-to-text backend with per-backend fields. "Save and test"
+  persists everything and verifies the connection via the model list,
+  reporting into an in-dialog status line; a privacy note appears when the
+  base URL is not localhost. Changing provider, base URL, model or API key
+  invalidates the cached LLM client (the documented AI-A3 open point,
+  covered by a Rust test), and `aiConfigured` updates live so quick
+  capture's AI controls appear without a restart.
 - Quick capture can interpret free-form input with AI (AI-B1, #11): with a
   configured backend, an "Interpret with AI" action (Ctrl+J, listed in the
   help dialog) sends the title text plus the current date and the
@@ -45,7 +59,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Changed
 
 - The settings are now split into categories (UI-4, #30): General,
-  Synchronization, AI assistant (placeholder page until #12) and
+  Synchronization, AI assistant (filled by AI-A4, #12) and
   Maintenance live on separate pages of a Kirigami Addons
   `ConfigurationView` window with a category sidebar and search, replacing
   the single scrolling form window. Every setting keeps its wording and

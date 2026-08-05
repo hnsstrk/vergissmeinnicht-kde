@@ -57,8 +57,10 @@ pub fn make_llm(
 /// Konserven-Semantik des Mocks (Antworten in Aufruf-Reihenfolge über den
 /// App-Lauf, nicht je Anfrage) — und erspart dem echten Client den
 /// Secret-Service-Roundtrip je Anfrage. Ein Fehler beim Bauen wird nicht
-/// gecacht; der nächste Zugriff versucht es erneut. Eine Invalidierung bei
-/// Konfigurationsänderung kommt mit der Einstellungs-UI (Story AI-A4).
+/// gecacht; der nächste Zugriff versucht es erneut. Bei jeder Änderung der
+/// KI-Konfiguration (Provider, Basis-URL, Modell, API-Key) ruft die Bridge
+/// [`LlmHalter::invalidiere`] — sonst bediente der alte Client weiter
+/// (Story AI-A4).
 #[derive(Default)]
 pub struct LlmHalter {
     llm: Mutex<Option<Arc<dyn Llm + Send + Sync>>>,
@@ -80,6 +82,16 @@ impl LlmHalter {
         let neu: Arc<dyn Llm + Send + Sync> = Arc::from(make_llm(settings)?);
         *slot = Some(Arc::clone(&neu));
         Ok(neu)
+    }
+
+    /// Verwirft den gecachten Client — der nächste [`LlmHalter::hole`] baut
+    /// aus den dann gültigen Einstellungen (und dem dann gültigen API-Key)
+    /// einen neuen. Laufende Anfragen behalten ihren Arc und laufen mit dem
+    /// alten Client zu Ende; ihr Ergebnis verfällt ohnehin über den
+    /// Generationszähler, wenn es niemand mehr erwartet.
+    pub fn invalidiere(&self) {
+        let mut slot = self.llm.lock().unwrap_or_else(|vergiftet| vergiftet.into_inner());
+        *slot = None;
     }
 }
 
@@ -138,6 +150,32 @@ where
         let ergebnis = llm
             .hole(&settings)
             .and_then(|llm| llm.complete_json(&nachrichten));
+        if generationen.ist_aktuell(generation) {
+            melde(generation, ergebnis);
+        }
+    });
+    generation
+}
+
+/// Holt die Modellliste des Endpunkts (`/v1/models`) im Worker-Thread —
+/// gleicher Kontrakt wie [`starte_anfrage`]: Generationszähler, Stale-Drop,
+/// `melde` höchstens einmal und nur für die jüngste Anfrage. Grundlage der
+/// Modellauswahl und des „Speichern und testen"-Checks der Einstellungsseite
+/// (Story AI-A4).
+pub fn starte_modellliste<F>(
+    generationen: &Arc<Generationen>,
+    llm: &Arc<LlmHalter>,
+    settings: crate::config::Settings,
+    melde: F,
+) -> u64
+where
+    F: FnOnce(u64, Result<Vec<String>, AiError>) + Send + 'static,
+{
+    let generation = generationen.naechste();
+    let generationen = Arc::clone(generationen);
+    let llm = Arc::clone(llm);
+    std::thread::spawn(move || {
+        let ergebnis = llm.hole(&settings).and_then(|llm| llm.list_models());
         if generationen.ist_aktuell(generation) {
             melde(generation, ergebnis);
         }
@@ -207,6 +245,53 @@ mod tests {
             let zweite = halter.hole(&einstellungen).unwrap();
             assert_eq!(erste.complete_json(&[]).unwrap()["n"], 1);
             assert_eq!(zweite.complete_json(&[]).unwrap()["n"], 2);
+        });
+    }
+
+    #[test]
+    fn invalidieren_baut_neuen_client() {
+        // Kern der AI-A4-Invalidierung: Nach `invalidiere` liefert der
+        // nächste `hole` einen NEUEN Client. Nachweis über die
+        // Konserven-Position — ein neuer Mock beginnt wieder bei der ersten
+        // Konserve, der alte hätte die zweite serviert.
+        let datei =
+            schreibe_konserven(r#"[{"content": {"n": 1}}, {"content": {"n": 2}}]"#);
+        let pfad = datei.path().to_str().unwrap().to_string();
+        mit_env(&[(ENV_MOCK, &pfad)], || {
+            let halter = LlmHalter::default();
+            let einstellungen = crate::config::Settings::default();
+            assert_eq!(halter.hole(&einstellungen).unwrap().complete_json(&[]).unwrap()["n"], 1);
+            halter.invalidiere();
+            assert_eq!(
+                halter.hole(&einstellungen).unwrap().complete_json(&[]).unwrap()["n"],
+                1,
+                "nach invalidiere muss ein frisch gebauter Client antworten"
+            );
+        });
+    }
+
+    #[test]
+    fn modellliste_meldet_ueber_worker() {
+        // AI-A4: Modelllisten-Worker über den Mock — meldet die Liste des
+        // Traits (`vmn-mock`), ohne eine Konserve zu verbrauchen.
+        let datei = schreibe_konserven(r#"[{"content": {"n": 1}}]"#);
+        let pfad = datei.path().to_str().unwrap().to_string();
+        mit_env(&[(ENV_MOCK, &pfad)], || {
+            let generationen = Arc::new(Generationen::default());
+            let llm = Arc::new(LlmHalter::default());
+            let (sender, empfaenger) = mpsc::channel();
+            starte_modellliste(
+                &generationen,
+                &llm,
+                crate::config::Settings::default(),
+                move |generation, ergebnis| {
+                    let _ = sender.send((generation, ergebnis));
+                },
+            );
+            let (_, ergebnis) = empfaenger
+                .recv_timeout(Duration::from_secs(5))
+                .expect("Modellliste muss melden");
+            assert_eq!(ergebnis.unwrap(), vec!["vmn-mock".to_string()]);
         });
     }
 

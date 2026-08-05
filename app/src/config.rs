@@ -87,6 +87,17 @@ impl Default for Settings {
     }
 }
 
+/// Basis-URL-Vorgabe je KI-Provider-Preset (Spec §4.3). „custom" (und alles
+/// Unbekannte) liefert leer — dort bleibt die URL Handarbeit, die
+/// Einstellungsseite lässt das Feld dann unangetastet.
+pub fn ai_provider_default_url(provider: &str) -> &'static str {
+    match provider {
+        "ollama" => "http://localhost:11434/v1",
+        "openrouter" => "https://openrouter.ai/api/v1",
+        _ => "",
+    }
+}
+
 pub fn config_path() -> PathBuf {
     dirs::config_dir()
         .unwrap_or_else(|| PathBuf::from("."))
@@ -162,6 +173,16 @@ mod tests {
         assert_eq!(s.ai_whisper_model, "small");
         assert!(s.ai_whisper_cpp_binary.is_empty());
         assert!(s.ai_whisper_cpp_model.is_empty());
+    }
+
+    #[test]
+    fn provider_presets_liefern_basis_urls() {
+        // Presets aus Spec §4.3: Ollama lokal, OpenRouter-Cloud; „custom"
+        // (und Unbekanntes) bleibt leer und überschreibt nichts.
+        assert_eq!(ai_provider_default_url("ollama"), "http://localhost:11434/v1");
+        assert_eq!(ai_provider_default_url("openrouter"), "https://openrouter.ai/api/v1");
+        assert_eq!(ai_provider_default_url("custom"), "");
+        assert_eq!(ai_provider_default_url("unbekannt"), "");
     }
 
     #[test]
