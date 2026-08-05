@@ -78,7 +78,7 @@ FormCard.FormCardPage {
             onClicked: Qt.openUrlExternally("file://" + page.app.backupFolder())
         }
 
-        FormCard.FormComboBoxDelegate {
+        VmComboBoxDelegate {
             id: restoreCombo
             text: i18n("Backup wiederherstellen")
             model: page.backups.map(b => b.filename + " (" + Math.round(b.size_bytes / 1024) + " KiB)")
@@ -96,7 +96,7 @@ FormCard.FormCardPage {
     }
 
     FormCard.FormCard {
-        FormCard.FormComboBoxDelegate {
+        VmComboBoxDelegate {
             id: purgeAgeCombo
             text: i18n("Mindestalter erledigter Aufgaben")
             description: i18n("Alter ab letzter Änderung; Wiederholungs-Aufgaben der Taskwarrior-CLI bleiben unberührt.")

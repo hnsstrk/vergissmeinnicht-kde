@@ -23,6 +23,9 @@ KirigamiSettings.ConfigurationView {
     // die Dialog-Verankerung im Einstellungsfenster (UI-8, #35).
     property var maintenancePage: null
 
+    // Von AiSettingsPage gesetzt — Ziel des Popup-Testhakens (UI-7, #34).
+    property var aiPage: null
+
     title: i18n("Einstellungen")
 
     modules: [
@@ -45,7 +48,7 @@ KirigamiSettings.ConfigurationView {
             text: i18n("KI-Assistent")
             icon.name: "applications-science"
             page: () => Qt.createComponent("de.hnsstrk.vergissmeinnicht", "AiSettingsPage")
-            initialProperties: () => ({ app: dialog.appContainer })
+            initialProperties: () => ({ app: dialog.appContainer, besitzer: dialog })
         },
         KirigamiSettings.ConfigurationModule {
             moduleId: "maintenance"

@@ -90,6 +90,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- Combo box popups on the settings pages could cover the whole settings
+  window (UI-7, #34, customer report with 15 installed models): the
+  Kirigami Addons `FormComboBoxDelegate` sets no height limit on its
+  internal combo box popup, and once the list grew taller than the space
+  below the field, Qt's popup positioner shifted it over the entire
+  window. All settings combos now share a delegate that caps the popup
+  at roughly ten entries (never taller than the window) and makes the
+  list scroll beyond that; the popup stays anchored to its field and no
+  longer overlaps the category sidebar. Clicking anywhere on the row
+  (label area included) opens the list — for the editable model combo
+  the text area keeps the cursor for manual entry, which the "Load
+  models" description already points out; manual entry and offline
+  behavior from AI-A4 are unchanged. A regression guard
+  (`--test-dialog=settings-ai-combo`) opens the model popup with 15
+  sample entries headlessly, reports `COMBO-FAIL` if it is missing or
+  unbounded, and grabs a screenshot.
+
 - The delete confirmation on the maintenance settings page opened behind
   the settings window (UI-8, #35, customer report): since the categorized
   settings (UI-4, #30) the pages live in the Kirigami Addons

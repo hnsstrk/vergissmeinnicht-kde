@@ -18,7 +18,7 @@ FormCard.FormCardPage {
     FormCard.FormCard {
         Layout.topMargin: Kirigami.Units.largeSpacing
 
-        FormCard.FormComboBoxDelegate {
+        VmComboBoxDelegate {
             id: defaultFilterCombo
             text: i18n("Standardansicht beim Start")
             readonly property var keys: ["inbox", "today", "todo", "overdue", "duesoon", "upcoming", "all"]
@@ -27,7 +27,7 @@ FormCard.FormCardPage {
             onActivated: page.app.setDefaultFilterSetting(keys[currentIndex])
         }
 
-        FormCard.FormComboBoxDelegate {
+        VmComboBoxDelegate {
             id: languageCombo
             text: i18n("Sprache")
             description: i18n("Änderung wird nach einem Neustart wirksam. Standard-Dialogknöpfe (OK/Abbrechen) folgen der Systemsprache.")

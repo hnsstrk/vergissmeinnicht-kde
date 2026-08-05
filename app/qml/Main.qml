@@ -868,6 +868,16 @@ Kirigami.ApplicationWindow {
                 settingsDialog.configViewItem.height = 760
                 testHoverTimer.start()
                 break
+            case "settings-ai-combo":
+                // Regressionswache UI-7 (#34): KI-Seite öffnen, Modell-Combo
+                // mit 15 Beispielnamen füllen und ihr Popup über den
+                // Zeilenklick-Pfad öffnen — COMBO-OK/COMBO-FAIL meldet, ob es
+                // höhenbegrenzt aufgeht; --test-grab liefert den Screenshot.
+                settingsDialog.openSettings("ai")
+                settingsDialog.configViewItem.height = 760
+                testComboPopupTimer.start()
+                testHoverTimer.start()
+                break
             case "settings-purge":
                 // Regressionswache UI-8 (#35): Wartungsseite öffnen, dann die
                 // Lösch-Bestätigung — DIALOG-OK/DIALOG-FAIL meldet, ob sie im
@@ -887,6 +897,20 @@ Kirigami.ApplicationWindow {
                 break
             }
             }
+        }
+    }
+
+    // Regressionswache UI-7 (#34), Schritt 2: Die KI-Seite entsteht asynchron
+    // im ConfigWindow — erst danach lässt sich das Modell-Popup öffnen und
+    // seine Höhenbegrenzung prüfen. Läuft vor dem Grab (3 s).
+    Timer {
+        id: testComboPopupTimer
+        interval: 1500
+        onTriggered: {
+            const seite = settingsDialog.aiPage
+            const ok = seite && seite.testOeffneModellPopup(15)
+            console.log(ok ? "COMBO-OK settings-ai-combo Popup offen und höhenbegrenzt"
+                           : "COMBO-FAIL settings-ai-combo Popup fehlt oder unbegrenzt")
         }
     }
 

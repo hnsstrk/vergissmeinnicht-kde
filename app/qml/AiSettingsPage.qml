@@ -13,6 +13,10 @@ FormCard.FormCardPage {
 
     required property var app
 
+    // Der SettingsDialog (ConfigurationView-Wrapper) — Anmeldung analog
+    // SyncSettingsPage, Ziel des Popup-Testhakens (UI-7, #34).
+    property var besitzer: null
+
     title: i18n("KI-Assistent")
 
     // Vom Endpunkt geladene Modellliste (aus aiModelsJson); leer, solange
@@ -46,7 +50,26 @@ FormCard.FormCardPage {
         app.setAiApiKey(keyField.text)
     }
 
+    // Testhaken (UI-7, #34): füllt die Modell-Combo mit Beispielnamen und
+    // öffnet ihr Popup über denselben Weg wie ein Klick auf die Zeile
+    // (clicked-Signal der Vorlage). Liefert true, wenn das Popup danach
+    // offen und niedriger als seine ungebremste Wunschhöhe ist — Grundlage
+    // des Screenshots, der die Höhenbegrenzung belegt.
+    function testOeffneModellPopup(anzahl) {
+        const namen = []
+        for (let i = 1; i <= anzahl; ++i)
+            namen.push("beispiel-modell-" + (i < 10 ? "0" + i : i))
+        modelle = namen
+        const combo = modelCombo.interneCombo
+        if (!combo)
+            return false
+        modelCombo.clicked()
+        return combo.popup.visible && combo.popup.height < combo.popup.implicitHeight
+    }
+
     Component.onCompleted: {
+        if (besitzer)
+            besitzer.aiPage = page
         app.clearAiError()
         const s = JSON.parse(app.aiSettingsJson())
         providerCombo.currentIndex = Math.max(0, providerCombo.keys.indexOf(s.ai_provider))
@@ -86,7 +109,7 @@ FormCard.FormCardPage {
             description: i18n("Vorgabe ist Ollama auf dieser Maschine — dabei verlassen keine Daten den Rechner. Der API-Key wird im Passwortspeicher des Systems (KWallet/Secret Service) abgelegt.")
         }
 
-        FormCard.FormComboBoxDelegate {
+        VmComboBoxDelegate {
             id: providerCombo
             text: i18n("Provider")
             readonly property var keys: ["ollama", "openrouter", "custom"]
@@ -108,7 +131,7 @@ FormCard.FormCardPage {
 
         // Kontextumfang der KI-Interpretation (AI-B1b, #31): drei Stufen —
         // die Beschreibung benennt je Stufe, was die Maschine verlässt.
-        FormCard.FormComboBoxDelegate {
+        VmComboBoxDelegate {
             id: contextCombo
             text: i18n("Kontextumfang der Interpretation")
             readonly property var keys: ["taxonomy", "open_titles", "all"]
@@ -139,7 +162,7 @@ FormCard.FormCardPage {
             descriptionItem.color: Kirigami.Theme.neutralTextColor
         }
 
-        FormCard.FormComboBoxDelegate {
+        VmComboBoxDelegate {
             id: modelCombo
             text: i18n("Modell")
             editable: true
@@ -168,7 +191,7 @@ FormCard.FormCardPage {
     }
 
     FormCard.FormCard {
-        FormCard.FormComboBoxDelegate {
+        VmComboBoxDelegate {
             id: sttCombo
             text: i18n("Spracherkennungs-Backend")
             readonly property var keys: ["openai-whisper", "whisper-cpp"]
