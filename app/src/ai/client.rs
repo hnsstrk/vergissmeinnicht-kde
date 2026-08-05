@@ -614,10 +614,17 @@ pub mod tests {
         let sonde = LlmClient::new("http://localhost:11434/v1", "", None).unwrap();
         let modelle = sonde.list_models().expect("Modellliste");
         assert!(!modelle.is_empty(), "kein Modell installiert");
-        // Embedding-Modelle können nicht chatten — erstes Chat-Modell nehmen.
+        // Embedding-Modelle können nicht chatten, und `/v1/models` sagt nicht,
+        // welches welches ist. Der Name allein trägt die Unterscheidung nicht
+        // („bge-m3" enthält kein „embed"), deshalb die gängigen Einbettungs-
+        // Familien mit ausschließen.
+        const EINBETTER: [&str; 6] = ["embed", "bge", "arctic", "nomic", "gte-", "e5-"];
         let modell = modelle
             .iter()
-            .find(|m| !m.contains("embed"))
+            .find(|m| {
+                let name = m.to_lowercase();
+                !EINBETTER.iter().any(|e| name.contains(e))
+            })
             .expect("kein Chat-Modell installiert");
         let client = LlmClient::new("http://localhost:11434/v1", modell, None).unwrap();
         let antwort = client
