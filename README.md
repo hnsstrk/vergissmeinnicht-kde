@@ -87,6 +87,17 @@ platform.
   model list; a privacy note appears for non-local endpoints.
 
   ![Vergissmeinnicht — AI settings](docs/screenshots/settings-ai.png)
+
+  **Which model to use.** Measured on the reference system (local Ollama,
+  Radeon RX 7900 XTX, 64k context), **`gemma4:12b` gave the best results**
+  and is the recommendation: ~20 s per interpretation, and across 8 runs it
+  mapped every input onto an existing project with a correct due date.
+  Reasoning models are markedly worse for this task — `qwen3.6:27b` took
+  90–163 s for the same work and left the project field empty in about half
+  the runs. Thinking cannot be disabled through the OpenAI-compatible
+  endpoint (`think: false` only exists on Ollama's native `/api/chat`, and
+  `reasoning_effort` only ever switches it *on*), so the model choice is
+  the lever. The request timeout is 300 s to accommodate slow backends.
 - **Localization** — German (source) and English via ki18n/gettext, with
   manual override in the settings.
 - **Sync** against any [taskchampion-sync-server](https://github.com/GothenburgBitFactory/taskchampion-sync-server)

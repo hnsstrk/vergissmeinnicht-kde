@@ -86,6 +86,18 @@ Oberfläche auf jeder Plattform.
   nicht-lokalen Endpunkten erscheint ein Datenschutzhinweis.
 
   ![Vergissmeinnicht — KI-Einstellungen](docs/screenshots/settings-ai.png)
+
+  **Welches Modell.** Gemessen auf der Referenzmaschine (lokales Ollama,
+  Radeon RX 7900 XTX, 64k Kontext) lieferte **`gemma4:12b` die besten
+  Ergebnisse** und ist die Empfehlung: rund 20 s je Interpretation, und in
+  8 Läufen wurde jede Eingabe einem vorhandenen Projekt mit korrekter
+  Fälligkeit zugeordnet. Reasoning-Modelle sind für diese Aufgabe deutlich
+  schlechter — `qwen3.6:27b` brauchte für dasselbe 90–163 s und ließ das
+  Projektfeld in etwa der Hälfte der Läufe leer. Das Denken lässt sich über
+  den OpenAI-kompatiblen Endpunkt nicht abschalten (`think: false` gibt es
+  nur in Ollamas eigener `/api/chat`, und `reasoning_effort` schaltet es in
+  jeder Stufe *ein*) — der Hebel ist also die Modellwahl. Der Anfrage-
+  Timeout liegt bei 300 s, damit auch langsame Backends durchkommen.
 - **Lokalisierung** — Deutsch (Quellsprache) und Englisch über
   ki18n/gettext, mit manueller Umschaltung in den Einstellungen.
 - **Synchronisierung** gegen einen beliebigen
