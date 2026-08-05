@@ -184,6 +184,8 @@ server. TaskChampion resolves conflicts CRDT-style via its operation log.
 │   └── examples/       seed_demo, sync_roundtrip (E2E against a live server)
 ├── app/                Kirigami app
 │   ├── src/            cxx-qt bridge, filters, parsers, state, backups
+│   │   └── ai/         opt-in AI assistance (in progress): LLM client,
+│   │                   canned-response mock, request worker
 │   ├── qml/            Main window, sidebar, dialogs
 │   └── cpp/            small shims (KLocalizedContext, window grab)
 ├── data/               desktop file, icon, AppStream metainfo

@@ -182,6 +182,8 @@ ab. TaskChampion löst Konflikte CRDT-artig über sein Operation-Log.
 │   └── examples/       seed_demo, sync_roundtrip (E2E gegen laufenden Server)
 ├── app/                Kirigami-App
 │   ├── src/            cxx-qt-Bridge, Filter, Parser, State, Backups
+│   │   └── ai/         Opt-in-KI-Assistenz (im Aufbau): LLM-Client,
+│   │                   Konserven-Mock, Anfrage-Worker
 │   ├── qml/            Hauptfenster, Seitenleiste, Dialoge
 │   └── cpp/            kleine Shims (KLocalizedContext, Fenster-Grab)
 ├── data/               Desktop-Datei, Icon, AppStream-Metainfo

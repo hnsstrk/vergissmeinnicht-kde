@@ -59,8 +59,6 @@ pub fn get_ai_api_key() -> Result<Option<String>, String> {
 }
 
 /// KI-API-Key schreiben; leerer Wert löscht den Eintrag (idempotent).
-/// Genutzt ab Story AI-A3.
-#[allow(dead_code)]
 pub fn set_ai_api_key(value: &str) -> Result<(), String> {
     set_in(SERVICE_AI, KEY_AI_API_KEY, value)
 }

@@ -1,5 +1,4 @@
-// Qt-freies KI-Modul; von der Bridge genutzt ab Story AI-A3.
-#[allow(dead_code)]
+// Qt-freies KI-Modul (Worker, Client, Mock) — von der Bridge genutzt.
 mod ai;
 mod backup;
 mod bridge;

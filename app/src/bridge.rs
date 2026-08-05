@@ -14,7 +14,7 @@ use cxx_qt_lib::{QHash, QHashPair_i32_QByteArray, QModelIndex, QString, QVariant
 use crate::config::Settings;
 use crate::filters::{SidebarFilter, SortOrder};
 use crate::state::{status_key, AppState};
-use crate::{backup, parsers, secrets};
+use crate::{ai, backup, parsers, secrets};
 
 use qobject::TaskRoles;
 
@@ -118,6 +118,14 @@ mod qobject {
         #[qproperty(i32, sidebar_width, cxx_name = "sidebarWidth")]
         #[qproperty(QString, collapsed_sections_json, cxx_name = "collapsedSectionsJson")]
         #[qproperty(bool, can_undo, cxx_name = "canUndo")]
+        // KI-Status (Spec §4.2, Kontrakt siehe Modul-Doku in `ai/mod.rs`):
+        // eigene Kanäle, nie über den globalen `errorMessage`, publiziert
+        // ohne apply() — kein Model-Reset für reine Statusänderungen.
+        #[qproperty(bool, ai_configured, cxx_name = "aiConfigured")]
+        #[qproperty(bool, ai_busy, cxx_name = "aiBusy")]
+        #[qproperty(QString, ai_error, cxx_name = "aiError")]
+        #[qproperty(QString, ai_response_json, cxx_name = "aiResponseJson")]
+        #[qproperty(bool, dictation_available, cxx_name = "dictationAvailable")]
         type AppContainer = super::AppContainerRust;
 
         // ── Modell-Overrides ────────────────────────────────────────────────
@@ -291,6 +299,22 @@ mod qobject {
         #[qinvokable]
         fn set_auto_sync_mode_setting(self: Pin<&mut AppContainer>, mode: &QString);
 
+        // ── KI (Story AI-A3 — Kontrakt siehe Modul-Doku in `ai/mod.rs`) ─────
+        /// Roh-Anfrage an das KI-Backend: schickt `prompt` als User-Nachricht
+        /// und publiziert das validierte JSON-Objekt in `aiResponseJson`.
+        /// Referenz-Implementierung des Worker-Kontrakts und Testhaken für
+        /// `--test-flow`; die Feature-Stories (ab AI-B1) ergänzen eigene
+        /// Invokables mit Prompt-Aufbau über denselben Pfad.
+        #[qinvokable]
+        fn start_ai_request(self: Pin<&mut AppContainer>, prompt: &QString);
+        /// Abbruch der laufenden KI-Anfrage: erhöht nur den Generationszähler
+        /// — das Ergebnis des Worker-Threads verfällt beim Eintreffen.
+        #[qinvokable]
+        fn cancel_ai_request(self: Pin<&mut AppContainer>);
+        /// KI-API-Key im Secret Service speichern (leer = löschen).
+        #[qinvokable]
+        fn set_ai_api_key(self: Pin<&mut AppContainer>, key: &QString) -> bool;
+
         /// Legacy-Reparatur: Token-Syntax in Descriptions → echte Properties.
         /// Rückgabe: Anzahl reparierter Aufgaben, -1 bei Fehler.
         #[qinvokable]
@@ -357,6 +381,17 @@ pub struct AppContainerRust {
     sidebar_width: i32,
     collapsed_sections_json: QString,
     can_undo: bool,
+    ai_configured: bool,
+    ai_busy: bool,
+    ai_error: QString,
+    ai_response_json: QString,
+    dictation_available: bool,
+    /// Generationszähler der KI-Anfragen — geteilt mit den Worker-Threads,
+    /// damit Worker und Queue-Callback dieselbe Wahrheit prüfen.
+    ai_generationen: std::sync::Arc<ai::Generationen>,
+    /// Geteilter Llm-Client über alle Anfragen (Konserven-Reihenfolge des
+    /// Mocks gilt je App-Lauf; erspart Secret-Service-Roundtrips).
+    ai_llm: std::sync::Arc<ai::LlmHalter>,
 }
 
 impl Default for AppContainerRust {
@@ -390,6 +425,13 @@ impl Default for AppContainerRust {
                     .as_str(),
             ),
             can_undo: false,
+            ai_configured: false,
+            ai_busy: false,
+            ai_error: QString::default(),
+            ai_response_json: QString::default(),
+            dictation_available: false,
+            ai_generationen: std::sync::Arc::new(ai::Generationen::default()),
+            ai_llm: std::sync::Arc::new(ai::LlmHalter::default()),
             state,
         }
     }
@@ -399,6 +441,12 @@ impl cxx_qt::Initialize for qobject::AppContainer {
     fn initialize(mut self: Pin<&mut Self>) {
         let configured = compute_sync_configured(&self.rust().state.settings);
         self.as_mut().set_sync_configured(configured);
+        // KI-Gate (Spec §3.2): ohne Konfiguration bleiben alle
+        // KI-Bedienelemente versteckt. Die Diktier-Sonde kommt mit Story
+        // AI-A5 — bis dahin bleibt das Mikrofon konstant versteckt.
+        let ai_configured = compute_ai_configured(&self.rust().state.settings);
+        self.as_mut().set_ai_configured(ai_configured);
+        self.as_mut().set_dictation_available(false);
         self.as_mut().publish();
     }
 }
@@ -415,8 +463,7 @@ fn compute_sync_configured(settings: &Settings) -> bool {
 
 /// KI gilt als konfiguriert, wenn Basis-URL und Modellname gesetzt sind.
 /// Der API-Key ist absichtlich keine Bedingung — lokale Endpunkte (Ollama)
-/// brauchen keinen. Die Bridge-Property dazu kommt mit Story AI-A3.
-#[allow(dead_code)]
+/// brauchen keinen. Speist die Bridge-Property `aiConfigured`.
 fn compute_ai_configured(settings: &Settings) -> bool {
     !settings.ai_base_url.trim().is_empty() && !settings.ai_model.trim().is_empty()
 }
@@ -1343,6 +1390,65 @@ impl qobject::AppContainer {
         let state = &mut self.as_mut().rust_mut().state;
         state.settings.auto_sync = mode;
         let _ = state.settings.save();
+    }
+
+    // ─── KI (Story AI-A3 — Kontrakt siehe Modul-Doku in `ai/mod.rs`) ────────
+
+    /// Referenz-Implementierung des KI-Worker-Kontrakts: Worker-Thread nach
+    /// dem `start_sync`-Muster, Ergebnis per `qt_thread().queue` zurück.
+    /// Re-Entranz-Schutz ist der Generationszähler, keine Sperre: eine
+    /// neuere Anfrage macht die laufende veraltet, deren Ergebnis verfällt.
+    /// `aiResponseJson` behält bei Verwerfen/Abbruch den letzten Stand.
+    fn start_ai_request(mut self: Pin<&mut Self>, prompt: &QString) {
+        let nachrichten = vec![ai::client::ChatMessage::user(&prompt.to_string())];
+        let settings = self.rust().state.settings.clone();
+        let generationen = std::sync::Arc::clone(&self.rust().ai_generationen);
+        let llm = std::sync::Arc::clone(&self.rust().ai_llm);
+        self.as_mut().set_ai_busy(true);
+        self.as_mut().set_ai_error(QString::default());
+        let qt_thread = self.qt_thread();
+        ai::starte_anfrage(&generationen, &llm, settings, nachrichten, move |generation, ergebnis| {
+            let _ = qt_thread.queue(move |mut qobject| {
+                // Zweite Prüfung auf dem Qt-Thread: zwischen Worker-Meldung
+                // und Queue-Ausführung kann ein Abbruch oder eine neuere
+                // Anfrage dazwischenkommen.
+                if !qobject.rust().ai_generationen.ist_aktuell(generation) {
+                    return;
+                }
+                qobject.as_mut().set_ai_busy(false);
+                match ergebnis {
+                    Ok(wert) => qobject
+                        .as_mut()
+                        .set_ai_response_json(QString::from(wert.to_string().as_str())),
+                    // Fehler in den KI-eigenen Kanal — nie in den globalen
+                    // `errorMessage` (der gehört Sync und Mutationen).
+                    Err(e) => qobject
+                        .as_mut()
+                        .set_ai_error(QString::from(e.to_string().as_str())),
+                }
+            });
+        });
+    }
+
+    fn cancel_ai_request(mut self: Pin<&mut Self>) {
+        self.rust().ai_generationen.verwerfen();
+        self.as_mut().set_ai_busy(false);
+    }
+
+    /// KI-API-Key im Secret Service ablegen (leer = löschen). Fehler landen
+    /// im KI-eigenen Kanal `aiError`.
+    fn set_ai_api_key(mut self: Pin<&mut Self>, key: &QString) -> bool {
+        match secrets::set_ai_api_key(key.to_string().trim()) {
+            Ok(()) => {
+                self.as_mut().set_ai_error(QString::default());
+                true
+            }
+            Err(e) => {
+                self.as_mut()
+                    .set_ai_error(QString::from(format!("Secret Service: {e}").as_str()));
+                false
+            }
+        }
     }
 
     fn repair_legacy_tasks(mut self: Pin<&mut Self>) -> i32 {

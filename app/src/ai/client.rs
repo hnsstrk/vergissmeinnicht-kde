@@ -82,6 +82,9 @@ pub trait Llm {
     fn chat(&self, messages: &[ChatMessage]) -> Result<String, AiError>;
 
     /// Modellliste des Endpunkts (`/v1/models`) — für „Speichern und testen".
+    /// Produktiv verdrahtet ab Story AI-A4 (Einstellungs-UI); bis dahin nur
+    /// von Tests aufgerufen.
+    #[allow(dead_code)]
     fn list_models(&self) -> Result<Vec<String>, AiError>;
 
     /// Chat-Aufruf mit JSON-Erzwingung im Prompt und Validierung der Antwort.
@@ -270,6 +273,9 @@ fn parse_chat_response(body: &str) -> Result<String, AiError> {
         .ok_or_else(|| AiError::Api("Antwort ohne Inhalt".into()))
 }
 
+// Die drei Modelllisten-Helfer hängen an `list_models` und sind wie dieses
+// erst ab Story AI-A4 produktiv erreichbar — daher dieselben Vermerke.
+#[allow(dead_code)]
 #[derive(Deserialize)]
 struct ModelsResponse {
     #[serde(default)]
@@ -277,6 +283,7 @@ struct ModelsResponse {
     error: Option<ApiErrorBody>,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize)]
 struct ModelEntry {
     id: String,
@@ -284,6 +291,7 @@ struct ModelEntry {
 
 /// Zieht die Modellnamen aus einer `/v1/models`-Antwort (OpenAI-Listenform,
 /// bei Ollama wie OpenRouter: `{"data": [{"id": …}, …]}`).
+#[allow(dead_code)]
 fn parse_models_response(body: &str) -> Result<Vec<String>, AiError> {
     let parsed: ModelsResponse = serde_json::from_str(body)
         .map_err(|_| AiError::Api(format!("Unerwartete Antwortform: {}", excerpt(body))))?;
@@ -568,6 +576,38 @@ pub mod tests {
     fn leerer_api_key_wird_wie_kein_key_behandelt() {
         let client = LlmClient::new("http://localhost:11434/v1", "m", Some(String::new())).unwrap();
         assert_eq!(client.api_key, None);
+    }
+
+    #[test]
+    fn send_meldet_fehlerstatus_mit_body_auszug() {
+        // Nicht-2xx-Pfad von `send` gegen einen Mini-HTTP-Server aus der
+        // Standardbibliothek: die Meldung trägt Status UND Body-Auszug.
+        use std::io::{Read, Write};
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let adresse = listener.local_addr().unwrap();
+        let server = std::thread::spawn(move || {
+            let (mut verbindung, _) = listener.accept().unwrap();
+            // Request grob einlesen (Inhalt egal), dann 500 mit Body liefern.
+            let mut puffer = [0u8; 4096];
+            let _ = verbindung.read(&mut puffer);
+            let body = r#"{"error": {"message": "kaputt"}}"#;
+            let antwort = format!(
+                "HTTP/1.1 500 Internal Server Error\r\nContent-Type: application/json\r\n\
+                 Content-Length: {}\r\nConnection: close\r\n\r\n{body}",
+                body.len()
+            );
+            verbindung.write_all(antwort.as_bytes()).unwrap();
+        });
+        let client = LlmClient::new(&format!("http://{adresse}/v1"), "m", None).unwrap();
+        let fehler = client.chat(&[ChatMessage::user("hi")]).unwrap_err();
+        server.join().unwrap();
+        match fehler {
+            AiError::Api(meldung) => {
+                assert!(meldung.contains("500"), "Status fehlt: {meldung}");
+                assert!(meldung.contains("kaputt"), "Body-Auszug fehlt: {meldung}");
+            }
+            andere => panic!("Api-Fehler erwartet, war: {andere:?}"),
+        }
     }
 
     /// Echter Roundtrip gegen ein lokales Ollama — braucht den laufenden

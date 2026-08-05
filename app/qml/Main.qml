@@ -418,6 +418,95 @@ Kirigami.ApplicationWindow {
             app.applyFilter("all")
             check(!uuids().some(u => taskOf(u).project === "flowdemo2"), "Aufräumen")
 
+            // 12. KI-Gerüst (AI-A3): Property-Defaults der Bridge. Der
+            // Worker-Teil (Stale-Drop, Abbruch) läuft nur, wenn der Aufruf
+            // eine Mock-Konfiguration mitbringt (Wegwerf-config.json mit
+            // ai_model plus VMN_AI_MOCK-Konserve) — sonst wird er
+            // übersprungen, damit der Flow nie echte HTTP-Anfragen stellt.
+            check(!app.aiBusy, "aiBusy anfangs false")
+            check(app.aiError.length === 0, "aiError anfangs leer")
+            check(!app.dictationAvailable, "dictationAvailable ohne Sonde false")
+            app.cancelAiRequest()
+            check(!app.aiBusy && app.aiError.length === 0,
+                  "cancelAiRequest ohne laufende Anfrage ist folgenlos")
+
+            if (app.aiConfigured) {
+                // Erste Anfrage zieht die künstlich verzögerte Konserve;
+                // die zweite folgt zeitversetzt (deterministische Zuordnung).
+                app.startAiRequest("erste — wird veraltet")
+                check(app.aiBusy, "aiBusy nach startAiRequest true")
+                aiSecondRequestTimer.baseFailures = failures
+                aiSecondRequestTimer.start()
+            } else {
+                console.log("FLOW-INFO KI-Worker-Teil übersprungen (aiConfigured false)")
+                console.log(failures === 0 ? "FLOW-ENDE: alles grün" : `FLOW-ENDE: ${failures} Fehler`)
+                Qt.quit()
+            }
+        }
+    }
+
+    // KI-Flow (AI-A3), Schritt 2: zweite Anfrage nach kurzer Pause — so hat
+    // die erste ihre (langsame) Konserve sicher schon gezogen und die
+    // Konserven-Zuordnung ist deterministisch.
+    Timer {
+        id: aiSecondRequestTimer
+        property int baseFailures: 0
+        interval: 250
+        onTriggered: {
+            app.startAiRequest("zweite — bleibt aktuell")
+            aiResultWaiter.baseFailures = baseFailures
+            aiResultWaiter.start()
+        }
+    }
+
+    // KI-Flow, Schritt 3: Ergebnis der jüngsten Anfrage abwarten, dann den
+    // Abbruch-Fall anstoßen.
+    Timer {
+        id: aiResultWaiter
+        property int baseFailures: 0
+        property int versuche: 0
+        interval: 200
+        repeat: true
+        onTriggered: {
+            versuche++
+            if (app.aiBusy && versuche < 25)
+                return
+            aiResultWaiter.running = false
+            let failures = baseFailures
+            function check(cond, label) {
+                console.log((cond ? "FLOW-OK  " : "FLOW-FAIL ") + label)
+                if (!cond) failures++
+            }
+            check(!app.aiBusy, "KI-Worker meldet fertig (aiBusy false)")
+            check(app.aiError.length === 0, "keine aiError-Meldung")
+            const antwort = JSON.parse(app.aiResponseJson || "{}")
+            check(antwort.marker === "aktuell", "jüngste Antwort publiziert (aiResponseJson)")
+            // Abbruch: langsame Konserve starten und sofort abbrechen.
+            app.startAiRequest("dritte — wird abgebrochen")
+            app.cancelAiRequest()
+            check(!app.aiBusy, "cancelAiRequest setzt aiBusy zurück")
+            aiCancelWaiter.baseFailures = failures
+            aiCancelWaiter.start()
+        }
+    }
+
+    // KI-Flow, Schritt 4: länger warten, als die langsamen Konserven (800 ms)
+    // brauchen — weder das veraltete noch das abgebrochene Ergebnis darf
+    // publiziert worden sein (Stale-Drop über den Generationszähler).
+    Timer {
+        id: aiCancelWaiter
+        property int baseFailures: 0
+        interval: 1200
+        onTriggered: {
+            let failures = baseFailures
+            function check(cond, label) {
+                console.log((cond ? "FLOW-OK  " : "FLOW-FAIL ") + label)
+                if (!cond) failures++
+            }
+            const antwort = JSON.parse(app.aiResponseJson || "{}")
+            check(antwort.marker === "aktuell",
+                  "veraltete und abgebrochene Ergebnisse verworfen (Stale-Drop)")
+            check(app.aiError.length === 0, "kein aiError nach Verwerfen")
             console.log(failures === 0 ? "FLOW-ENDE: alles grün" : `FLOW-ENDE: ${failures} Fehler`)
             Qt.quit()
         }

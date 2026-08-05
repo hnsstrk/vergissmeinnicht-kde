@@ -7,6 +7,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- AI groundwork, not yet user-visible (AI-A3, #10): the bridge exposes
+  `aiConfigured`, `aiBusy`, `aiError`, `aiResponseJson` and
+  `dictationAvailable`, runs LLM requests on a worker thread
+  (`start_sync` pattern) and drops stale or cancelled responses via a
+  generation counter — the newest request wins, results publish as plain
+  property sets without a model reset, and AI errors never touch the
+  global error banner. `cancelAiRequest` aborts; the AI API key can be
+  stored in the Secret Service via `setAiApiKey`. The headless
+  `--test-flow` covers the scaffolding end-to-end against the canned-
+  response mock (`VMN_AI_MOCK`).
 - Quick capture: the due and recurrence combos gained a "Custom …" entry
   (pattern from the detail editor). Due accepts any Taskwarrior date
   expression (`+3d`, `eow`, ISO date) in a validated text field;

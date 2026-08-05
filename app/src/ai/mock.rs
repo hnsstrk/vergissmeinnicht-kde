@@ -135,8 +135,10 @@ impl Llm for CannedLlm {
     }
 }
 
+// Wie in `client.rs` ist das Testmodul pub: `mit_env` und
+// `schreibe_konserven` nutzen auch die Worker-Tests in `mod.rs`.
 #[cfg(test)]
-mod tests {
+pub mod tests {
     use super::*;
     use std::io::Write;
     use std::sync::{mpsc, Arc};
@@ -148,7 +150,7 @@ mod tests {
 
     /// Führt `test` mit exakt den angegebenen Mock-Variablen aus: alle
     /// anderen sind entfernt, danach wird aufgeräumt — auch bei Panik.
-    fn mit_env(paare: &[(&str, &str)], test: impl FnOnce()) {
+    pub fn mit_env(paare: &[(&str, &str)], test: impl FnOnce()) {
         let _sperre = ENV_LOCK.lock().unwrap_or_else(|vergiftet| vergiftet.into_inner());
         std::env::remove_var(ENV_MOCK);
         std::env::remove_var(ENV_MOCK_DELAY);
@@ -163,7 +165,7 @@ mod tests {
         }
     }
 
-    fn schreibe_konserven(inhalt: &str) -> tempfile::NamedTempFile {
+    pub fn schreibe_konserven(inhalt: &str) -> tempfile::NamedTempFile {
         let mut datei = tempfile::NamedTempFile::new().expect("Tempdatei");
         datei.write_all(inhalt.as_bytes()).expect("Konserven schreiben");
         datei
