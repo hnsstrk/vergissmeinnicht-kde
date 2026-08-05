@@ -53,6 +53,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `Ctrl+Shift+S` disabled) when no sync server is configured, instead of
   always being shown and silently falling back to a plain refresh
   (UI-2, #28).
+- Quick capture: "Interpret with AI" is now a real button next to a short
+  hint instead of a form list row. As a list row with a trailing chevron
+  it read like a navigation target rather than an action (user report).
 
 ## [0.3.2] - 2026-07-17
 

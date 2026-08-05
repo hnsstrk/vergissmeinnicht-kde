@@ -216,19 +216,46 @@ FormWindow {
     }
 
     // „Mit KI interpretieren" (AI-B1) — nur bei konfigurierter KI sichtbar
-    // (Spec §3.2). Der Spinner läuft, solange die Anfrage unterwegs ist.
-    FormCard.FormButtonDelegate {
+    // (Spec §3.2). Bewusst ein echter Knopf statt eines Formular-Delegates:
+    // als Listenzeile mit Chevron las sich die Aktion wie ein Navigationsziel.
+    RowLayout {
         Layout.fillWidth: true
+        Layout.topMargin: Kirigami.Units.smallSpacing
+        Layout.bottomMargin: Kirigami.Units.largeSpacing
+        Layout.leftMargin: Kirigami.Units.smallSpacing
+        Layout.rightMargin: Kirigami.Units.smallSpacing
         visible: app.aiConfigured
-        enabled: !app.aiBusy && titleField.text.trim().length > 0
-        icon.name: "tools-wizard"
-        text: i18n("Mit KI interpretieren")
-        description: i18n("Füllt die Felder aus dem Titeltext (Strg+J)")
-        trailing: QQC2.BusyIndicator {
+        spacing: Kirigami.Units.smallSpacing
+
+        QQC2.BusyIndicator {
             running: app.aiBusy
             visible: app.aiBusy
+            Layout.preferredHeight: Kirigami.Units.iconSizes.small
+            Layout.preferredWidth: Kirigami.Units.iconSizes.small
         }
-        onClicked: dialog.interpret()
+
+        QQC2.Label {
+            Layout.fillWidth: true
+            text: app.aiBusy
+                  ? i18n("Die KI liest den Titel …")
+                  : i18n("Freitext genügt — die KI füllt die Felder.")
+            wrapMode: Text.WordWrap
+            opacity: 0.7
+            font: Kirigami.Theme.smallFont
+        }
+
+        QQC2.Button {
+            id: interpretButton
+            text: i18n("Mit KI interpretieren")
+            icon.name: "tools-wizard"
+            // Hervorgehoben: die Aktion ist der Zweck dieser Zeile.
+            highlighted: enabled
+            enabled: !app.aiBusy && titleField.text.trim().length > 0
+            onClicked: dialog.interpret()
+            QQC2.ToolTip.text: i18n("Strg+J")
+            QQC2.ToolTip.visible: hovered
+            QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
+        }
     }
 
     // Live-Vorschau der erkannten Tokens.
