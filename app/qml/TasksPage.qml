@@ -14,6 +14,9 @@ Kirigami.ScrollablePage {
     property var selection: []
     property int selectionAnchor: -1
 
+    // Sync-Aktion von außen ansprechbar (Testhaken für --test-flow, UI-2).
+    property alias syncAction: syncActionItem
+
     function isSelected(uuid) {
         return selection.indexOf(uuid) !== -1
     }
@@ -243,11 +246,16 @@ Kirigami.ScrollablePage {
             }
         },
         Kirigami.Action {
+            id: syncActionItem
             text: app.isSyncing ? i18n("Synchronisiere …") : i18n("Synchronisieren")
             // state-sync trägt den blauen Punkt fest im Icon — nur zeigen, wenn
             // wirklich unsynchronisierte Änderungen vorliegen.
             icon.name: app.hasLocalChanges ? "state-sync" : "cloudstatus"
-            enabled: !app.isSyncing
+            // Ohne Sync-Server gibt es nur einen Fehlschlag zu zeigen (kein
+            // passendes „durchgestrichene Cloud"-Icon in Breeze) — Kunden-
+            // Entscheidung 2026-08-05: Aktion dann ganz ausblenden.
+            visible: app.syncConfigured
+            enabled: !app.isSyncing && app.syncConfigured
             shortcut: "Ctrl+Shift+S"
             onTriggered: app.startSync()
         },

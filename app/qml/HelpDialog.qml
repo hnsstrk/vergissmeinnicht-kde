@@ -52,7 +52,7 @@ Kirigami.Dialog {
             QQC2.Label { text: "Strg+Umschalt+H" ; font.family: "monospace" }
             QQC2.Label { text: i18n("Erledigte ein-/ausblenden") }
             QQC2.Label { text: "Strg+Umschalt+S" ; font.family: "monospace" }
-            QQC2.Label { text: i18n("Synchronisieren") }
+            QQC2.Label { text: i18n("Synchronisieren (nur bei konfiguriertem Sync-Server)") }
             QQC2.Label { text: "F5" ; font.family: "monospace" }
             QQC2.Label { text: i18n("Aktualisieren") }
             QQC2.Label { text: "Strg+Umschalt+," ; font.family: "monospace" }

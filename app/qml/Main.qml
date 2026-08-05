@@ -418,7 +418,28 @@ Kirigami.ApplicationWindow {
             app.applyFilter("all")
             check(!uuids().some(u => taskOf(u).project === "flowdemo2"), "Aufräumen")
 
-            // 12. KI-Gerüst (AI-A3): Property-Defaults der Bridge. Der
+            // 12. Sync-Aktion nur bei konfiguriertem Sync-Server sichtbar/aktiv (UI-2).
+            // Ursprünglichen Zustand merken, um ihn danach wiederherzustellen.
+            const syncUrlZuvor = app.syncServerUrl
+            const syncCidZuvor = app.syncClientId()
+            const syncSecretZuvor = app.syncSecret()
+
+            app.setSyncServerUrlSetting("")
+            check(!app.syncConfigured, "syncConfigured false ohne Server-URL")
+            check(!tasksPage.syncAction.visible, "Sync-Aktion ausgeblendet ohne Konfiguration")
+            check(!tasksPage.syncAction.enabled, "Sync-Aktion deaktiviert ohne Konfiguration")
+
+            app.setSyncServerUrlSetting("http://127.0.0.1:18080")
+            app.setSyncCredentials("550e8400-e29b-41d4-a716-446655440000", "flow-test-geheimnis")
+            check(app.syncConfigured, "syncConfigured true mit vollständiger Konfiguration")
+            check(tasksPage.syncAction.visible, "Sync-Aktion sichtbar bei konfiguriertem Sync-Server")
+            check(tasksPage.syncAction.enabled, "Sync-Aktion aktiv bei konfiguriertem Sync-Server")
+
+            // Aufräumen: ursprünglichen Konfigurationszustand wiederherstellen.
+            app.setSyncCredentials(syncCidZuvor, syncSecretZuvor)
+            app.setSyncServerUrlSetting(syncUrlZuvor)
+
+            // 13. KI-Gerüst (AI-A3): Property-Defaults der Bridge. Der
             // Worker-Teil (Stale-Drop, Abbruch) läuft nur, wenn der Aufruf
             // eine Mock-Konfiguration mitbringt (Wegwerf-config.json mit
             // ai_model plus VMN_AI_MOCK-Konserve) — sonst wird er
@@ -553,7 +574,7 @@ Kirigami.ApplicationWindow {
 
     globalDrawer: Sidebar {}
 
-    pageStack.initialPage: TasksPage {}
+    pageStack.initialPage: TasksPage { id: tasksPage }
     pageStack.defaultColumnWidth: root.width
 
     DetailDialog {

@@ -68,7 +68,8 @@ Oberfläche auf jeder Plattform.
   Zugangsdaten liegen im Secret Service des Systems (KWallet).
   Auto-Sync: manuell, alle 5/15/60 Minuten oder sofort nach Änderungen.
   Der Werkzeugleisten-Knopf zeigt unsynchronisierte lokale Änderungen mit
-  einem blauen Punkt an.
+  einem blauen Punkt an und ist (samt Tastenkürzel Strg+Umschalt+S)
+  ausgeblendet, solange kein Sync-Server konfiguriert ist.
 - **Automatische Backups** — `VACUUM INTO`-Snapshot vor jedem Sync,
   rotierend die letzten 10. Manuelles Backup und Wiederherstellung in den
   Einstellungen. Siehe [`docs/backup-and-restore.md`](docs/backup-and-restore.md).

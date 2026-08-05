@@ -69,7 +69,8 @@ platform.
   you point it at. Credentials live in the system Secret Service (KWallet).
   Auto-sync modes: manual, every 5/15/60 minutes, or immediately after
   changes. The toolbar button indicates unsynchronized local changes with
-  a blue dot.
+  a blue dot, and is hidden entirely (`Ctrl+Shift+S` included) until a
+  sync server is configured.
 - **Automatic backups** — `VACUUM INTO` snapshot before every sync, rotated
   to the last 10. Manual backup and restore from settings. See
   [`docs/backup-and-restore.md`](docs/backup-and-restore.md).

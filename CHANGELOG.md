@@ -29,6 +29,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   slips such as `prüfem`. Exact substring matching runs first and is
   unchanged, and `project:`/`tag:`/`status:` stay exact (UI-3, #29).
 
+### Changed
+
+- The toolbar's Synchronize action is now hidden (and its shortcut
+  `Ctrl+Shift+S` disabled) when no sync server is configured, instead of
+  always being shown and silently falling back to a plain refresh
+  (UI-2, #28).
+
 ## [0.3.2] - 2026-07-17
 
 ### Fixed
