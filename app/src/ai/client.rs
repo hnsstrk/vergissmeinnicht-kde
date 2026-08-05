@@ -15,7 +15,14 @@ use std::time::Duration;
 
 /// Fester Request-Timeout — bewusst Konstante, kein Setting: lokale Modelle
 /// brauchen beim ersten Aufruf Ladezeit (Spec §4.2).
-pub const REQUEST_TIMEOUT: Duration = Duration::from_secs(120);
+///
+/// 120 s waren zu knapp: gegen ein lokales Ollama mit einem Reasoning-Modell
+/// (qwen3.6:27b) lagen gemessene Antwortzeiten für eine einzelne Interpretation
+/// bei 90–163 s, also regelmäßig über der alten Grenze — die Anfrage brach ab,
+/// obwohl das Backend arbeitete. Der Timeout ist ein Sicherheitsnetz gegen
+/// hängende Verbindungen, keine Zumutbarkeitsgrenze: Wer nicht warten will,
+/// bricht über `cancelAiRequest` ab.
+pub const REQUEST_TIMEOUT: Duration = Duration::from_secs(300);
 
 /// JSON-Anweisung, die jedem `complete_json`-Aufruf in die System-Nachricht
 /// gelegt wird (zweite Stufe der JSON-Erzwingung).

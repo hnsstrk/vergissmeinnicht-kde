@@ -72,6 +72,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   slips such as `prüfem`. Exact substring matching runs first and is
   unchanged, and `project:`/`tag:`/`status:` stay exact (UI-3, #29).
 
+### Fixed
+
+- The AI request timeout was 120 s, which a local reasoning model exceeds:
+  measured against Ollama with `qwen3.6:27b`, a single interpretation took
+  90-163 s, so requests aborted while the backend was still working. The
+  timeout is now 300 s — a safety net against stuck connections, not a
+  patience limit (the request can always be cancelled).
+
 ### Changed
 
 - The settings are now split into categories (UI-4, #30): General,
