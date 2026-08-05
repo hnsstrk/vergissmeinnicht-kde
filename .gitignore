@@ -5,6 +5,9 @@
 .idea/
 .vscode/
 
+# msgmerge legt Sicherungen der alten Kataloge an
+*.po~
+
 # Claude Code lokal
 .claude/settings.local.json
 .claude/projects/
