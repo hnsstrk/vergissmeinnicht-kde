@@ -125,6 +125,9 @@ mod qobject {
         #[qproperty(bool, ai_busy, cxx_name = "aiBusy")]
         #[qproperty(QString, ai_error, cxx_name = "aiError")]
         #[qproperty(QString, ai_response_json, cxx_name = "aiResponseJson")]
+        // Stufen-Ergebnis der NL-Erfassung (AI-B1): validierter Entwurf als
+        // JSON, siehe `ai::types::AiDraft`.
+        #[qproperty(QString, ai_draft_json, cxx_name = "aiDraftJson")]
         #[qproperty(bool, dictation_available, cxx_name = "dictationAvailable")]
         type AppContainer = super::AppContainerRust;
 
@@ -307,10 +310,19 @@ mod qobject {
         /// Invokables mit Prompt-Aufbau über denselben Pfad.
         #[qinvokable]
         fn start_ai_request(self: Pin<&mut AppContainer>, prompt: &QString);
+        /// „Mit KI interpretieren" (Story AI-B1): schickt den Freitext mit
+        /// Datums- und Taxonomie-Kontext ans Modell und publiziert den
+        /// validierten Entwurf in `aiDraftJson` (Schema: `ai::types::AiDraft`).
+        #[qinvokable]
+        fn start_ai_interpret(self: Pin<&mut AppContainer>, text: &QString);
         /// Abbruch der laufenden KI-Anfrage: erhöht nur den Generationszähler
         /// — das Ergebnis des Worker-Threads verfällt beim Eintreffen.
         #[qinvokable]
         fn cancel_ai_request(self: Pin<&mut AppContainer>);
+        /// Leert den KI-Fehlerkanal (Pendant zu `clearError` für `aiError`) —
+        /// der Dialog ruft es beim Öffnen, damit keine alte Meldung steht.
+        #[qinvokable]
+        fn clear_ai_error(self: Pin<&mut AppContainer>);
         /// KI-API-Key im Secret Service speichern (leer = löschen).
         #[qinvokable]
         fn set_ai_api_key(self: Pin<&mut AppContainer>, key: &QString) -> bool;
@@ -385,6 +397,7 @@ pub struct AppContainerRust {
     ai_busy: bool,
     ai_error: QString,
     ai_response_json: QString,
+    ai_draft_json: QString,
     dictation_available: bool,
     /// Generationszähler der KI-Anfragen — geteilt mit den Worker-Threads,
     /// damit Worker und Queue-Callback dieselbe Wahrheit prüfen.
@@ -429,6 +442,7 @@ impl Default for AppContainerRust {
             ai_busy: false,
             ai_error: QString::default(),
             ai_response_json: QString::default(),
+            ai_draft_json: QString::default(),
             dictation_available: false,
             ai_generationen: std::sync::Arc::new(ai::Generationen::default()),
             ai_llm: std::sync::Arc::new(ai::LlmHalter::default()),
@@ -1430,9 +1444,60 @@ impl qobject::AppContainer {
         });
     }
 
+    /// „Mit KI interpretieren" (Story AI-B1): baut den Capture-Prompt mit
+    /// aktuellem Datum und der Taxonomie aus dem Store (Spec §6, Stufe 1)
+    /// und läuft über denselben Worker-Kontrakt wie `start_ai_request`.
+    /// Die Antwort wird vor der Publikation validiert (`AiDraft`) — nur
+    /// geprüfte Werte erreichen `aiDraftJson` und damit die Dialogfelder.
+    fn start_ai_interpret(mut self: Pin<&mut Self>, text: &QString) {
+        let projekte = crate::filters::projects_from(&self.rust().state.tasks);
+        let tags = crate::filters::tags_from(&self.rust().state.tasks);
+        let nachrichten = ai::prompts::capture_nachrichten(
+            &text.to_string(),
+            vergissmeinnicht_core::chrono::Local::now(),
+            &projekte,
+            &tags,
+        );
+        let settings = self.rust().state.settings.clone();
+        let generationen = std::sync::Arc::clone(&self.rust().ai_generationen);
+        let llm = std::sync::Arc::clone(&self.rust().ai_llm);
+        self.as_mut().set_ai_busy(true);
+        self.as_mut().set_ai_error(QString::default());
+        let qt_thread = self.qt_thread();
+        ai::starte_anfrage(&generationen, &llm, settings, nachrichten, move |generation, ergebnis| {
+            let _ = qt_thread.queue(move |mut qobject| {
+                // Zweite Aktualitätsprüfung auf dem Qt-Thread (siehe
+                // `start_ai_request`) — Abbruch/Neuanfrage kann dazwischenkommen.
+                if !qobject.rust().ai_generationen.ist_aktuell(generation) {
+                    return;
+                }
+                qobject.as_mut().set_ai_busy(false);
+                match ergebnis {
+                    Ok(wert) => {
+                        let now = vergissmeinnicht_core::chrono::Utc::now().timestamp();
+                        let draft = ai::types::AiDraft::aus_antwort(&wert, now);
+                        let json = serde_json::to_string(&draft)
+                            .unwrap_or_else(|_| "{}".into());
+                        qobject
+                            .as_mut()
+                            .set_ai_draft_json(QString::from(json.as_str()));
+                    }
+                    // Fehler in den KI-eigenen Kanal, nie in `errorMessage`.
+                    Err(e) => qobject
+                        .as_mut()
+                        .set_ai_error(QString::from(e.to_string().as_str())),
+                }
+            });
+        });
+    }
+
     fn cancel_ai_request(mut self: Pin<&mut Self>) {
         self.rust().ai_generationen.verwerfen();
         self.as_mut().set_ai_busy(false);
+    }
+
+    fn clear_ai_error(mut self: Pin<&mut Self>) {
+        self.as_mut().set_ai_error(QString::default());
     }
 
     /// KI-API-Key im Secret Service ablegen (leer = löschen). Fehler landen

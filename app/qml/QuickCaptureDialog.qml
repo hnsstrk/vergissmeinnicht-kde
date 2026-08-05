@@ -28,12 +28,109 @@ FormWindow {
         recurCombo.currentIndex = 0
         recurCustomField.text = ""
         preview = {}
+        app.clearAiError()
         openWindow()
         titleField.forceActiveFocus()
     }
 
     function updatePreview() {
         preview = JSON.parse(app.quickCapturePreviewJson(titleField.text))
+    }
+
+    // „Mit KI interpretieren" (AI-B1): schickt den Titel-Freitext ans Modell;
+    // die Antwort füllt über applyDraft() nur die Dialogfelder — angelegt
+    // wird erst mit dem normalen Hinzufügen-Knopf (Vorschlagen, nie ausführen).
+    function interpret() {
+        if (!app.aiConfigured || app.aiBusy || titleField.text.trim().length === 0)
+            return
+        app.startAiInterpret(titleField.text)
+    }
+
+    // Füllfunktion (AI-B1): validierter Entwurf → Dialogfelder. Von außen
+    // aufrufbar (auch im --test-flow); der Titel bleibt stehen, wenn die KI
+    // keinen liefert — die Eingabe des Users wird nie geleert.
+    function applyDraft(draft) {
+        if ((draft.title ?? "").trim().length > 0)
+            titleField.text = draft.title.trim()
+        projectField.editText = draft.project ?? ""
+        tagsField.text = (draft.tags ?? []).join(" ")
+        setDueValue(draft.due ?? "")
+        priorityCombo.currentIndex = Math.max(0, ["", "H", "M", "L"].indexOf(draft.priority ?? ""))
+        setRecurValue(draft.recur ?? "")
+        notesArea.text = draft.notes ?? ""
+        updatePreview()
+    }
+
+    // Umkehrung der due-Zuordnung aus commit(): Wert → Preset-Index oder
+    // Custom-Pfad. Ein absolutes ISO-Datum geht in den Datumswähler, jeder
+    // andere gültige Ausdruck in das Freitextfeld „Benutzerdefiniert".
+    function setDueValue(token) {
+        token = (token ?? "").trim()
+        dueCustomField.text = ""
+        const presetIndex = ["", "today", "tomorrow", "+1w"].indexOf(token.toLowerCase())
+        if (presetIndex >= 0) {
+            dueCombo.currentIndex = presetIndex
+        } else if (/^\d{4}-\d{2}-\d{2}$/.test(token)) {
+            // Mittag statt Mitternacht: robust gegen Zeitzonen-Kanten.
+            dueDate.value = new Date(token + "T12:00:00")
+            dueCombo.currentIndex = 4
+        } else {
+            dueCustomField.text = token
+            dueCombo.currentIndex = 5
+        }
+    }
+
+    // Umkehrung der recur-Zuordnung aus commit(): Preset oder Custom-Feld.
+    function setRecurValue(token) {
+        token = (token ?? "").trim().toLowerCase()
+        recurCustomField.text = ""
+        const presetIndex = ["", "daily", "weekly", "monthly", "yearly"].indexOf(token)
+        if (presetIndex >= 0) {
+            recurCombo.currentIndex = presetIndex
+        } else {
+            recurCustomField.text = token
+            recurCombo.currentIndex = 5
+        }
+    }
+
+    // Feldwerte für den Headless-Flow (--test-flow), Muster wie im
+    // SettingsDialog: interne IDs sind außerhalb der Datei nicht sichtbar.
+    function testValues() {
+        return {
+            title: titleField.text,
+            project: projectField.editText,
+            tags: tagsField.text,
+            dueIndex: dueCombo.currentIndex,
+            dueCustom: dueCustomField.text,
+            dueDate: dueDate.value,
+            priorityIndex: priorityCombo.currentIndex,
+            recurIndex: recurCombo.currentIndex,
+            recurCustom: recurCustomField.text,
+            notes: notesArea.text,
+        }
+    }
+
+    // Ein KI-Ergebnis füllt die Felder nur, solange der Dialog offen ist —
+    // ein spät eintreffender Entwurf greift nicht in einen frisch geöffneten
+    // Dialog (openCapture setzt alle Felder zurück, close bricht ab).
+    Connections {
+        target: app
+        function onAiDraftJsonChanged() {
+            if (dialog.visible)
+                dialog.applyDraft(JSON.parse(app.aiDraftJson || "{}"))
+        }
+    }
+
+    // Schließen während einer laufenden Anfrage verwirft deren Ergebnis.
+    onVisibleChanged: {
+        if (!visible && app.aiBusy)
+            app.cancelAiRequest()
+    }
+
+    Shortcut {
+        sequence: "Ctrl+J"
+        enabled: dialog.visible && app.aiConfigured
+        onActivated: dialog.interpret()
     }
 
     function commit() {
@@ -100,6 +197,15 @@ FormWindow {
         visible: dialog.visible && app.errorMessage.length > 0
     }
 
+    // KI-Fehler im eigenen Kanal (aiError) — nie im globalen errorMessage.
+    Kirigami.InlineMessage {
+        Layout.fillWidth: true
+        Layout.margins: visible ? Kirigami.Units.smallSpacing : 0
+        type: Kirigami.MessageType.Error
+        text: app.aiError
+        visible: dialog.visible && app.aiError.length > 0
+    }
+
     FormCard.FormTextFieldDelegate {
         Layout.fillWidth: true
         id: titleField
@@ -107,6 +213,22 @@ FormWindow {
         placeholderText: i18n("z. B. Bericht schreiben +arbeit project:Büro due:tomorrow")
         onTextChanged: dialog.updatePreview()
         onAccepted: dialog.commit()
+    }
+
+    // „Mit KI interpretieren" (AI-B1) — nur bei konfigurierter KI sichtbar
+    // (Spec §3.2). Der Spinner läuft, solange die Anfrage unterwegs ist.
+    FormCard.FormButtonDelegate {
+        Layout.fillWidth: true
+        visible: app.aiConfigured
+        enabled: !app.aiBusy && titleField.text.trim().length > 0
+        icon.name: "tools-wizard"
+        text: i18n("Mit KI interpretieren")
+        description: i18n("Füllt die Felder aus dem Titeltext (Strg+J)")
+        trailing: QQC2.BusyIndicator {
+            running: app.aiBusy
+            visible: app.aiBusy
+        }
+        onClicked: dialog.interpret()
     }
 
     // Live-Vorschau der erkannten Tokens.

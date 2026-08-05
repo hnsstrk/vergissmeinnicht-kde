@@ -471,7 +471,38 @@ Kirigami.ApplicationWindow {
             // Aufräumen: Zähltest-Aufgaben entfernen.
             app.deleteTasks(zaehlUuids)
 
-            // 14. KI-Gerüst (AI-A3): Property-Defaults der Bridge. Der
+            // 14. Füllfunktion (AI-B1): Entwurf → Dialogfelder als von außen
+            // aufrufbare Funktion — Wert→Preset|Custom-Zuordnung in beide
+            // Sechser-Fälle (due, recur) plus Datumswähler-Entscheidung.
+            // Läuft ohne Mock und ohne KI-Konfiguration.
+            quickCaptureDialog.applyDraft({title: "KI-Titel", project: "flowki-projekt",
+                                           tags: ["ki", "flow"], due: "tomorrow",
+                                           priority: "H", recur: "weekly", notes: "KI-Notiz"})
+            let fv = quickCaptureDialog.testValues()
+            check(fv.title === "KI-Titel" && fv.project === "flowki-projekt"
+                  && fv.tags === "ki flow" && fv.notes === "KI-Notiz",
+                  "applyDraft füllt Textfelder")
+            check(fv.dueIndex === 2 && fv.priorityIndex === 1 && fv.recurIndex === 2,
+                  "applyDraft trifft Presets (tomorrow/H/weekly)")
+            quickCaptureDialog.applyDraft({due: "+3d", recur: "quarterly"})
+            fv = quickCaptureDialog.testValues()
+            check(fv.dueIndex === 5 && fv.dueCustom === "+3d",
+                  "freier due-Ausdruck landet im Custom-Feld")
+            check(fv.recurIndex === 5 && fv.recurCustom === "quarterly",
+                  "freies recur-Intervall landet im Custom-Feld")
+            check(fv.title === "KI-Titel", "Entwurf ohne Titel lässt Titel stehen")
+            quickCaptureDialog.applyDraft({due: "2027-01-15"})
+            fv = quickCaptureDialog.testValues()
+            check(fv.dueIndex === 4 && fv.dueDate.getFullYear() === 2027
+                  && fv.dueDate.getMonth() === 0 && fv.dueDate.getDate() === 15,
+                  "ISO-Datum landet im Datumswähler")
+            quickCaptureDialog.applyDraft({})
+            fv = quickCaptureDialog.testValues()
+            check(fv.project === "" && fv.tags === "" && fv.dueIndex === 0
+                  && fv.priorityIndex === 0 && fv.recurIndex === 0 && fv.notes === "",
+                  "leerer Entwurf setzt Metadaten-Felder zurück")
+
+            // 15. KI-Gerüst (AI-A3): Property-Defaults der Bridge. Der
             // Worker-Teil (Stale-Drop, Abbruch) läuft nur, wenn der Aufruf
             // eine Mock-Konfiguration mitbringt (Wegwerf-config.json mit
             // ai_model plus VMN_AI_MOCK-Konserve) — sonst wird er
@@ -560,6 +591,104 @@ Kirigami.ApplicationWindow {
             check(antwort.marker === "aktuell",
                   "veraltete und abgebrochene Ergebnisse verworfen (Stale-Drop)")
             check(app.aiError.length === 0, "kein aiError nach Verwerfen")
+            // Weiter zum AI-B1-Teil — der zieht die Konserven 4 und 5.
+            aiDraftTimer.baseFailures = failures
+            aiDraftTimer.start()
+        }
+    }
+
+    // KI-Flow, Schritt 5 (AI-B1): „Mit KI interpretieren" end-to-end über den
+    // Mock. Hängt bewusst hinter dem KI-Gerüst-Teil: die Konserven-Zuordnung
+    // ist positionsabhängig (Gerüst = Konserven 1–3), ein Abschnitt davor
+    // würde dessen Indizes verschieben. Erwartete Konserven:
+    //   4: {"title": "Zahnarzttermin vereinbaren", "project": "flowki",
+    //       "tags": ["gesundheit"], "due": "tomorrow", "priority": "H",
+    //       "recur": "monthly", "notes": "Vormittags anrufen"}
+    //   5: {"title": "Kaputt-Werte", "project": "", "tags": [],
+    //       "due": "übermorgen vielleicht", "priority": "urgent",
+    //       "recur": "alle Jubeljahre", "notes": ""}
+    Timer {
+        id: aiDraftTimer
+        property int baseFailures: 0
+        interval: 100
+        onTriggered: {
+            app.startAiInterpret("Zahnarzttermin vereinbaren, nächste Woche, wichtig")
+            aiDraftWaiter.baseFailures = baseFailures
+            aiDraftWaiter.start()
+        }
+    }
+
+    // KI-Flow, Schritt 6: validierten Entwurf prüfen, über die Füllfunktion in
+    // den Dialog übernehmen und mit dem normalen Anlege-Pfad committen —
+    // die KI schlägt nur vor, angelegt wird über addTaskDetailed.
+    Timer {
+        id: aiDraftWaiter
+        property int baseFailures: 0
+        property int versuche: 0
+        interval: 200
+        repeat: true
+        onTriggered: {
+            versuche++
+            if (app.aiBusy && versuche < 25)
+                return
+            aiDraftWaiter.running = false
+            let failures = baseFailures
+            function check(cond, label) {
+                console.log((cond ? "FLOW-OK  " : "FLOW-FAIL ") + label)
+                if (!cond) failures++
+            }
+            check(!app.aiBusy, "Interpretieren meldet fertig (aiBusy false)")
+            check(app.aiError.length === 0, "kein aiError beim Interpretieren")
+            const draft = JSON.parse(app.aiDraftJson || "{}")
+            check(draft.title === "Zahnarzttermin vereinbaren" && draft.project === "flowki"
+                  && draft.due === "tomorrow" && draft.priority === "H"
+                  && draft.recur === "monthly",
+                  "aiDraftJson trägt validierten Entwurf")
+            quickCaptureDialog.applyDraft(draft)
+            quickCaptureDialog.commit()
+            app.applyFilter("project:flowki")
+            const angelegt = Array.from(app.visibleUuids(0, 9999))
+            check(angelegt.length === 1, "Entwurf über den normalen Anlege-Pfad committet")
+            if (angelegt.length === 1) {
+                const t = JSON.parse(app.taskJson(angelegt[0]))
+                check(t.project === "flowki" && t.priority === "H" && t.recur === "monthly"
+                      && t.due > 0 && t.tags.indexOf("gesundheit") !== -1,
+                      "neues Projekt und Entwurfs-Metadaten persistiert")
+                check(t.annotations.length === 1
+                      && t.annotations[0].description === "Vormittags anrufen",
+                      "Entwurfs-Notizen als Annotation")
+                app.deleteTasks(angelegt)
+            }
+            app.applyFilter("all")
+            // Konserve 5: unbrauchbare Metadaten müssen leer ankommen.
+            app.startAiInterpret("irgendwas mit kaputten Metadaten")
+            aiDraftInvalidWaiter.baseFailures = failures
+            aiDraftInvalidWaiter.start()
+        }
+    }
+
+    // KI-Flow, Schritt 7: Validierung — ungültige due/priority/recur-Werte
+    // erreichen die Dialogfelder nie (leere Strings statt Müll).
+    Timer {
+        id: aiDraftInvalidWaiter
+        property int baseFailures: 0
+        property int versuche: 0
+        interval: 200
+        repeat: true
+        onTriggered: {
+            versuche++
+            if (app.aiBusy && versuche < 25)
+                return
+            aiDraftInvalidWaiter.running = false
+            let failures = baseFailures
+            function check(cond, label) {
+                console.log((cond ? "FLOW-OK  " : "FLOW-FAIL ") + label)
+                if (!cond) failures++
+            }
+            const draft = JSON.parse(app.aiDraftJson || "{}")
+            check(draft.title === "Kaputt-Werte", "zweiter Entwurf publiziert")
+            check(draft.due === "" && draft.priority === "" && draft.recur === "",
+                  "ungültige due/priority/recur kommen leer an (Validierung)")
             console.log(failures === 0 ? "FLOW-ENDE: alles grün" : `FLOW-ENDE: ${failures} Fehler`)
             Qt.quit()
         }

@@ -45,7 +45,12 @@ Oberfläche auf jeder Plattform.
   Terminal-Syntax (`+tag project:foo due:tomorrow priority:H`) mit
   Live-Vorschau. Wie Detail-Editor und Einstellungen öffnet sie sich als
   eigenständiges Dialogfenster (frei beweg- und skalierbar), nicht als
-  Modal im Hauptfenster.
+  Modal im Hauptfenster. Mit konfiguriertem KI-Backend schickt **Mit KI
+  interpretieren** (Strg+J) den Freitext des Titels ans Modell und füllt
+  die strukturierten Felder aus der validierten Antwort — ungültige
+  Fälligkeits-/Wiederholungs-/Prioritätswerte werden verworfen, neue
+  Projektnamen sind erlaubt, und angelegt wird erst über den normalen
+  Hinzufügen-Knopf.
 - **Detail-Editor** — Titel, Projekt, Tags, Fällig, Geplant ab, Warten bis,
   Priorität, Wiederholung, Notizen, Abhängigkeits-Editor, Reaktivieren
   erledigter Aufgaben.
@@ -186,6 +191,7 @@ ab. TaskChampion löst Konflikte CRDT-artig über sein Operation-Log.
 ├── app/                Kirigami-App
 │   ├── src/            cxx-qt-Bridge, Filter, Parser, State, Backups
 │   │   └── ai/         Opt-in-KI-Assistenz (im Aufbau): LLM-Client,
+│   │                   Prompt-Bausteine, validierte Entwürfe,
 │   │                   Konserven-Mock, Anfrage-Worker
 │   ├── qml/            Hauptfenster, Seitenleiste, Dialoge
 │   └── cpp/            kleine Shims (KLocalizedContext, Fenster-Grab)

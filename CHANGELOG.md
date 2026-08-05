@@ -7,6 +7,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Quick capture can interpret free-form input with AI (AI-B1, #11): with a
+  configured backend, an "Interpret with AI" action (Ctrl+J, listed in the
+  help dialog) sends the title text plus the current date and the
+  project/tag taxonomy to the model and fills the structured form fields
+  from the validated response — due dates and recurrence are checked with
+  the existing parsers, priority against H/M/L, and invalid values leave
+  their fields empty. Absolute ISO dates land in the date picker, other
+  valid expressions in the custom fields; new project names are allowed.
+  The AI only proposes: tasks are still created through the regular Add
+  button. Errors appear in a dialog-local message bound to the dedicated
+  `aiError` channel, a busy indicator shows a running request, and the
+  headless `--test-flow` covers the fill function and the end-to-end path
+  against the canned-response mock.
 - AI groundwork, not yet user-visible (AI-A3, #10): the bridge exposes
   `aiConfigured`, `aiBusy`, `aiError`, `aiResponseJson` and
   `dictationAvailable`, runs LLM requests on a worker thread

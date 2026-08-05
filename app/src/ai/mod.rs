@@ -30,6 +30,8 @@
 
 pub mod client;
 pub mod mock;
+pub mod prompts;
+pub mod types;
 
 use client::{AiError, Llm};
 use std::sync::atomic::{AtomicU64, Ordering};

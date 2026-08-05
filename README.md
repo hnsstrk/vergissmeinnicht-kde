@@ -46,6 +46,11 @@ platform.
   tokens (`+tag project:foo due:tomorrow priority:H`) with a live preview.
   Like the detail editor and the settings, it opens as a separate dialog
   window (movable and resizable), not as a modal inside the main window.
+  With a configured AI backend, **Interpret with AI** (Ctrl+J) sends the
+  free-form title text to the model and fills the structured fields from the
+  validated response — invalid due/recurrence/priority values are dropped,
+  new project names are allowed, and nothing is created until the regular
+  Add button confirms.
 
   ![Vergissmeinnicht — quick capture](docs/screenshots/quick-capture.png)
 - **Detail editor** — title, project, tags, due, scheduled, wait, priority,
@@ -188,7 +193,8 @@ server. TaskChampion resolves conflicts CRDT-style via its operation log.
 ├── app/                Kirigami app
 │   ├── src/            cxx-qt bridge, filters, parsers, state, backups
 │   │   └── ai/         opt-in AI assistance (in progress): LLM client,
-│   │                   canned-response mock, request worker
+│   │                   prompt builders, validated drafts, canned-response
+│   │                   mock, request worker
 │   ├── qml/            Main window, sidebar, dialogs
 │   └── cpp/            small shims (KLocalizedContext, window grab)
 ├── data/               desktop file, icon, AppStream metainfo
