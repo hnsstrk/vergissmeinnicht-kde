@@ -439,7 +439,39 @@ Kirigami.ApplicationWindow {
             app.setSyncCredentials(syncCidZuvor, syncSecretZuvor)
             app.setSyncServerUrlSetting(syncUrlZuvor)
 
-            // 13. KI-Gerüst (AI-A3): Property-Defaults der Bridge. Der
+            // 13. Sidebar-Zähler zählen offene Aufgaben, Alle-Zeile liefert
+            // offen/gesamt (UI-1, #27). Zwei Aufgaben in Projekt+Tag anlegen,
+            // damit Projekt/Tag nach dem Erledigen einer davon sichtbar
+            // bleiben (die Sidebar-Liste selbst zeigt nur Projekte/Tags mit
+            // mindestens einer aktiven Aufgabe — unverändertes Verhalten).
+            check(app.quickCaptureCommit("Flow-Zähltest A +flowcounttest project:flowcounttest"),
+                  "Zähltest-Aufgabe A angelegt")
+            check(app.quickCaptureCommit("Flow-Zähltest B +flowcounttest project:flowcounttest"),
+                  "Zähltest-Aufgabe B angelegt")
+            app.applyFilter("project:flowcounttest")
+            const zaehlUuids = uuids()
+            check(zaehlUuids.length === 2, "beide Zähltest-Aufgaben offen sichtbar")
+            const projektVorher = root.projects.find(p => p.name === "flowcounttest").count
+            const tagVorher = root.tagList.find(t => t.name === "flowcounttest").count
+            const alleOffenVorher = root.counts.all
+            const alleGesamtVorher = root.counts.allTotal
+            check(projektVorher === 2 && tagVorher === 2,
+                  "Projekt-/Tag-Zähler zählen beide offenen Aufgaben")
+
+            app.markDone(zaehlUuids[0])
+            check(root.projects.find(p => p.name === "flowcounttest").count === projektVorher - 1,
+                  "Projekt-Zähler sinkt nach Erledigen")
+            check(root.tagList.find(t => t.name === "flowcounttest").count === tagVorher - 1,
+                  "Tag-Zähler sinkt nach Erledigen")
+            check(root.counts.allTotal === alleGesamtVorher,
+                  "Alle-Gesamt bleibt nach Erledigen gleich")
+            check(root.counts.all === alleOffenVorher - 1,
+                  "Alle-Offen sinkt nach Erledigen")
+
+            // Aufräumen: Zähltest-Aufgaben entfernen.
+            app.deleteTasks(zaehlUuids)
+
+            // 14. KI-Gerüst (AI-A3): Property-Defaults der Bridge. Der
             // Worker-Teil (Stale-Drop, Abbruch) läuft nur, wenn der Aufruf
             // eine Mock-Konfiguration mitbringt (Wegwerf-config.json mit
             // ai_model plus VMN_AI_MOCK-Konserve) — sonst wird er

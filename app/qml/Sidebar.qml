@@ -86,6 +86,9 @@ Kirigami.OverlayDrawer {
                         label: modelData.label
                         iconName: modelData.icon
                         count: root.counts[modelData.key] ?? 0
+                        // Alle-Zeile zeigt offen/gesamt (UI-1, #27); alle anderen
+                        // Zeilen bleiben bei einer einzelnen (jetzt offenen) Zahl.
+                        totalCount: modelData.key === "all" ? (root.counts.allTotal ?? 0) : -1
                         visible: (modelData.key !== "waiting" && modelData.key !== "active") || count > 0
                         acceptsDrop: modelData.key === "inbox"
                         onDropped: uuids => app.dropOnInbox(uuids)
@@ -313,6 +316,9 @@ Kirigami.OverlayDrawer {
         property string label: ""
         property string iconName: ""
         property int count: 0
+        // Gesetzt (>= 0) nur bei der Alle-Zeile: zeigt "offen/gesamt" statt
+        // einer einzelnen Zahl (UI-1, #27).
+        property int totalCount: -1
         property bool acceptsDrop: false
         property var contextMenu: null
         // Hierarchie (Projekte): Einrück-Tiefe + Klapp-Zustand.
@@ -351,8 +357,8 @@ Kirigami.OverlayDrawer {
                 elide: Text.ElideRight
             }
             QQC2.Label {
-                visible: row.count > 0
-                text: row.count
+                visible: row.totalCount >= 0 || row.count > 0
+                text: row.totalCount >= 0 ? row.count + "/" + row.totalCount : row.count
                 opacity: 0.6
                 // Abstand zum Rand und zum (unsichtbaren) Resize-Griff.
                 Layout.rightMargin: Kirigami.Units.largeSpacing

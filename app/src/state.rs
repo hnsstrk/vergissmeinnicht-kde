@@ -109,13 +109,25 @@ impl AppState {
     pub fn counts_json(&self) -> String {
         let now = now_secs();
         let days = self.settings.due_soon_days;
+        // Offen-Gate an der Zähl-Aufrufstelle (UI-1, #27): SidebarFilter::matches
+        // bleibt unverändert, sonst bräche "Erledigte ausblenden" für
+        // All-/Project-/Tag-Ansichten. Wiedervorlage-Master (parent/imask) sind
+        // ohnehin nie Completed und zählen daher weiter mit.
         let count = |f: &SidebarFilter| {
             self.tasks
                 .iter()
                 .filter(|t| f.matches(t, now, days))
+                .filter(|t| t.status != TaskStatus::Completed)
                 .count()
         };
+        let all_open = self
+            .tasks
+            .iter()
+            .filter(|t| t.status != TaskStatus::Completed)
+            .count();
         // "Zu erledigen"-Zähler bewusst ohne Wartende (macOS todoCount-Bugfix).
+        // "all" = offene Aufgaben, "allTotal" = Bestand gesamt (Gelöschte sind
+        // in self.tasks bereits nicht enthalten, kein Zusatz-Gate nötig).
         json!({
             "inbox": count(&SidebarFilter::Inbox),
             "today": count(&SidebarFilter::Today),
@@ -125,7 +137,8 @@ impl AppState {
             "upcoming": count(&SidebarFilter::Upcoming),
             "waiting": count(&SidebarFilter::Waiting),
             "active": count(&SidebarFilter::Active),
-            "all": self.tasks.len(),
+            "all": all_open,
+            "allTotal": self.tasks.len(),
             "blocked": count(&SidebarFilter::Blocked),
             "blocking": count(&SidebarFilter::Blocking),
         })
@@ -157,7 +170,13 @@ impl AppState {
             .iter()
             .map(|name| {
                 let f = SidebarFilter::Project(name.clone());
-                let count = self.tasks.iter().filter(|t| f.matches(t, now, days)).count();
+                // Offen-Gate an der Aufrufstelle (UI-1, #27) — siehe counts_json.
+                let count = self
+                    .tasks
+                    .iter()
+                    .filter(|t| f.matches(t, now, days))
+                    .filter(|t| t.status != TaskStatus::Completed)
+                    .count();
                 let depth = name.matches('.').count();
                 let label = name.rsplit('.').next().unwrap_or(name).to_string();
                 let prefix = format!("{name}.");
@@ -181,7 +200,13 @@ impl AppState {
             .into_iter()
             .map(|name| {
                 let f = SidebarFilter::Tag(name.clone());
-                let count = self.tasks.iter().filter(|t| f.matches(t, now, days)).count();
+                // Offen-Gate an der Aufrufstelle (UI-1, #27) — siehe counts_json.
+                let count = self
+                    .tasks
+                    .iter()
+                    .filter(|t| f.matches(t, now, days))
+                    .filter(|t| t.status != TaskStatus::Completed)
+                    .count();
                 json!({"name": name, "count": count})
             })
             .collect();
@@ -925,6 +950,82 @@ mod tests {
         assert_eq!(items[2]["depth"], 2);
         assert_eq!(items[2]["label"], "Deep");
         assert_eq!(items[3]["count"], 1);
+    }
+
+    #[test]
+    fn open_counts_exclude_completed_but_keep_recurring_masters() {
+        // UI-1 (#27): Zähler zählen offene Aufgaben (status != Completed).
+        // Wiedervorlage-Master sind nie Completed und zählen daher weiter mit.
+        let mut state = AppState {
+            store: None,
+            init_error: None,
+            tasks: vec![],
+            visible: vec![],
+            filter: SidebarFilter::Todo,
+            search_query: String::new(),
+            sort: SortOrder::Id,
+            sort_ascending: true,
+            settings: Settings::default(),
+        };
+        let base = TaskInfo {
+            uuid: "a".into(),
+            description: "A".into(),
+            project: Some("Haushalt".into()),
+            tags: vec!["küche".into()],
+            due: None,
+            status: TaskStatus::Pending,
+            entry: None,
+            working_set_id: Some(1),
+            priority: None,
+            annotations: vec![],
+            wait: None,
+            recur: None,
+            scheduled: None,
+            depends: vec![],
+            is_blocked: false,
+            is_blocking: false,
+            is_recurring_child: false,
+            start: None,
+            until: None,
+            modified: None,
+            udas: vec![],
+        };
+        let mut done = base.clone();
+        done.uuid = "b".into();
+        done.status = TaskStatus::Completed;
+        let mut master = base.clone();
+        master.uuid = "c".into();
+        master.project = None;
+        master.tags = vec![];
+        master.status = TaskStatus::Recurring;
+        master.recur = Some("weekly".into());
+        state.tasks = vec![base, done, master];
+
+        // Projekt "Haushalt": nur die offene Aufgabe zählt, der Recurring-Master
+        // hat kein Projekt und die erledigte Aufgabe fällt raus.
+        let projects: serde_json::Value = serde_json::from_str(&state.projects_json()).unwrap();
+        let haushalt = projects
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|p| p["name"] == "Haushalt")
+            .unwrap();
+        assert_eq!(haushalt["count"], 1);
+
+        // Tag "küche": ebenso nur die offene Aufgabe.
+        let tags: serde_json::Value = serde_json::from_str(&state.tags_json()).unwrap();
+        let kueche = tags
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|t| t["name"] == "küche")
+            .unwrap();
+        assert_eq!(kueche["count"], 1);
+
+        // Alle-Zeile: offen (Pending + Recurring-Master) vs. gesamt (inkl. Completed).
+        let counts: serde_json::Value = serde_json::from_str(&state.counts_json()).unwrap();
+        assert_eq!(counts["all"], 2);
+        assert_eq!(counts["allTotal"], 3);
     }
 
     #[test]

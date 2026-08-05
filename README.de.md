@@ -21,8 +21,10 @@ Oberfläche auf jeder Plattform.
 
 - **Seitenleisten-Perspektiven** — Eingang · Heute · Zu erledigen · Überfällig ·
   Bald fällig · Geplant · Wartend · Alle, dazu Projekt- und Tag-Zeilen mit
-  Live-Zählern, Drop-Zielen und Kontextmenüs (Umbenennen/Entfernen).
-  Gepunktete Projekte (`Arbeit.Teilprojekt`) bilden einen klappbaren Baum;
+  Live-Zählern offener Aufgaben (Wiedervorlage-Master zählen mit, Erledigte
+  nicht); die Alle-Zeile zeigt `offen/gesamt`. Dazu Drop-Ziele und
+  Kontextmenüs (Umbenennen/Entfernen). Gepunktete Projekte
+  (`Arbeit.Teilprojekt`) bilden einen klappbaren Baum;
   die Auswahl eines Elternprojekts schließt Subprojekte ein
   (Taskwarrior-Präfix-Semantik). Die Breite lässt sich per Zieh-Griff
   anpassen, Sektionen klappen per Klick auf ihre Überschrift ein und aus;

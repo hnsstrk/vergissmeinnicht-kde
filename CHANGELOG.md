@@ -31,6 +31,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Sidebar counts (system filters, projects, tags) now count open tasks
+  only (`status != Completed`) instead of including completed history;
+  recurring master tasks keep counting since they are never `Completed`.
+  The "All" row shows `open/total` (e.g. `12/87`) so the total task count
+  stays visible alongside the open count (UI-1, #27).
 - The toolbar's Synchronize action is now hidden (and its shortcut
   `Ctrl+Shift+S` disabled) when no sync server is configured, instead of
   always being shown and silently falling back to a plain refresh

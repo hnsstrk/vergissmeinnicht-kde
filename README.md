@@ -23,8 +23,10 @@ platform.
 ## Features
 
 - **Sidebar perspectives** — Inbox · Today · To Do · Overdue · Due Soon ·
-  Scheduled · Waiting · All, plus per-project and per-tag rows. Live counts,
-  drop targets, context menus for rename/remove. Dotted projects
+  Scheduled · Waiting · All, plus per-project and per-tag rows. Live counts
+  of open tasks (recurring masters included, completed excluded); the All
+  row shows `open/total`. Drop targets, context menus for rename/remove.
+  Dotted projects
   (`Work.Sub`) form a collapsible tree; selecting a parent includes its
   subprojects (Taskwarrior prefix semantics). Resizable via a drag handle,
   sections collapse by clicking their headers; both are persisted.
