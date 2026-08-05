@@ -68,6 +68,9 @@ mod qobject {
         /// Synthetisches Tastatur-Event (Testhaken --test-input).
         #[rust_name = "send_key"]
         fn vmnSendKey(key: i32, modifiers: i32, text: &QString);
+        /// Synthetischer Mausmove (Hover-Position, Testhaken für Screenshots).
+        #[rust_name = "send_move"]
+        fn vmnSendMove(x: f64, y: f64);
     }
 
     /// Modell-Rollen der Task-Liste.
@@ -356,6 +359,9 @@ mod qobject {
         /// Testhaken: synthetisches Tastatur-Event (--test-input).
         #[qinvokable]
         fn test_key(self: &AppContainer, key: i32, modifiers: i32, text: &QString);
+        /// Testhaken: Hover-Position setzen (Tooltips aus Screenshots halten).
+        #[qinvokable]
+        fn test_move(self: &AppContainer, x: f64, y: f64);
         #[qinvokable]
         fn parse_due_token(self: &AppContainer, token: &QString) -> i64;
         #[qinvokable]
@@ -1651,6 +1657,10 @@ impl qobject::AppContainer {
 
     fn test_key(&self, key: i32, modifiers: i32, text: &QString) {
         qobject::send_key(key, modifiers, text);
+    }
+
+    fn test_move(&self, x: f64, y: f64) {
+        qobject::send_move(x, y);
     }
 
     fn parse_due_token(&self, token: &QString) -> i64 {

@@ -68,6 +68,11 @@ Oberfläche auf jeder Plattform.
   Detail-Dialog (`depends`-Relationen hinzufügen/entfernen, mit Titel-Auflösung).
 - **Benachrichtigungen** — Opt-in-Zusammenfassung beim Start, wenn
   überfällige Aufgaben vorliegen.
+- **Einstellungen in Kategorien** — Allgemein, Synchronisation,
+  KI-Assistent (kommt mit der KI-Integration) und Wartung als eigene
+  Seiten in einem Einstellungsfenster mit Kategorien-Seitenleiste.
+
+  ![Vergissmeinnicht — Einstellungen](docs/screenshots/settings.png)
 - **Lokalisierung** — Deutsch (Quellsprache) und Englisch über
   ki18n/gettext, mit manueller Umschaltung in den Einstellungen.
 - **Synchronisierung** gegen einen beliebigen

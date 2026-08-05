@@ -70,6 +70,11 @@ platform.
   the detail dialog (add/remove `depends` relations with title lookup).
 - **Notifications** — opt-in summary at launch when overdue tasks exist
   (freedesktop notifications).
+- **Categorized settings** — General, Synchronization, AI assistant
+  (arriving with the AI integration) and Maintenance as separate pages in
+  a settings window with a category sidebar.
+
+  ![Vergissmeinnicht — settings](docs/screenshots/settings.png)
 - **Localization** — German (source) and English via ki18n/gettext, with
   manual override in the settings.
 - **Sync** against any [taskchampion-sync-server](https://github.com/GothenburgBitFactory/taskchampion-sync-server)

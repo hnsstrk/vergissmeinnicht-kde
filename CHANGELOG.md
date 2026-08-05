@@ -44,6 +44,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- The settings are now split into categories (UI-4, #30): General,
+  Synchronization, AI assistant (placeholder page until #12) and
+  Maintenance live on separate pages of a Kirigami Addons
+  `ConfigurationView` window with a category sidebar and search, replacing
+  the single scrolling form window. Every setting keeps its wording and
+  behavior; the sync page keeps its in-dialog status line and "Save and
+  test sync" sequence. The `--test-settings-ui` hook now drives the sync
+  sub-page directly, and a first settings screenshot ships in the README.
 - Sidebar counts (system filters, projects, tags) now count open tasks
   only (`status != Completed`) instead of including completed history;
   recurring master tasks keep counting since they are never `Completed`.

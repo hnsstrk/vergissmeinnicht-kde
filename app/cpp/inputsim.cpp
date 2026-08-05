@@ -60,6 +60,18 @@ void vmnSendClick(double x, double y, int button, int modifiers, bool doubleClic
     }
 }
 
+void vmnSendMove(double x, double y)
+{
+    QQuickWindow *w = targetQuickWindow();
+    if (!w) {
+        return;
+    }
+    const QPointF pos(x, y);
+    QMouseEvent event(QEvent::MouseMove, pos, w->mapToGlobal(pos), Qt::NoButton, Qt::NoButton, Qt::NoModifier);
+    event.setTimestamp(vmnNextTimestamp());
+    QCoreApplication::sendEvent(w, &event);
+}
+
 void vmnSendKey(int key, int modifiers, const QString &text)
 {
     QQuickWindow *w = targetQuickWindow();

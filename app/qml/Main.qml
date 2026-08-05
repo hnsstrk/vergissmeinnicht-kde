@@ -123,10 +123,11 @@ Kirigami.ApplicationWindow {
             step++
             switch (step) {
             case 1:
-                // Hohes Dialogfenster VOR dem Öffnen: alle Formularzeilen sofort
-                // im fertigen Layout, damit die synthetischen Klicks treffen.
-                settingsDialog.height = 1600
-                settingsDialog.openSettings()
+                // Direkt auf der Sync-Seite öffnen (Kategorien seit UI-4) und
+                // das Fenster hoch ziehen: alle Formularzeilen im fertigen
+                // Layout, damit die synthetischen Klicks treffen.
+                settingsDialog.openSettings("sync")
+                settingsDialog.configViewItem.height = 900
                 break
             case 2: {
                 // Erzwingt einen synchronen Render: das frisch geöffnete
@@ -180,7 +181,7 @@ Kirigami.ApplicationWindow {
             }
             case 11:
                 // Wiederöffnen: Felder müssen die gespeicherten Werte zeigen.
-                settingsDialog.openSettings()
+                settingsDialog.openSettings("sync")
                 break
             case 12: {
                 const v = settingsDialog.testValues()
@@ -719,7 +720,10 @@ Kirigami.ApplicationWindow {
         onTriggered: {
             switch (dialogName) {
             case "quickcapture": quickCaptureDialog.openCapture(); break
-            case "settings": settingsDialog.openSettings(); break
+            case "settings":
+                settingsDialog.openSettings()
+                testHoverTimer.start()
+                break
             case "help": helpDialog.open(); break
             case "about": aboutDialog.open(); break
             case "detail": {
@@ -730,6 +734,20 @@ Kirigami.ApplicationWindow {
             }
             }
         }
+    }
+
+    // Hover vom Suchfeld des Einstellungsfensters wegziehen: das
+    // Offscreen-Enter-Event legt die Hover-Position (asynchron, nach dem
+    // Öffnen) auf (0,0) über das Suchfeld, dessen Shortcut-Tooltip sonst den
+    // --test-grab-Screenshot verschmutzt. Läuft vor dem Grab (3 s).
+    // Periodisch, weil die Offscreen-Plattform die Hover-Position immer
+    // wieder auf (0,0) zurücksetzt — so läuft die Tooltip-Verzögerung des
+    // Suchfelds nie ab.
+    Timer {
+        id: testHoverTimer
+        interval: 300
+        repeat: true
+        onTriggered: app.testMove(600, 500)
     }
 
     // Auto-Sync-Intervalle ("immediate" wird Rust-seitig nach Mutationen ausgelöst).
@@ -756,6 +774,8 @@ Kirigami.ApplicationWindow {
 
     SettingsDialog {
         id: settingsDialog
+        window: root
+        appContainer: app
     }
 
     HelpDialog {

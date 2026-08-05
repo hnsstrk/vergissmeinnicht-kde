@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: vergissmeinnicht 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-05 20:58+0200\n"
+"POT-Creation-Date: 2026-08-05 21:37+0200\n"
 "Language: en\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -28,6 +28,19 @@ msgstr ""
 #: app/qml/AboutDialog.qml:51
 msgid "MIT-Lizenz"
 msgstr "MIT license"
+
+#: app/qml/AiSettingsPage.qml:14 app/qml/AiSettingsPage.qml:20
+#: app/qml/SettingsDialog.qml:41
+msgid "KI-Assistent"
+msgstr "AI Assistant"
+
+#: app/qml/AiSettingsPage.qml:21
+msgid ""
+"Die KI-Einstellungen (Provider, Modell, Spracheingabe) folgen mit der KI-"
+"Integration."
+msgstr ""
+"The AI settings (provider, model, speech input) arrive with the AI "
+"integration."
 
 #: app/qml/DetailDialog.qml:16
 msgid "Aufgabe bearbeiten"
@@ -153,7 +166,7 @@ msgstr "e.g. 3d or 2w"
 msgid "Nicht erkanntes Intervall"
 msgstr "Unrecognized interval"
 
-#: app/qml/DetailDialog.qml:210 app/qml/SettingsDialog.qml:184
+#: app/qml/DetailDialog.qml:210 app/qml/SyncSettingsPage.qml:109
 msgid "Status"
 msgstr "Status"
 
@@ -236,6 +249,83 @@ msgstr "Created"
 msgid "Zuletzt geändert"
 msgstr "Last modified"
 
+#: app/qml/GeneralSettingsPage.qml:16 app/qml/SettingsDialog.qml:27
+msgid "Allgemein"
+msgstr "General"
+
+#: app/qml/GeneralSettingsPage.qml:23
+msgid "Standardansicht beim Start"
+msgstr "Default view at startup"
+
+#: app/qml/GeneralSettingsPage.qml:25 app/qml/Main.qml:52
+#: app/qml/Sidebar.qml:57
+msgid "Eingang"
+msgstr "Inbox"
+
+#: app/qml/GeneralSettingsPage.qml:25 app/qml/Main.qml:42
+#: app/qml/QuickCaptureDialog.qml:299 app/qml/Sidebar.qml:58
+#: app/qml/TasksPage.qml:487
+msgid "Heute"
+msgstr "Today"
+
+#: app/qml/GeneralSettingsPage.qml:25 app/qml/Main.qml:43
+#: app/qml/Sidebar.qml:59
+msgid "Zu erledigen"
+msgstr "To Do"
+
+#: app/qml/GeneralSettingsPage.qml:25 app/qml/Main.qml:44
+#: app/qml/Sidebar.qml:60
+msgid "Überfällig"
+msgstr "Overdue"
+
+#: app/qml/GeneralSettingsPage.qml:25 app/qml/Main.qml:45
+#: app/qml/Sidebar.qml:61
+msgid "Bald fällig"
+msgstr "Due Soon"
+
+#: app/qml/GeneralSettingsPage.qml:25 app/qml/Main.qml:46
+#: app/qml/Sidebar.qml:62
+msgid "Geplant"
+msgstr "Scheduled"
+
+#: app/qml/GeneralSettingsPage.qml:25 app/qml/Main.qml:41
+#: app/qml/Sidebar.qml:65
+msgid "Alle"
+msgstr "All"
+
+#: app/qml/GeneralSettingsPage.qml:32
+msgid "Sprache"
+msgstr "Language"
+
+#: app/qml/GeneralSettingsPage.qml:33
+msgid ""
+"Änderung wird nach einem Neustart wirksam. Standard-Dialogknöpfe (OK/"
+"Abbrechen) folgen der Systemsprache."
+msgstr ""
+"Takes effect after a restart. Standard dialog buttons (OK/Cancel) follow the "
+"system language."
+
+#: app/qml/GeneralSettingsPage.qml:35
+msgid "Systemsprache"
+msgstr "System language"
+
+#: app/qml/GeneralSettingsPage.qml:41
+msgid "„Bald fällig“-Fenster (Tage)"
+msgstr "“Due soon” window (days)"
+
+#: app/qml/GeneralSettingsPage.qml:52
+msgid "Erledigte Aufgaben ausblenden"
+msgstr "Hide completed tasks"
+
+#: app/qml/GeneralSettingsPage.qml:58
+msgid "Benachrichtigung bei überfälligen Aufgaben"
+msgstr "Notify about overdue tasks"
+
+#: app/qml/GeneralSettingsPage.qml:59
+msgid ""
+"Zusammenfassung beim Programmstart, wenn überfällige Aufgaben vorliegen."
+msgstr "Summary at startup when overdue tasks exist."
+
 #: app/qml/HelpDialog.qml:10
 msgid "Hilfe"
 msgstr "Help"
@@ -313,7 +403,7 @@ msgstr "Synchronize (only with a configured sync server)"
 msgid "Aktualisieren"
 msgstr "Refresh"
 
-#: app/qml/HelpDialog.qml:61 app/qml/SettingsDialog.qml:13
+#: app/qml/HelpDialog.qml:61 app/qml/SettingsDialog.qml:22
 msgid "Einstellungen"
 msgstr "Settings"
 
@@ -408,32 +498,6 @@ msgstr "Quick capture syntax"
 msgid "Gespeicherte Suche"
 msgstr "Saved search"
 
-#: app/qml/Main.qml:41 app/qml/SettingsDialog.qml:80 app/qml/Sidebar.qml:65
-msgid "Alle"
-msgstr "All"
-
-#: app/qml/Main.qml:42 app/qml/QuickCaptureDialog.qml:299
-#: app/qml/SettingsDialog.qml:80 app/qml/Sidebar.qml:58
-#: app/qml/TasksPage.qml:487
-msgid "Heute"
-msgstr "Today"
-
-#: app/qml/Main.qml:43 app/qml/SettingsDialog.qml:80 app/qml/Sidebar.qml:59
-msgid "Zu erledigen"
-msgstr "To Do"
-
-#: app/qml/Main.qml:44 app/qml/SettingsDialog.qml:80 app/qml/Sidebar.qml:60
-msgid "Überfällig"
-msgstr "Overdue"
-
-#: app/qml/Main.qml:45 app/qml/SettingsDialog.qml:80 app/qml/Sidebar.qml:61
-msgid "Bald fällig"
-msgstr "Due Soon"
-
-#: app/qml/Main.qml:46 app/qml/SettingsDialog.qml:80 app/qml/Sidebar.qml:62
-msgid "Geplant"
-msgstr "Scheduled"
-
 #: app/qml/Main.qml:47 app/qml/Sidebar.qml:64
 msgid "Wartend"
 msgstr "Waiting"
@@ -454,9 +518,98 @@ msgstr "Blocking"
 msgid "Nicht blockiert"
 msgstr "Unblocked"
 
-#: app/qml/Main.qml:52 app/qml/SettingsDialog.qml:80 app/qml/Sidebar.qml:57
-msgid "Eingang"
-msgstr "Inbox"
+#: app/qml/MaintenanceSettingsPage.qml:15 app/qml/SettingsDialog.qml:48
+msgid "Wartung"
+msgstr "Maintenance"
+
+#: app/qml/MaintenanceSettingsPage.qml:26
+msgid "Wartung — Datensicherung"
+msgstr "Maintenance — Backups"
+
+#: app/qml/MaintenanceSettingsPage.qml:31
+msgid "Automatische Backups"
+msgstr "Automatic backups"
+
+#: app/qml/MaintenanceSettingsPage.qml:32
+msgid ""
+"Vor jeder Synchronisierung wird ein Backup erstellt; die letzten 10 werden "
+"aufbewahrt."
+msgstr "A backup is created before every sync; the last 10 are kept."
+
+#: app/qml/MaintenanceSettingsPage.qml:36
+msgid "Backup jetzt erstellen"
+msgstr "Create backup now"
+
+#: app/qml/MaintenanceSettingsPage.qml:45
+msgid "Alle Aufgaben exportieren (JSON) …"
+msgstr "Export all tasks (JSON) …"
+
+#: app/qml/MaintenanceSettingsPage.qml:46
+msgid "Taskwarrior-Exportformat, inklusive UDAs."
+msgstr "Taskwarrior export format, including UDAs."
+
+#: app/qml/MaintenanceSettingsPage.qml:52
+msgid "Backup-Ordner öffnen"
+msgstr "Open backup folder"
+
+#: app/qml/MaintenanceSettingsPage.qml:59
+#: app/qml/MaintenanceSettingsPage.qml:104
+msgid "Backup wiederherstellen"
+msgstr "Restore backup"
+
+#: app/qml/MaintenanceSettingsPage.qml:66
+msgid "Noch keine Backups vorhanden."
+msgstr "No backups yet."
+
+#: app/qml/MaintenanceSettingsPage.qml:71
+msgid "Wartung — Reparatur"
+msgstr "Maintenance — Repair"
+
+#: app/qml/MaintenanceSettingsPage.qml:78
+msgid "Legacy-Aufgaben reparieren"
+msgstr "Repair legacy tasks"
+
+#: app/qml/MaintenanceSettingsPage.qml:81
+msgid ""
+"Überführt Token-Syntax in Titeln (+tag, project:, due:, priority:) in echte "
+"Eigenschaften."
+msgstr ""
+"Converts token syntax in titles (+tag, project:, due:, priority:) into real "
+"properties."
+
+#: app/qml/MaintenanceSettingsPage.qml:84
+msgid "Reparatur fehlgeschlagen: %1"
+msgstr "Repair failed: %1"
+
+#: app/qml/MaintenanceSettingsPage.qml:85
+msgid "Reparatur fehlgeschlagen."
+msgstr "Repair failed."
+
+#: app/qml/MaintenanceSettingsPage.qml:86
+msgid "1 Aufgabe repariert."
+msgid_plural "%1 Aufgaben repariert."
+msgstr[0] "1 task repaired."
+msgstr[1] "%1 tasks repaired."
+
+#: app/qml/MaintenanceSettingsPage.qml:95
+msgid "Aufgaben exportieren"
+msgstr "Export tasks"
+
+#: app/qml/MaintenanceSettingsPage.qml:97
+msgid "JSON-Dateien (*.json)"
+msgstr "JSON files (*.json)"
+
+#: app/qml/MaintenanceSettingsPage.qml:106
+msgid ""
+"Die aktuelle Replica wird durch „%1“ ersetzt. Vorher wird automatisch ein "
+"Sicherheits-Backup angelegt."
+msgstr ""
+"The current replica will be replaced by “%1”. A safety backup is created "
+"automatically beforehand."
+
+#: app/qml/MaintenanceSettingsPage.qml:111
+msgid "Wiederherstellen"
+msgstr "Restore"
 
 #: app/qml/QuickCaptureDialog.qml:179
 msgid "Hinzufügen"
@@ -540,211 +693,9 @@ msgstr "e.g. +3d, eow or 2026-12-31"
 msgid "Nicht erkannter Ausdruck"
 msgstr "Unrecognized expression"
 
-#: app/qml/SettingsDialog.qml:61
-msgid "Schließen"
-msgstr "Close"
-
-#: app/qml/SettingsDialog.qml:72
-msgid "Allgemein"
-msgstr "General"
-
-#: app/qml/SettingsDialog.qml:78
-msgid "Standardansicht beim Start"
-msgstr "Default view at startup"
-
-#: app/qml/SettingsDialog.qml:88
-msgid "Sprache"
-msgstr "Language"
-
-#: app/qml/SettingsDialog.qml:89
-msgid ""
-"Änderung wird nach einem Neustart wirksam. Standard-Dialogknöpfe (OK/"
-"Abbrechen) folgen der Systemsprache."
-msgstr ""
-"Takes effect after a restart. Standard dialog buttons (OK/Cancel) follow the "
-"system language."
-
-#: app/qml/SettingsDialog.qml:91
-msgid "Systemsprache"
-msgstr "System language"
-
-#: app/qml/SettingsDialog.qml:98
-msgid "„Bald fällig“-Fenster (Tage)"
-msgstr "“Due soon” window (days)"
-
-#: app/qml/SettingsDialog.qml:110
-msgid "Erledigte Aufgaben ausblenden"
-msgstr "Hide completed tasks"
-
-#: app/qml/SettingsDialog.qml:117
-msgid "Benachrichtigung bei überfälligen Aufgaben"
-msgstr "Notify about overdue tasks"
-
-#: app/qml/SettingsDialog.qml:118
-msgid ""
-"Zusammenfassung beim Programmstart, wenn überfällige Aufgaben vorliegen."
-msgstr "Summary at startup when overdue tasks exist."
-
-#: app/qml/SettingsDialog.qml:129
+#: app/qml/SettingsDialog.qml:34 app/qml/SyncSettingsPage.qml:17
 msgid "Synchronisation"
 msgstr "Synchronization"
-
-#: app/qml/SettingsDialog.qml:134
-msgid "TaskChampion-Sync-Server"
-msgstr "TaskChampion sync server"
-
-#: app/qml/SettingsDialog.qml:135
-msgid ""
-"Client-ID und Verschlüsselungs-Secret werden im Passwortspeicher des Systems "
-"(KWallet/Secret Service) abgelegt."
-msgstr ""
-"Client ID and encryption secret are stored in the system password store "
-"(KWallet/Secret Service)."
-
-#: app/qml/SettingsDialog.qml:141
-msgid "Server-URL"
-msgstr "Server URL"
-
-#: app/qml/SettingsDialog.qml:148
-msgid "Client-ID (UUID)"
-msgstr "Client ID (UUID)"
-
-#: app/qml/SettingsDialog.qml:155
-msgid "Encryption-Secret"
-msgstr "Encryption secret"
-
-#: app/qml/SettingsDialog.qml:161
-msgid "Automatisch synchronisieren"
-msgstr "Synchronize automatically"
-
-#: app/qml/SettingsDialog.qml:163
-msgid "Manuell"
-msgstr "Manually"
-
-#: app/qml/SettingsDialog.qml:163
-msgid "Alle 5 Minuten"
-msgstr "Every 5 minutes"
-
-#: app/qml/SettingsDialog.qml:163
-msgid "Alle 15 Minuten"
-msgstr "Every 15 minutes"
-
-#: app/qml/SettingsDialog.qml:163
-msgid "Alle 60 Minuten"
-msgstr "Every 60 minutes"
-
-#: app/qml/SettingsDialog.qml:163
-msgid "Sofort nach Änderungen"
-msgstr "Immediately after changes"
-
-#: app/qml/SettingsDialog.qml:171
-msgid "Speichern und Sync testen"
-msgstr "Save and test sync"
-
-#: app/qml/SettingsDialog.qml:189 app/qml/TasksPage.qml:155
-#: app/qml/TasksPage.qml:250
-msgid "Synchronisiere …"
-msgstr "Synchronizing …"
-
-#: app/qml/SettingsDialog.qml:191
-msgid "Gespeichert — zuletzt synchronisiert: %1"
-msgstr "Saved — last synchronized: %1"
-
-#: app/qml/SettingsDialog.qml:194
-msgid "Gespeichert."
-msgstr "Saved."
-
-#: app/qml/SettingsDialog.qml:196 app/qml/TasksPage.qml:157
-msgid "Zuletzt synchronisiert: %1"
-msgstr "Last synchronized: %1"
-
-#: app/qml/SettingsDialog.qml:211
-msgid "Wartung — Datensicherung"
-msgstr "Maintenance — Backups"
-
-#: app/qml/SettingsDialog.qml:216
-msgid "Automatische Backups"
-msgstr "Automatic backups"
-
-#: app/qml/SettingsDialog.qml:217
-msgid ""
-"Vor jeder Synchronisierung wird ein Backup erstellt; die letzten 10 werden "
-"aufbewahrt."
-msgstr "A backup is created before every sync; the last 10 are kept."
-
-#: app/qml/SettingsDialog.qml:222
-msgid "Backup jetzt erstellen"
-msgstr "Create backup now"
-
-#: app/qml/SettingsDialog.qml:232
-msgid "Alle Aufgaben exportieren (JSON) …"
-msgstr "Export all tasks (JSON) …"
-
-#: app/qml/SettingsDialog.qml:233
-msgid "Taskwarrior-Exportformat, inklusive UDAs."
-msgstr "Taskwarrior export format, including UDAs."
-
-#: app/qml/SettingsDialog.qml:240
-msgid "Aufgaben exportieren"
-msgstr "Export tasks"
-
-#: app/qml/SettingsDialog.qml:242
-msgid "JSON-Dateien (*.json)"
-msgstr "JSON files (*.json)"
-
-#: app/qml/SettingsDialog.qml:252
-msgid "Backup-Ordner öffnen"
-msgstr "Open backup folder"
-
-#: app/qml/SettingsDialog.qml:260 app/qml/SettingsDialog.qml:300
-msgid "Backup wiederherstellen"
-msgstr "Restore backup"
-
-#: app/qml/SettingsDialog.qml:268
-msgid "Noch keine Backups vorhanden."
-msgstr "No backups yet."
-
-#: app/qml/SettingsDialog.qml:277
-msgid "Wartung — Reparatur"
-msgstr "Maintenance — Repair"
-
-#: app/qml/SettingsDialog.qml:284
-msgid "Legacy-Aufgaben reparieren"
-msgstr "Repair legacy tasks"
-
-#: app/qml/SettingsDialog.qml:287
-msgid ""
-"Überführt Token-Syntax in Titeln (+tag, project:, due:, priority:) in echte "
-"Eigenschaften."
-msgstr ""
-"Converts token syntax in titles (+tag, project:, due:, priority:) into real "
-"properties."
-
-#: app/qml/SettingsDialog.qml:290
-msgid "Reparatur fehlgeschlagen: %1"
-msgstr "Repair failed: %1"
-
-#: app/qml/SettingsDialog.qml:291
-msgid "Reparatur fehlgeschlagen."
-msgstr "Repair failed."
-
-#: app/qml/SettingsDialog.qml:292
-msgid "1 Aufgabe repariert."
-msgid_plural "%1 Aufgaben repariert."
-msgstr[0] "1 task repaired."
-msgstr[1] "%1 tasks repaired."
-
-#: app/qml/SettingsDialog.qml:302
-msgid ""
-"Die aktuelle Replica wird durch „%1“ ersetzt. Vorher wird automatisch ein "
-"Sicherheits-Backup angelegt."
-msgstr ""
-"The current replica will be replaced by “%1”. A safety backup is created "
-"automatically beforehand."
-
-#: app/qml/SettingsDialog.qml:307
-msgid "Wiederherstellen"
-msgstr "Restore"
 
 #: app/qml/Sidebar.qml:100
 msgid "Gespeicherte Suchen"
@@ -777,6 +728,75 @@ msgstr "Rename search"
 #: app/qml/Sidebar.qml:257 app/qml/TasksPage.qml:181 app/qml/TasksPage.qml:515
 msgid "Löschen"
 msgstr "Delete"
+
+#: app/qml/SyncSettingsPage.qml:65
+msgid "TaskChampion-Sync-Server"
+msgstr "TaskChampion sync server"
+
+#: app/qml/SyncSettingsPage.qml:66
+msgid ""
+"Client-ID und Verschlüsselungs-Secret werden im Passwortspeicher des Systems "
+"(KWallet/Secret Service) abgelegt."
+msgstr ""
+"Client ID and encryption secret are stored in the system password store "
+"(KWallet/Secret Service)."
+
+#: app/qml/SyncSettingsPage.qml:71
+msgid "Server-URL"
+msgstr "Server URL"
+
+#: app/qml/SyncSettingsPage.qml:77
+msgid "Client-ID (UUID)"
+msgstr "Client ID (UUID)"
+
+#: app/qml/SyncSettingsPage.qml:83
+msgid "Encryption-Secret"
+msgstr "Encryption secret"
+
+#: app/qml/SyncSettingsPage.qml:88
+msgid "Automatisch synchronisieren"
+msgstr "Synchronize automatically"
+
+#: app/qml/SyncSettingsPage.qml:90
+msgid "Manuell"
+msgstr "Manually"
+
+#: app/qml/SyncSettingsPage.qml:90
+msgid "Alle 5 Minuten"
+msgstr "Every 5 minutes"
+
+#: app/qml/SyncSettingsPage.qml:90
+msgid "Alle 15 Minuten"
+msgstr "Every 15 minutes"
+
+#: app/qml/SyncSettingsPage.qml:90
+msgid "Alle 60 Minuten"
+msgstr "Every 60 minutes"
+
+#: app/qml/SyncSettingsPage.qml:90
+msgid "Sofort nach Änderungen"
+msgstr "Immediately after changes"
+
+#: app/qml/SyncSettingsPage.qml:97
+msgid "Speichern und Sync testen"
+msgstr "Save and test sync"
+
+#: app/qml/SyncSettingsPage.qml:114 app/qml/TasksPage.qml:155
+#: app/qml/TasksPage.qml:250
+msgid "Synchronisiere …"
+msgstr "Synchronizing …"
+
+#: app/qml/SyncSettingsPage.qml:116
+msgid "Gespeichert — zuletzt synchronisiert: %1"
+msgstr "Saved — last synchronized: %1"
+
+#: app/qml/SyncSettingsPage.qml:119
+msgid "Gespeichert."
+msgstr "Saved."
+
+#: app/qml/SyncSettingsPage.qml:121 app/qml/TasksPage.qml:157
+msgid "Zuletzt synchronisiert: %1"
+msgstr "Last synchronized: %1"
 
 #: app/qml/TaskDelegate.qml:104 app/qml/TasksPage.qml:478
 msgid "Hoch"
@@ -1005,6 +1025,9 @@ msgstr "Tag (no spaces)"
 
 #~ msgid "Füllt die Felder aus dem Titeltext (Strg+J)"
 #~ msgstr "Fills the fields from the title text (Ctrl+J)"
+
+#~ msgid "Schließen"
+#~ msgstr "Close"
 
 #~ msgid "blockiert durch andere Aufgaben"
 #~ msgstr "blocked by other tasks"
