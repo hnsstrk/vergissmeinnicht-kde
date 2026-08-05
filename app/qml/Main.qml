@@ -868,6 +868,16 @@ Kirigami.ApplicationWindow {
                 settingsDialog.configViewItem.height = 760
                 testHoverTimer.start()
                 break
+            case "settings-purge":
+                // Regressionswache UI-8 (#35): Wartungsseite öffnen, dann die
+                // Lösch-Bestätigung — DIALOG-OK/DIALOG-FAIL meldet, ob sie im
+                // Einstellungsfenster verankert ist; --test-grab liefert den
+                // Screenshot mit offenem Dialog.
+                settingsDialog.openSettings("maintenance")
+                settingsDialog.configViewItem.height = 760
+                testPurgeDialogTimer.start()
+                testHoverTimer.start()
+                break
             case "help": helpDialog.open(); break
             case "about": aboutDialog.open(); break
             case "detail": {
@@ -877,6 +887,20 @@ Kirigami.ApplicationWindow {
                 break
             }
             }
+        }
+    }
+
+    // Regressionswache UI-8 (#35), Schritt 2: Die Wartungsseite entsteht
+    // asynchron im ConfigWindow — erst danach lässt sich die Bestätigung
+    // öffnen und ihre Verankerung prüfen. Läuft vor dem Grab (3 s).
+    Timer {
+        id: testPurgeDialogTimer
+        interval: 1500
+        onTriggered: {
+            const seite = settingsDialog.maintenancePage
+            const ok = seite && seite.testOeffnePurgeBestaetigung()
+            console.log(ok ? "DIALOG-OK settings-purge im Einstellungsfenster verankert"
+                           : "DIALOG-FAIL settings-purge nicht im Einstellungsfenster verankert")
         }
     }
 

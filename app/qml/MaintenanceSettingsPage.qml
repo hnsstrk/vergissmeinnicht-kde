@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls as QQC2
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import org.kde.kirigamiaddons.formcard as FormCard
@@ -12,6 +13,10 @@ FormCard.FormCardPage {
 
     required property var app
 
+    // Der SettingsDialog (ConfigurationView-Wrapper) — Anmeldung analog
+    // SyncSettingsPage, Ziel des Testhakens für die Dialog-Verankerung.
+    property var besitzer: null
+
     title: i18n("Wartung")
 
     property var backups: []
@@ -20,7 +25,26 @@ FormCard.FormCardPage {
         backups = JSON.parse(app.backupsJson() || "[]")
     }
 
-    Component.onCompleted: refreshBackups()
+    Component.onCompleted: {
+        refreshBackups()
+        if (besitzer)
+            besitzer.maintenancePage = page
+    }
+
+    // Testhaken (UI-8, #35): öffnet die Lösch-Bestätigung über denselben
+    // Pfad wie der Knopf und meldet, ob beide Bestätigungsdialoge im
+    // Overlay des Fensters dieser Seite (dem Einstellungsfenster) verankert
+    // sind. Beweist die Verankerung, nicht die Pixel — die zeigt der
+    // --test-grab-Screenshot mit offenem Dialog.
+    function testOeffnePurgeBestaetigung() {
+        purgeConfirm.frozenDays = purgeButton.ageDays[purgeAgeCombo.currentIndex]
+        purgeConfirm.kandidaten = JSON.parse(app.purgeCandidatesJson(purgeConfirm.frozenDays))
+        purgeConfirm.open()
+        const overlay = page.QQC2.Overlay.overlay
+        return overlay !== null
+               && purgeConfirm.parent === overlay
+               && restoreConfirm.parent === overlay
+    }
 
     FormCard.FormHeader {
         title: i18n("Wartung — Datensicherung")
@@ -145,6 +169,12 @@ FormCard.FormCardPage {
     // UUIDs — nie mehr als bestätigt (Vorbild: restoreConfirm).
     Kirigami.PromptDialog {
         id: purgeConfirm
+        // Verankerung im Einstellungsfenster (UI-8, #35): Kirigami.Dialog
+        // hängt sich standardmäßig an applicationWindow().overlay — das löst
+        // über den Erzeugungskontext der Seite zum HAUPTfenster auf, der
+        // Dialog läge unsichtbar hinter dem modalen ConfigWindow. Deshalb
+        // ausdrücklich das Overlay des Fensters, in dem die Seite liegt.
+        parent: page.QQC2.Overlay.overlay
         // Beim Öffnen eingefrorene Kandidaten-UUIDs samt zugehöriger Schwelle.
         property var kandidaten: []
         property int frozenDays: 0
@@ -173,6 +203,8 @@ FormCard.FormCardPage {
 
     Kirigami.PromptDialog {
         id: restoreConfirm
+        // Verankerung im Einstellungsfenster — siehe purgeConfirm (UI-8, #35).
+        parent: page.QQC2.Overlay.overlay
         title: i18n("Backup wiederherstellen")
         subtitle: page.backups[restoreCombo.currentIndex]
                   ? i18n("Die aktuelle Replica wird durch „%1“ ersetzt. Vorher wird automatisch ein Sicherheits-Backup angelegt.", page.backups[restoreCombo.currentIndex].filename)

@@ -19,6 +19,10 @@ KirigamiSettings.ConfigurationView {
     // unveränderten Testhaken-Verträge (testValues/testPoints/saveSync).
     property var syncPage: null
 
+    // Von MaintenanceSettingsPage gesetzt — Ziel der Regressionswache für
+    // die Dialog-Verankerung im Einstellungsfenster (UI-8, #35).
+    property var maintenancePage: null
+
     title: i18n("Einstellungen")
 
     modules: [
@@ -48,7 +52,7 @@ KirigamiSettings.ConfigurationView {
             text: i18n("Wartung")
             icon.name: "tools-wizard"
             page: () => Qt.createComponent("de.hnsstrk.vergissmeinnicht", "MaintenanceSettingsPage")
-            initialProperties: () => ({ app: dialog.appContainer })
+            initialProperties: () => ({ app: dialog.appContainer, besitzer: dialog })
         }
     ]
 

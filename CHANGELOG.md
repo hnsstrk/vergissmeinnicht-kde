@@ -90,6 +90,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- The delete confirmation on the maintenance settings page opened behind
+  the settings window (UI-8, #35, customer report): since the categorized
+  settings (UI-4, #30) the pages live in the Kirigami Addons
+  `ConfigWindow` — a separate window — while `Kirigami.PromptDialog`
+  anchors to `applicationWindow().overlay`, which resolves through the
+  page's creation context to the **main** window. The purge and restore
+  confirmations are now parented to the overlay of the window the page
+  actually lives in, appearing in front of and modal to the settings
+  window. Same root-cause family as the 0.3.1 FormCard popup fix. The
+  export file dialog is a native window-modal dialog attached to the
+  settings window and was not affected. A regression guard
+  (`--test-dialog=settings-purge`) opens the confirmation headlessly,
+  reports `DIALOG-FAIL` if it is not anchored to the settings window,
+  and grabs a screenshot with the open dialog.
+
 - The AI request timeout was 120 s, which a local reasoning model exceeds:
   measured against Ollama with `qwen3.6:27b`, a single interpretation took
   90-163 s, so requests aborted while the backend was still working. The
