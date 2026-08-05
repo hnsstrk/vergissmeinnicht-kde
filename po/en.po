@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: vergissmeinnicht 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-05 22:19+0200\n"
+"POT-Creation-Date: 2026-08-06 00:12+0200\n"
 "Language: en\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -709,7 +709,7 @@ msgid "Backup-Ordner öffnen"
 msgstr "Open backup folder"
 
 #: app/qml/MaintenanceSettingsPage.qml:59
-#: app/qml/MaintenanceSettingsPage.qml:104
+#: app/qml/MaintenanceSettingsPage.qml:176
 msgid "Backup wiederherstellen"
 msgstr "Restore backup"
 
@@ -718,14 +718,72 @@ msgid "Noch keine Backups vorhanden."
 msgstr "No backups yet."
 
 #: app/qml/MaintenanceSettingsPage.qml:71
+msgid "Wartung — Aufräumen"
+msgstr "Maintenance — Cleanup"
+
+#: app/qml/MaintenanceSettingsPage.qml:77
+msgid "Mindestalter erledigter Aufgaben"
+msgstr "Minimum age of completed tasks"
+
+#: app/qml/MaintenanceSettingsPage.qml:78
+msgid ""
+"Alter ab letzter Änderung; Wiederholungs-Aufgaben der Taskwarrior-CLI "
+"bleiben unberührt."
+msgstr ""
+"Age since last modification; recurring tasks managed by the Taskwarrior CLI "
+"are left untouched."
+
+#: app/qml/MaintenanceSettingsPage.qml:79
+msgid "1 Monat"
+msgstr "1 month"
+
+#: app/qml/MaintenanceSettingsPage.qml:79
+msgid "1 Quartal"
+msgstr "1 quarter"
+
+#: app/qml/MaintenanceSettingsPage.qml:79
+msgid "6 Monate"
+msgstr "6 months"
+
+#: app/qml/MaintenanceSettingsPage.qml:79
+msgid "1 Jahr"
+msgstr "1 year"
+
+#: app/qml/MaintenanceSettingsPage.qml:88
+msgid "Erledigte Aufgaben löschen …"
+msgstr "Delete completed tasks …"
+
+#: app/qml/MaintenanceSettingsPage.qml:92
+msgid ""
+"Zeigt vor dem Löschen die genaue Anzahl; vorher wird automatisch ein Backup "
+"angelegt."
+msgstr ""
+"Shows the exact count before deleting; a backup is created automatically "
+"beforehand."
+
+#: app/qml/MaintenanceSettingsPage.qml:95
+msgid "Löschen fehlgeschlagen: %1"
+msgstr "Deletion failed: %1"
+
+#: app/qml/MaintenanceSettingsPage.qml:96
+msgid "Löschen fehlgeschlagen."
+msgstr "Deletion failed."
+
+#: app/qml/MaintenanceSettingsPage.qml:97
+msgid "1 erledigte Aufgabe gelöscht — mit Strg+Z umkehrbar."
+msgid_plural "%1 erledigte Aufgaben gelöscht — mit Strg+Z umkehrbar."
+msgstr[0] "1 completed task deleted — reversible with Ctrl+Z."
+msgstr[1] "%1 completed tasks deleted — reversible with Ctrl+Z."
+
+#: app/qml/MaintenanceSettingsPage.qml:112
 msgid "Wartung — Reparatur"
 msgstr "Maintenance — Repair"
 
-#: app/qml/MaintenanceSettingsPage.qml:78
+#: app/qml/MaintenanceSettingsPage.qml:119
 msgid "Legacy-Aufgaben reparieren"
 msgstr "Repair legacy tasks"
 
-#: app/qml/MaintenanceSettingsPage.qml:81
+#: app/qml/MaintenanceSettingsPage.qml:122
 msgid ""
 "Überführt Token-Syntax in Titeln (+tag, project:, due:, priority:) in echte "
 "Eigenschaften."
@@ -733,29 +791,57 @@ msgstr ""
 "Converts token syntax in titles (+tag, project:, due:, priority:) into real "
 "properties."
 
-#: app/qml/MaintenanceSettingsPage.qml:84
+#: app/qml/MaintenanceSettingsPage.qml:125
 msgid "Reparatur fehlgeschlagen: %1"
 msgstr "Repair failed: %1"
 
-#: app/qml/MaintenanceSettingsPage.qml:85
+#: app/qml/MaintenanceSettingsPage.qml:126
 msgid "Reparatur fehlgeschlagen."
 msgstr "Repair failed."
 
-#: app/qml/MaintenanceSettingsPage.qml:86
+#: app/qml/MaintenanceSettingsPage.qml:127
 msgid "1 Aufgabe repariert."
 msgid_plural "%1 Aufgaben repariert."
 msgstr[0] "1 task repaired."
 msgstr[1] "%1 tasks repaired."
 
-#: app/qml/MaintenanceSettingsPage.qml:95
+#: app/qml/MaintenanceSettingsPage.qml:136
 msgid "Aufgaben exportieren"
 msgstr "Export tasks"
 
-#: app/qml/MaintenanceSettingsPage.qml:97
+#: app/qml/MaintenanceSettingsPage.qml:138
 msgid "JSON-Dateien (*.json)"
 msgstr "JSON files (*.json)"
 
-#: app/qml/MaintenanceSettingsPage.qml:106
+#: app/qml/MaintenanceSettingsPage.qml:152
+msgid "Erledigte Aufgaben löschen"
+msgstr "Delete completed tasks"
+
+#: app/qml/MaintenanceSettingsPage.qml:154
+msgid ""
+"1 erledigte Aufgabe ist älter als „%2“ und wird endgültig gelöscht. Vorher "
+"wird automatisch ein Backup angelegt; Strg+Z macht die Aktion rückgängig."
+msgid_plural ""
+"%1 erledigte Aufgaben sind älter als „%2“ und werden endgültig gelöscht. "
+"Vorher wird automatisch ein Backup angelegt; Strg+Z macht die Aktion "
+"rückgängig."
+msgstr[0] ""
+"1 completed task is older than “%2” and will be deleted permanently. A "
+"backup is created automatically beforehand; Ctrl+Z undoes the action."
+msgstr[1] ""
+"%1 completed tasks are older than “%2” and will be deleted permanently. A "
+"backup is created automatically beforehand; Ctrl+Z undoes the action."
+
+#: app/qml/MaintenanceSettingsPage.qml:157
+msgid "Keine erledigte Aufgabe ist älter als „%1“ — es gibt nichts zu löschen."
+msgstr "No completed task is older than “%1” — there is nothing to delete."
+
+#: app/qml/MaintenanceSettingsPage.qml:161 app/qml/Sidebar.qml:257
+#: app/qml/TasksPage.qml:181 app/qml/TasksPage.qml:515
+msgid "Löschen"
+msgstr "Delete"
+
+#: app/qml/MaintenanceSettingsPage.qml:178
 msgid ""
 "Die aktuelle Replica wird durch „%1“ ersetzt. Vorher wird automatisch ein "
 "Sicherheits-Backup angelegt."
@@ -763,7 +849,7 @@ msgstr ""
 "The current replica will be replaced by “%1”. A safety backup is created "
 "automatically beforehand."
 
-#: app/qml/MaintenanceSettingsPage.qml:111
+#: app/qml/MaintenanceSettingsPage.qml:183
 msgid "Wiederherstellen"
 msgstr "Restore"
 
@@ -880,10 +966,6 @@ msgstr "Rename tag"
 #: app/qml/Sidebar.qml:253
 msgid "Suche umbenennen"
 msgstr "Rename search"
-
-#: app/qml/Sidebar.qml:257 app/qml/TasksPage.qml:181 app/qml/TasksPage.qml:515
-msgid "Löschen"
-msgstr "Delete"
 
 #: app/qml/SyncSettingsPage.qml:65
 msgid "TaskChampion-Sync-Server"

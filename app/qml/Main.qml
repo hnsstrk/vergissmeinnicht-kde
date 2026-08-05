@@ -480,6 +480,52 @@ Kirigami.ApplicationWindow {
             // Aufräumen: Zähltest-Aufgaben entfernen.
             app.deleteTasks(zaehlUuids)
 
+            // 13b. Aufräumen Erledigter (UI-5, #32): Kandidaten einfrieren,
+            // löschen und Undo der gesamten Aktion in EINEM Schritt — über
+            // die Invokables. Gelöscht wird höchstens die eingefrorene
+            // Menge: Wer erst nach dem Einfrieren über die Schwelle rutscht
+            // (Dialog stand offen), bleibt stehen. Negative Tagesangabe legt
+            // die Schwelle in die Zukunft und macht frisch Erledigte
+            // löschbar (die UI bietet nur 30/90/180/365 Tage an).
+            check(app.quickCaptureCommit("Flow-Purge-Erledigt-A +flowpurge"), "Purge-Aufgabe A angelegt")
+            check(app.quickCaptureCommit("Flow-Purge-Erledigt-B +flowpurge"), "Purge-Aufgabe B angelegt")
+            check(app.quickCaptureCommit("Flow-Purge-Offen +flowpurge"), "offene Purge-Aufgabe angelegt")
+            app.applySearch("tag:flowpurge")
+            const purgeAlle = uuids()
+            check(purgeAlle.length === 3, "drei Purge-Aufgaben sichtbar")
+            const purgeOffen = purgeAlle.find(u => taskOf(u).description === "Flow-Purge-Offen")
+            const purgeErledigt = purgeAlle.filter(u => u !== purgeOffen)
+            app.markDone(purgeErledigt[0])
+            app.markDone(purgeErledigt[1])
+            check(JSON.parse(app.purgeCandidatesJson(30)).length === 0,
+                  "frisch Erledigte sind nicht älter als 30 Tage")
+            const purgeFrozen = JSON.parse(app.purgeCandidatesJson(-1))
+            check(purgeFrozen.length === 2,
+                  "purgeCandidatesJson friert genau die beiden Erledigten ein")
+            // Nach dem Einfrieren wird eine weitere Aufgabe erledigt — sie
+            // wäre bei einer Neuzählung Kandidat, ist aber nicht bestätigt.
+            check(app.quickCaptureCommit("Flow-Purge-Nachzügler +flowpurge"), "Nachzügler angelegt")
+            app.applySearch("tag:flowpurge")
+            const nachzuegler = uuids().find(u => taskOf(u).description === "Flow-Purge-Nachzügler")
+            app.markDone(nachzuegler)
+            check(JSON.parse(app.purgeCandidatesJson(-1)).length === 3,
+                  "Nachzügler wäre bei Neuzählung Kandidat")
+            const purgeGeloescht = app.purgeCompletedFrozen(purgeFrozen, -1)
+            check(purgeGeloescht === purgeFrozen.length,
+                  "Löschung entspricht exakt der eingefrorenen Zählung")
+            app.applySearch("tag:flowpurge")
+            check(taskOf(nachzuegler).status === "completed",
+                  "Nachzügler (nach dem Einfrieren erledigt) bleibt stehen")
+            check(uuids().indexOf(purgeOffen) !== -1 && uuids().length === 2,
+                  "offene Aufgabe überlebt den Purge")
+            app.undoLastChange()
+            app.applySearch("tag:flowpurge")
+            check(uuids().length === 4
+                  && purgeErledigt.every(u => taskOf(u).status === "completed"),
+                  "EIN Undo holt alle gelöschten Erledigten zurück")
+            app.applySearch("")
+            app.deleteTasks(purgeAlle.concat([nachzuegler]))
+
             // 14. Füllfunktion (AI-B1): Entwurf → Dialogfelder als von außen
             // aufrufbare Funktion — Wert→Preset|Custom-Zuordnung in beide
             // Sechser-Fälle (due, recur) plus Datumswähler-Entscheidung.
@@ -813,6 +859,13 @@ Kirigami.ApplicationWindow {
             case "settings-ai":
                 // KI-Seite direkt öffnen (Screenshot AI-A4).
                 settingsDialog.openSettings("ai")
+                testHoverTimer.start()
+                break
+            case "settings-maintenance":
+                // Wartungsseite direkt öffnen (Screenshot UI-5); höheres
+                // Fenster, damit die Aufräumen-Karte samt Knopf sichtbar ist.
+                settingsDialog.openSettings("maintenance")
+                settingsDialog.configViewItem.height = 760
                 testHoverTimer.start()
                 break
             case "help": helpDialog.open(); break

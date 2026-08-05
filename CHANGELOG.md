@@ -7,6 +7,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Delete old completed tasks from the maintenance settings page (UI-5,
+  #32): a new "Maintenance — Cleanup" card offers an age threshold
+  (1 month / 1 quarter / 6 months / 1 year, measured from the last
+  modification, falling back to the creation date) and a delete action.
+  The confirmation dialog names the exact number of affected tasks and
+  freezes that candidate set: deleting removes at most the confirmed
+  UUIDs, so tasks that cross the age threshold while the dialog sits
+  open are never swept along, and frozen tasks that stopped being
+  candidates in the meantime (reactivated, modified, already deleted)
+  are silently skipped instead of failing the run. A backup is written
+  automatically before the purge (no backup, no deletion), the whole
+  purge is a single undo step (Ctrl+Z restores every deleted task at
+  once), and the action never touches open tasks, recurring templates,
+  CLI recurrence instances (`parent`/`imask`), or completed tasks whose
+  age is unknown.
+
 - Selectable AI context level (AI-B1b, #31): a new "Context scope for
   interpretation" combo on the AI settings page controls how much task
   data the AI sees when interpreting free-form input — project and tag

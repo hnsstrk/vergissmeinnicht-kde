@@ -109,6 +109,15 @@ platform.
 - **Automatic backups** — `VACUUM INTO` snapshot before every sync, rotated
   to the last 10. Manual backup and restore from settings. See
   [`docs/backup-and-restore.md`](docs/backup-and-restore.md).
+- **Completed-task cleanup** — a maintenance action deletes completed
+  tasks older than a chosen age (1 month to 1 year, by last
+  modification). The confirmation names the exact count and freezes the
+  affected set — never more than confirmed gets deleted, no matter how
+  long the dialog stays open. A backup is written automatically first,
+  the whole purge is one undo step (Ctrl+Z), and CLI-managed recurrence
+  is never touched.
+
+  ![Vergissmeinnicht — maintenance settings](docs/screenshots/settings-maintenance.png)
 - **Taskwarrior parity** — urgency (exact CLI formula) as sort order,
   start/stop (active task), undo (Ctrl+Z), `until` expiry, duplicate,
   JSON export incl. UDAs, virtual tags and `due.before:`/`due.after:`/

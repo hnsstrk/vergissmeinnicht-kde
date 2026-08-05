@@ -110,6 +110,15 @@ Oberfläche auf jeder Plattform.
 - **Automatische Backups** — `VACUUM INTO`-Snapshot vor jedem Sync,
   rotierend die letzten 10. Manuelles Backup und Wiederherstellung in den
   Einstellungen. Siehe [`docs/backup-and-restore.md`](docs/backup-and-restore.md).
+- **Erledigte aufräumen** — eine Wartungsaktion löscht erledigte
+  Aufgaben ab einem wählbaren Mindestalter (1 Monat bis 1 Jahr, nach
+  letzter Änderung). Die Bestätigung nennt die exakte Anzahl und friert
+  die betroffene Menge ein — gelöscht wird nie mehr als bestätigt, egal
+  wie lange der Dialog offen steht. Vorher wird automatisch ein Backup
+  angelegt, der gesamte Lauf ist ein einziger Undo-Schritt (Strg+Z), und
+  CLI-verwaltete Wiederholungen bleiben unangetastet.
+
+  ![Vergissmeinnicht — Wartungs-Einstellungen](docs/screenshots/settings-maintenance.png)
 - **Taskwarrior-Parität** — Dringlichkeit (exakte CLI-Formel) als
   Sortierung, Start/Stopp (aktive Aufgabe), Rückgängig (Strg+Z),
   `until`-Ablaufdatum, Duplizieren, JSON-Export inkl. UDAs, virtuelle

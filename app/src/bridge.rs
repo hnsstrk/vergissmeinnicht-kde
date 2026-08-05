@@ -376,6 +376,25 @@ mod qobject {
         #[qinvokable]
         fn repair_legacy_tasks(self: Pin<&mut AppContainer>) -> i32;
 
+        /// Aufräumen (UI-5, #32): UUIDs erledigter Aufgaben, die älter sind
+        /// als `days` Tage (Alters-Proxy `modified`, ersatzweise `entry`),
+        /// als JSON-Array. Der Bestätigungsdialog friert diese Liste ein
+        /// und zeigt ihre Länge als exakte Anzahl an.
+        #[qinvokable]
+        fn purge_candidates_json(self: &AppContainer, days: i32) -> QString;
+        /// Aufräumen (UI-5, #32): löscht von der eingefrorenen UUID-Liste
+        /// genau die, die zum Löschzeitpunkt noch Kandidaten sind — nie
+        /// mehr als bestätigt, auch wenn der Dialog lange offen stand —
+        /// in EINEM Undo-Schritt. Vorher wird ein Backup angelegt; schlägt
+        /// es fehl, wird nichts gelöscht. Rückgabe: Anzahl gelöschter
+        /// Aufgaben, -1 bei Fehler.
+        #[qinvokable]
+        fn purge_completed_frozen(
+            self: Pin<&mut AppContainer>,
+            uuids: &QStringList,
+            days: i32,
+        ) -> i32;
+
         // ── Backups ─────────────────────────────────────────────────────────
         #[qinvokable]
         fn backup_now(self: Pin<&mut AppContainer>) -> QString;
@@ -1695,6 +1714,51 @@ impl qobject::AppContainer {
     fn repair_legacy_tasks(mut self: Pin<&mut Self>) -> i32 {
         self.as_mut().begin_reset_model();
         let result = self.as_mut().rust_mut().state.repair_legacy_tasks();
+        self.as_mut().end_reset_model();
+        let count = match result {
+            Ok(n) => {
+                self.as_mut().set_error_message(QString::default());
+                n as i32
+            }
+            Err(e) => {
+                self.as_mut().set_error_message(QString::from(e.as_str()));
+                -1
+            }
+        };
+        self.publish();
+        count
+    }
+
+    fn purge_candidates_json(&self, days: i32) -> QString {
+        let now = vergissmeinnicht_core::chrono::Utc::now().timestamp();
+        let secs = i64::from(days) * 86_400;
+        let kandidaten = self.state.purge_candidates(secs, now);
+        QString::from(
+            serde_json::to_string(&kandidaten)
+                .unwrap_or_else(|_| "[]".into())
+                .as_str(),
+        )
+    }
+
+    fn purge_completed_frozen(
+        mut self: Pin<&mut Self>,
+        uuids: &cxx_qt_lib::QStringList,
+        days: i32,
+    ) -> i32 {
+        let frozen = uuid_vec(uuids);
+        // Backup vor dem Löschen (AC 6): schlägt es fehl, wird NICHT gelöscht.
+        // `backup_now` meldet den Fehler bereits in `errorMessage`.
+        if self.as_mut().backup_now().to_string().is_empty() {
+            return -1;
+        }
+        self.as_mut().begin_reset_model();
+        let now = vergissmeinnicht_core::chrono::Utc::now().timestamp();
+        let secs = i64::from(days) * 86_400;
+        let result = self
+            .as_mut()
+            .rust_mut()
+            .state
+            .purge_frozen(&frozen, secs, now);
         self.as_mut().end_reset_model();
         let count = match result {
             Ok(n) => {

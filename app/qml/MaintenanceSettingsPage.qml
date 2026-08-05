@@ -68,6 +68,47 @@ FormCard.FormCardPage {
     }
 
     FormCard.FormHeader {
+        title: i18n("Wartung — Aufräumen")
+    }
+
+    FormCard.FormCard {
+        FormCard.FormComboBoxDelegate {
+            id: purgeAgeCombo
+            text: i18n("Mindestalter erledigter Aufgaben")
+            description: i18n("Alter ab letzter Änderung; Wiederholungs-Aufgaben der Taskwarrior-CLI bleiben unberührt.")
+            model: [i18n("1 Monat"), i18n("1 Quartal"), i18n("6 Monate"), i18n("1 Jahr")]
+            currentIndex: 0
+        }
+
+        FormCard.FormButtonDelegate {
+            id: purgeButton
+            // Tage je Combo-Eintrag — Zählung und Löschung nutzen denselben Wert.
+            readonly property var ageDays: [30, 90, 180, 365]
+            property int lastResult: -2
+            text: i18n("Erledigte Aufgaben löschen …")
+            icon.name: "edit-delete"
+            description: {
+                if (lastResult === -2)
+                    return i18n("Zeigt vor dem Löschen die genaue Anzahl; vorher wird automatisch ein Backup angelegt.")
+                if (lastResult < 0)
+                    return page.app.errorMessage.length > 0
+                           ? i18n("Löschen fehlgeschlagen: %1", page.app.errorMessage)
+                           : i18n("Löschen fehlgeschlagen.")
+                return i18np("1 erledigte Aufgabe gelöscht — mit Strg+Z umkehrbar.",
+                             "%1 erledigte Aufgaben gelöscht — mit Strg+Z umkehrbar.", lastResult)
+            }
+            onClicked: {
+                // Kandidatenmenge JETZT einfrieren: Der Dialog bestätigt genau
+                // diese UUIDs — Aufgaben, die erst während des offenen Dialogs
+                // über die Altersschwelle rutschen, werden nie mitgelöscht.
+                purgeConfirm.frozenDays = ageDays[purgeAgeCombo.currentIndex]
+                purgeConfirm.kandidaten = JSON.parse(page.app.purgeCandidatesJson(purgeConfirm.frozenDays))
+                purgeConfirm.open()
+            }
+        }
+    }
+
+    FormCard.FormHeader {
         title: i18n("Wartung — Reparatur")
     }
 
@@ -97,6 +138,37 @@ FormCard.FormCardPage {
         nameFilters: [i18n("JSON-Dateien (*.json)")]
         defaultSuffix: "json"
         onAccepted: page.app.exportTasksTo(selectedFile.toString())
+    }
+
+    // Bestätigung fürs Aufräumen (UI-5): nennt die exakte Anzahl der beim
+    // Öffnen eingefrorenen Kandidatenliste; das Löschen übergibt genau diese
+    // UUIDs — nie mehr als bestätigt (Vorbild: restoreConfirm).
+    Kirigami.PromptDialog {
+        id: purgeConfirm
+        // Beim Öffnen eingefrorene Kandidaten-UUIDs samt zugehöriger Schwelle.
+        property var kandidaten: []
+        property int frozenDays: 0
+        readonly property int count: kandidaten.length
+        title: i18n("Erledigte Aufgaben löschen")
+        subtitle: count > 0
+                  ? i18np("1 erledigte Aufgabe ist älter als „%2“ und wird endgültig gelöscht. Vorher wird automatisch ein Backup angelegt; Strg+Z macht die Aktion rückgängig.",
+                          "%1 erledigte Aufgaben sind älter als „%2“ und werden endgültig gelöscht. Vorher wird automatisch ein Backup angelegt; Strg+Z macht die Aktion rückgängig.",
+                          count, purgeAgeCombo.currentText)
+                  : i18n("Keine erledigte Aufgabe ist älter als „%1“ — es gibt nichts zu löschen.", purgeAgeCombo.currentText)
+        standardButtons: Kirigami.Dialog.Cancel
+        customFooterActions: [
+            Kirigami.Action {
+                text: i18n("Löschen")
+                icon.name: "edit-delete"
+                enabled: purgeConfirm.count > 0
+                onTriggered: {
+                    purgeButton.lastResult =
+                        page.app.purgeCompletedFrozen(purgeConfirm.kandidaten, purgeConfirm.frozenDays)
+                    purgeConfirm.close()
+                    page.refreshBackups()
+                }
+            }
+        ]
     }
 
     Kirigami.PromptDialog {

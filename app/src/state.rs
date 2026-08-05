@@ -580,6 +580,77 @@ impl AppState {
         Ok(repaired)
     }
 
+    // ─── Aufräumen Erledigter (UI-5, #32) ───────────────────────────────────
+
+    /// Kandidaten fürs Löschen alter erledigter Aufgaben. Genau EINE Funktion
+    /// liefert die betroffenen UUIDs: Der Bestätigungsdialog friert diese
+    /// Liste ein und zeigt ihre Länge; `purge_frozen` löscht dann höchstens
+    /// diese Menge — Ankündigung und Wirkung können nicht auseinanderlaufen,
+    /// egal wie lange der Dialog offen steht.
+    ///
+    /// Alters-Proxy wie in `ai/prompts.rs` (AI-B1b): `modified` (letzte
+    /// Änderung ≈ Erledigungszeitpunkt), ersatzweise `entry`. Fehlt beides,
+    /// gilt das Alter als unbekannt und die Aufgabe wird NIE gelöscht.
+    /// Nie betroffen: Offene (nur `status == Completed` passiert den Filter,
+    /// damit auch `status:recurring`-Vorlagen nie) und CLI-Recurrence-
+    /// Instanzen mit `parent`/`imask` (`is_recurring_child`) — CLI-Rekurrenz
+    /// ist heilig (siehe CLAUDE.md).
+    pub fn purge_candidates(&self, max_age_secs: i64, now: i64) -> Vec<String> {
+        let cutoff = now.saturating_sub(max_age_secs);
+        self.tasks
+            .iter()
+            .filter(|t| t.status == TaskStatus::Completed)
+            .filter(|t| !t.is_recurring_child)
+            .filter(|t| match t.modified.or(t.entry) {
+                // Exakt an der Schwelle = nicht „älter als" → bleibt.
+                Some(ts) => ts < cutoff,
+                None => false,
+            })
+            .map(|t| t.uuid.clone())
+            .collect()
+    }
+
+    /// Löscht von der beim Zählen **eingefrorenen** UUID-Menge genau die,
+    /// die JETZT noch Aufräum-Kandidaten sind (Schnittmenge mit
+    /// `purge_candidates`) — in EINEM Core-Batch (ein UndoPoint), Strg+Z
+    /// holt den gesamten Lauf zurück. Gibt die Anzahl gelöschter Aufgaben
+    /// zurück.
+    ///
+    /// Die Schnittmenge trägt die Zusage des Bestätigungsdialogs: Gelöscht
+    /// wird nie mehr als die bestätigte Menge — Aufgaben, die erst nach dem
+    /// Zählen über die Altersschwelle rutschen (Dialog stand über Nacht
+    /// offen), sind nicht in `frozen` und bleiben stehen. Und nie etwas,
+    /// das kein Kandidat mehr ist: inzwischen Reaktivierte, Geänderte
+    /// (wieder jung) oder Gelöschte fallen still aus der Schnittmenge,
+    /// statt den Lauf scheitern zu lassen.
+    pub fn purge_frozen(
+        &mut self,
+        frozen: &[String],
+        max_age_secs: i64,
+        now: i64,
+    ) -> Result<usize, String> {
+        // Frisch laden: zwischen Zählen und Bestätigen können Sync oder
+        // Undo den Bestand verändert haben.
+        self.refresh()?;
+        let aktuell: std::collections::HashSet<String> =
+            self.purge_candidates(max_age_secs, now).into_iter().collect();
+        let ziel: Vec<String> = frozen
+            .iter()
+            .filter(|u| aktuell.contains(*u))
+            .cloned()
+            .collect();
+        if ziel.is_empty() {
+            return Ok(0);
+        }
+        let Some(store) = &self.store else {
+            return Err("Store nicht initialisiert".into());
+        };
+        let anzahl = ziel.len();
+        store.delete_tasks_batch(ziel).map_err(|e| e.to_string())?;
+        self.refresh()?;
+        Ok(anzahl)
+    }
+
     // ─── Saved Searches ─────────────────────────────────────────────────────
 
     pub fn save_search(&mut self, name: &str, query: &str) -> Result<String, String> {
@@ -1026,6 +1097,242 @@ mod tests {
         let counts: serde_json::Value = serde_json::from_str(&state.counts_json()).unwrap();
         assert_eq!(counts["all"], 2);
         assert_eq!(counts["allTotal"], 3);
+    }
+
+    #[test]
+    fn purge_candidates_predicate_covers_all_guards() {
+        // UI-5 (#32): Prädikat-Grenzfälle in-memory — dieselbe Funktion speist
+        // Zählung UND Löschung, daher reicht der Test des Prädikats für beide.
+        let mut state = AppState {
+            store: None,
+            init_error: None,
+            tasks: vec![],
+            visible: vec![],
+            filter: SidebarFilter::All,
+            search_query: String::new(),
+            sort: SortOrder::Id,
+            sort_ascending: true,
+            settings: Settings::default(),
+        };
+        let now: i64 = 1_000_000;
+        let max_age: i64 = 100; // cutoff = 999_900
+        let base = TaskInfo {
+            uuid: "old".into(),
+            description: "T".into(),
+            project: None,
+            tags: vec![],
+            due: None,
+            status: TaskStatus::Completed,
+            entry: None,
+            working_set_id: None,
+            priority: None,
+            annotations: vec![],
+            wait: None,
+            recur: None,
+            scheduled: None,
+            depends: vec![],
+            is_blocked: false,
+            is_blocking: false,
+            is_recurring_child: false,
+            start: None,
+            until: None,
+            modified: Some(999_899), // 1 s älter als die Schwelle → löschen
+            udas: vec![],
+        };
+        // Genau an der Schwelle (Alter == max_age) → NICHT löschen.
+        let mut boundary = base.clone();
+        boundary.uuid = "boundary".into();
+        boundary.modified = Some(999_900);
+        // Jünger als die Schwelle → NICHT löschen.
+        let mut fresh = base.clone();
+        fresh.uuid = "fresh".into();
+        fresh.modified = Some(999_950);
+        // Offen und uralt → NIE löschen.
+        let mut pending = base.clone();
+        pending.uuid = "pending".into();
+        pending.status = TaskStatus::Pending;
+        pending.modified = Some(1);
+        // CLI-Recurring-Vorlage → NIE löschen.
+        let mut template = base.clone();
+        template.uuid = "template".into();
+        template.status = TaskStatus::Recurring;
+        template.modified = Some(1);
+        // Erledigte CLI-Instanz (parent/imask) → NIE löschen.
+        let mut child = base.clone();
+        child.uuid = "child".into();
+        child.is_recurring_child = true;
+        child.modified = Some(1);
+        // Weder modified noch entry → Alter unbekannt → NIE löschen.
+        let mut unknown = base.clone();
+        unknown.uuid = "unknown".into();
+        unknown.modified = None;
+        unknown.entry = None;
+        // Nur entry (uralt) → entry-Fallback greift → löschen.
+        let mut entry_only = base.clone();
+        entry_only.uuid = "entry-only".into();
+        entry_only.modified = None;
+        entry_only.entry = Some(2);
+        state.tasks = vec![
+            base, boundary, fresh, pending, template, child, unknown, entry_only,
+        ];
+
+        let mut kandidaten = state.purge_candidates(max_age, now);
+        kandidaten.sort();
+        assert_eq!(kandidaten, vec!["entry-only".to_string(), "old".to_string()]);
+    }
+
+    #[test]
+    fn purge_frozen_deletes_counted_set_in_one_undo_step() {
+        // UI-5 (#32): Purge löscht exakt die gezählten Aufgaben, verschont
+        // Offene und CLI-Recurrence, und EIN Undo holt alles zurück.
+        let dir = tempfile::tempdir().unwrap();
+        let store = TaskStore::new(dir.path().to_string_lossy().into_owned()).unwrap();
+        let mut state = AppState {
+            store: Some(Arc::new(store)),
+            init_error: None,
+            tasks: vec![],
+            visible: vec![],
+            filter: SidebarFilter::All,
+            search_query: String::new(),
+            sort: SortOrder::Id,
+            sort_ascending: true,
+            settings: Settings::default(),
+        };
+        let store = state.store.clone().unwrap();
+        // Zwei alte Erledigte (modified zuletzt rückdatiert — taskchampion
+        // überschreibt ein explizit gesetztes `modified` nicht erneut).
+        let mut alte = Vec::new();
+        for name in ["Alt A", "Alt B"] {
+            let uuid = store.add_task_full(name.into(), None, vec![], None).unwrap();
+            store.mark_done(uuid.clone()).unwrap();
+            store
+                .set_raw_property(uuid.clone(), "modified".into(), Some("1000".into()))
+                .unwrap();
+            alte.push(uuid);
+        }
+        // Alte erledigte CLI-Instanz (parent) — muss überleben.
+        let child = store.add_task_full("CLI-Kind".into(), None, vec![], None).unwrap();
+        store.mark_done(child.clone()).unwrap();
+        store
+            .set_raw_property(
+                child.clone(),
+                "parent".into(),
+                Some("11111111-2222-3333-4444-555555555555".into()),
+            )
+            .unwrap();
+        store
+            .set_raw_property(child.clone(), "modified".into(), Some("1000".into()))
+            .unwrap();
+        // Alte offene Aufgabe — muss überleben.
+        let offen = store.add_task_full("Offen".into(), None, vec![], None).unwrap();
+        store
+            .set_raw_property(offen.clone(), "modified".into(), Some("1000".into()))
+            .unwrap();
+        state.refresh().unwrap();
+
+        let now = now_secs();
+        let max_age = 30 * 86_400; // 30 Tage — modified=1000 liegt weit davor.
+        let mut kandidaten = state.purge_candidates(max_age, now);
+        kandidaten.sort();
+        let mut erwartet = alte.clone();
+        erwartet.sort();
+        assert_eq!(kandidaten, erwartet, "Zählung trifft exakt die alten Erledigten");
+
+        let undo_punkte_vorher = store.num_undo_points().unwrap();
+        let geloescht = state.purge_frozen(&kandidaten, max_age, now).unwrap();
+        assert_eq!(geloescht, kandidaten.len(), "Löschung entspricht der Zählung");
+        assert!(
+            state.tasks.iter().all(|t| !alte.contains(&t.uuid)),
+            "alte Erledigte sind weg"
+        );
+        assert!(state.tasks.iter().any(|t| t.uuid == offen), "Offene überlebt");
+        assert!(state.tasks.iter().any(|t| t.uuid == child), "CLI-Instanz überlebt");
+        assert_eq!(
+            store.num_undo_points().unwrap(),
+            undo_punkte_vorher + 1,
+            "der gesamte Purge ist genau EIN UndoPoint"
+        );
+
+        // EIN Undo-Schritt holt beide zurück.
+        assert!(store.undo_last_change().unwrap());
+        state.refresh().unwrap();
+        for uuid in &alte {
+            let t = state.task_by_uuid(uuid).expect("Aufgabe nach Undo wieder da");
+            assert_eq!(t.status, TaskStatus::Completed, "Status nach Undo wieder Completed");
+        }
+
+        // Leere Schnittmenge (Schwelle greift bei now=2_000 nicht mehr):
+        // Purge ist ein No-op ohne neuen UndoPoint.
+        let undo_punkte = store.num_undo_points().unwrap();
+        assert_eq!(state.purge_frozen(&kandidaten, max_age, 2_000).unwrap(), 0);
+        assert_eq!(store.num_undo_points().unwrap(), undo_punkte);
+    }
+
+    #[test]
+    fn purge_frozen_deletes_only_the_frozen_set() {
+        // UI-5-Nacharbeit: Die beim Zählen eingefrorene Menge ist die
+        // Obergrenze. Rutscht eine weitere Erledigte über die Schwelle,
+        // während der Bestätigungsdialog offen steht, bleibt sie stehen;
+        // Eingefrorene, die kein Kandidat mehr sind (reaktiviert), fallen
+        // still heraus, statt den Lauf scheitern zu lassen.
+        let dir = tempfile::tempdir().unwrap();
+        let store = TaskStore::new(dir.path().to_string_lossy().into_owned()).unwrap();
+        let mut state = AppState {
+            store: Some(Arc::new(store)),
+            init_error: None,
+            tasks: vec![],
+            visible: vec![],
+            filter: SidebarFilter::All,
+            search_query: String::new(),
+            sort: SortOrder::Id,
+            sort_ascending: true,
+            settings: Settings::default(),
+        };
+        let store = state.store.clone().unwrap();
+        let alt_anlegen = |name: &str| {
+            let uuid = store.add_task_full(name.into(), None, vec![], None).unwrap();
+            store.mark_done(uuid.clone()).unwrap();
+            store
+                .set_raw_property(uuid.clone(), "modified".into(), Some("1000".into()))
+                .unwrap();
+            uuid
+        };
+        let a = alt_anlegen("Alt A");
+        let b = alt_anlegen("Alt B");
+        state.refresh().unwrap();
+
+        let now = now_secs();
+        let max_age = 30 * 86_400;
+        let mut frozen = state.purge_candidates(max_age, now);
+        frozen.sort();
+        let mut erwartet = vec![a.clone(), b.clone()];
+        erwartet.sort();
+        assert_eq!(frozen, erwartet);
+
+        // NACH dem Einfrieren: eine weitere alte Erledigte kommt hinzu
+        // (entspricht „rutscht über die Schwelle, während der Dialog
+        // offen steht") …
+        let nachzuegler = alt_anlegen("Nachzügler");
+        // … und eine eingefrorene wird reaktiviert (kein Kandidat mehr).
+        store.reactivate(b.clone()).unwrap();
+        state.refresh().unwrap();
+
+        let geloescht = state.purge_frozen(&frozen, max_age, now).unwrap();
+        assert_eq!(geloescht, 1, "nur die verbliebene eingefrorene Aufgabe fällt");
+        assert!(
+            state.task_by_uuid(&a).is_none(),
+            "eingefrorene alte Erledigte ist gelöscht"
+        );
+        assert!(
+            state.task_by_uuid(&nachzuegler).is_some(),
+            "Nachzügler (nicht eingefroren) bleibt stehen"
+        );
+        let b_task = state.task_by_uuid(&b).expect("Reaktivierte existiert noch");
+        assert_eq!(
+            b_task.status,
+            TaskStatus::Pending,
+            "Reaktivierte bleibt offen und unangetastet"
+        );
     }
 
     #[test]

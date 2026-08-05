@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-05 22:19+0200\n"
+"POT-Creation-Date: 2026-08-06 00:12+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -690,7 +690,7 @@ msgid "Backup-Ordner öffnen"
 msgstr ""
 
 #: app/qml/MaintenanceSettingsPage.qml:59
-#: app/qml/MaintenanceSettingsPage.qml:104
+#: app/qml/MaintenanceSettingsPage.qml:176
 msgid "Backup wiederherstellen"
 msgstr ""
 
@@ -699,48 +699,126 @@ msgid "Noch keine Backups vorhanden."
 msgstr ""
 
 #: app/qml/MaintenanceSettingsPage.qml:71
-msgid "Wartung — Reparatur"
+msgid "Wartung — Aufräumen"
+msgstr ""
+
+#: app/qml/MaintenanceSettingsPage.qml:77
+msgid "Mindestalter erledigter Aufgaben"
 msgstr ""
 
 #: app/qml/MaintenanceSettingsPage.qml:78
+msgid ""
+"Alter ab letzter Änderung; Wiederholungs-Aufgaben der Taskwarrior-CLI "
+"bleiben unberührt."
+msgstr ""
+
+#: app/qml/MaintenanceSettingsPage.qml:79
+msgid "1 Monat"
+msgstr ""
+
+#: app/qml/MaintenanceSettingsPage.qml:79
+msgid "1 Quartal"
+msgstr ""
+
+#: app/qml/MaintenanceSettingsPage.qml:79
+msgid "6 Monate"
+msgstr ""
+
+#: app/qml/MaintenanceSettingsPage.qml:79
+msgid "1 Jahr"
+msgstr ""
+
+#: app/qml/MaintenanceSettingsPage.qml:88
+msgid "Erledigte Aufgaben löschen …"
+msgstr ""
+
+#: app/qml/MaintenanceSettingsPage.qml:92
+msgid ""
+"Zeigt vor dem Löschen die genaue Anzahl; vorher wird automatisch ein Backup "
+"angelegt."
+msgstr ""
+
+#: app/qml/MaintenanceSettingsPage.qml:95
+msgid "Löschen fehlgeschlagen: %1"
+msgstr ""
+
+#: app/qml/MaintenanceSettingsPage.qml:96
+msgid "Löschen fehlgeschlagen."
+msgstr ""
+
+#: app/qml/MaintenanceSettingsPage.qml:97
+msgid "1 erledigte Aufgabe gelöscht — mit Strg+Z umkehrbar."
+msgid_plural "%1 erledigte Aufgaben gelöscht — mit Strg+Z umkehrbar."
+msgstr[0] ""
+msgstr[1] ""
+
+#: app/qml/MaintenanceSettingsPage.qml:112
+msgid "Wartung — Reparatur"
+msgstr ""
+
+#: app/qml/MaintenanceSettingsPage.qml:119
 msgid "Legacy-Aufgaben reparieren"
 msgstr ""
 
-#: app/qml/MaintenanceSettingsPage.qml:81
+#: app/qml/MaintenanceSettingsPage.qml:122
 msgid ""
 "Überführt Token-Syntax in Titeln (+tag, project:, due:, priority:) in echte "
 "Eigenschaften."
 msgstr ""
 
-#: app/qml/MaintenanceSettingsPage.qml:84
+#: app/qml/MaintenanceSettingsPage.qml:125
 msgid "Reparatur fehlgeschlagen: %1"
 msgstr ""
 
-#: app/qml/MaintenanceSettingsPage.qml:85
+#: app/qml/MaintenanceSettingsPage.qml:126
 msgid "Reparatur fehlgeschlagen."
 msgstr ""
 
-#: app/qml/MaintenanceSettingsPage.qml:86
+#: app/qml/MaintenanceSettingsPage.qml:127
 msgid "1 Aufgabe repariert."
 msgid_plural "%1 Aufgaben repariert."
 msgstr[0] ""
 msgstr[1] ""
 
-#: app/qml/MaintenanceSettingsPage.qml:95
+#: app/qml/MaintenanceSettingsPage.qml:136
 msgid "Aufgaben exportieren"
 msgstr ""
 
-#: app/qml/MaintenanceSettingsPage.qml:97
+#: app/qml/MaintenanceSettingsPage.qml:138
 msgid "JSON-Dateien (*.json)"
 msgstr ""
 
-#: app/qml/MaintenanceSettingsPage.qml:106
+#: app/qml/MaintenanceSettingsPage.qml:152
+msgid "Erledigte Aufgaben löschen"
+msgstr ""
+
+#: app/qml/MaintenanceSettingsPage.qml:154
+msgid ""
+"1 erledigte Aufgabe ist älter als „%2“ und wird endgültig gelöscht. Vorher "
+"wird automatisch ein Backup angelegt; Strg+Z macht die Aktion rückgängig."
+msgid_plural ""
+"%1 erledigte Aufgaben sind älter als „%2“ und werden endgültig gelöscht. "
+"Vorher wird automatisch ein Backup angelegt; Strg+Z macht die Aktion "
+"rückgängig."
+msgstr[0] ""
+msgstr[1] ""
+
+#: app/qml/MaintenanceSettingsPage.qml:157
+msgid "Keine erledigte Aufgabe ist älter als „%1“ — es gibt nichts zu löschen."
+msgstr ""
+
+#: app/qml/MaintenanceSettingsPage.qml:161 app/qml/Sidebar.qml:257
+#: app/qml/TasksPage.qml:181 app/qml/TasksPage.qml:515
+msgid "Löschen"
+msgstr ""
+
+#: app/qml/MaintenanceSettingsPage.qml:178
 msgid ""
 "Die aktuelle Replica wird durch „%1“ ersetzt. Vorher wird automatisch ein "
 "Sicherheits-Backup angelegt."
 msgstr ""
 
-#: app/qml/MaintenanceSettingsPage.qml:111
+#: app/qml/MaintenanceSettingsPage.qml:183
 msgid "Wiederherstellen"
 msgstr ""
 
@@ -856,10 +934,6 @@ msgstr ""
 
 #: app/qml/Sidebar.qml:253
 msgid "Suche umbenennen"
-msgstr ""
-
-#: app/qml/Sidebar.qml:257 app/qml/TasksPage.qml:181 app/qml/TasksPage.qml:515
-msgid "Löschen"
 msgstr ""
 
 #: app/qml/SyncSettingsPage.qml:65

@@ -624,6 +624,32 @@ impl TaskStore {
         })
     }
 
+    /// Markiert mehrere Tasks in EINEM Mutations-Batch als gelöscht (`Status::Deleted`).
+    /// Der Batch beginnt mit genau einem UndoPoint — der gesamte Lauf ist damit EIN
+    /// rückgängig machbarer Schritt (UI-5: Aufräumen Erledigter). Schlägt eine UUID
+    /// fehl (ungültig oder nicht gefunden), wird NICHTS committet.
+    pub fn delete_tasks_batch(&self, uuids: Vec<String>) -> Result<(), VmError> {
+        let parsed: Vec<Uuid> = uuids
+            .iter()
+            .map(|u| parse_uuid(u))
+            .collect::<Result<_, _>>()?;
+        let mut guard = self.lock_replica()?;
+        let replica: &mut AppReplica = &mut guard;
+
+        self.rt.block_on(async {
+            let mut ops = mutation_ops();
+            for (task_uuid, raw) in parsed.iter().zip(&uuids) {
+                let mut task = replica
+                    .get_task(*task_uuid)
+                    .await?
+                    .ok_or(VmError::NotFound { uuid: raw.clone() })?;
+                task.set_status(Status::Deleted, &mut ops)?;
+            }
+            replica.commit_operations(ops).await?;
+            Ok::<_, VmError>(())
+        })
+    }
+
     /// Hängt eine Annotation an die Task mit `uuid` an. Entry-Zeitstempel = `Utc::now()`.
     pub fn add_annotation(&self, uuid: String, annotation: String) -> Result<(), VmError> {
         let task_uuid = parse_uuid(&uuid)?;
