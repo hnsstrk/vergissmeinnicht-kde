@@ -1,12 +1,23 @@
 // Seed a TaskChampion replica with a deterministic demo dataset for screenshots
 // and manual testing. Usage:
 //
-//     cargo run --release --example seed_demo -- <replica-path>
+//     cargo run --release --example seed_demo -- <replica-path> [--ai-config <config-home>]
 //
 // The replica directory will be created if it does not exist. Existing tasks
 // are not deleted; run against an empty directory for a clean dataset.
+//
+// `--ai-config <config-home>` (AI-B4, #16) schreibt zusätzlich eine minimale
+// Demo-Konfiguration nach `<config-home>/vergissmeinnicht/config.json` —
+// englische Oberfläche, Ollama-Basis-URL und das im README empfohlene Modell.
+// Basis-URL plus Modellname genügen für `aiConfigured`, damit Screenshot-Läufe
+// die KI-Bedienelemente zeigen; ein laufender Server oder ein API-Key ist
+// nicht nötig. `<config-home>` ist der Wert, der dem App-Start als
+// `XDG_CONFIG_HOME` mitgegeben wird. Eine vorhandene config.json wird nie
+// überschrieben — Schutz davor, dass jemand versehentlich sein echtes
+// `~/.config` angibt.
 
 use std::env;
+use std::path::Path;
 use std::process;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
@@ -121,14 +132,75 @@ const DEMO_TASKS: &[Demo] = &[
     },
 ];
 
+// Demo-Konfiguration für Screenshot-Läufe: alle übrigen Felder bekommen beim
+// Laden ihre serde-Defaults (`#[serde(default)]` in app/src/config.rs). Das
+// Modell ist die gemessene Empfehlung aus dem README; die Sprache ist
+// Englisch, weil die Screenshot-DoD englische Locale verlangt (die kompilierte
+// en.mo kommt separat dazu, siehe docs/building.md).
+const DEMO_AI_CONFIG: &str = r#"{
+  "language": "en",
+  "ai_base_url": "http://localhost:11434/v1",
+  "ai_model": "gemma4:12b"
+}
+"#;
+
+/// Schreibt die Demo-Konfiguration nach `<config-home>/vergissmeinnicht/
+/// config.json`. Eine vorhandene Datei bleibt unangetastet (mit Hinweis) —
+/// so kann der Aufruf nie eine echte Konfiguration zerstören.
+fn write_ai_config(config_home: &str) -> std::io::Result<()> {
+    let dir = Path::new(config_home).join("vergissmeinnicht");
+    let datei = dir.join("config.json");
+    if datei.exists() {
+        println!("ai config untouched (already exists): {}", datei.display());
+        return Ok(());
+    }
+    std::fs::create_dir_all(&dir)?;
+    std::fs::write(&datei, DEMO_AI_CONFIG)?;
+    println!("wrote demo ai config to {}", datei.display());
+    Ok(())
+}
+
 fn main() {
-    let path = match env::args().nth(1) {
+    // Argumente: erster positionaler Wert ist der Replica-Pfad, optional
+    // gefolgt von `--ai-config <config-home>`.
+    let args: Vec<String> = env::args().skip(1).collect();
+    let mut path: Option<String> = None;
+    let mut ai_config: Option<String> = None;
+    let mut i = 0;
+    while i < args.len() {
+        if args[i] == "--ai-config" {
+            match args.get(i + 1) {
+                Some(wert) => ai_config = Some(wert.clone()),
+                None => {
+                    eprintln!("--ai-config braucht einen Pfad (XDG_CONFIG_HOME des App-Starts)");
+                    process::exit(2);
+                }
+            }
+            i += 2;
+        } else if path.is_none() {
+            path = Some(args[i].clone());
+            i += 1;
+        } else {
+            eprintln!("unbekanntes Argument: {}", args[i]);
+            process::exit(2);
+        }
+    }
+    let path = match path {
         Some(p) => p,
         None => {
-            eprintln!("usage: cargo run --release --example seed_demo -- <replica-path>");
+            eprintln!(
+                "usage: cargo run --release --example seed_demo -- <replica-path> [--ai-config <config-home>]"
+            );
             process::exit(2);
         }
     };
+
+    if let Some(config_home) = &ai_config {
+        if let Err(e) = write_ai_config(config_home) {
+            eprintln!("failed to write demo ai config under {config_home}: {e}");
+            process::exit(1);
+        }
+    }
 
     let store = match TaskStore::new(path.clone()) {
         Ok(s) => s,

@@ -128,9 +128,32 @@ cargo run -p vergissmeinnicht-core --example sync_roundtrip -- \
 ### Demo dataset for screenshots
 
 ```sh
+# Seed tasks AND a demo AI config (English UI, Ollama base URL, recommended
+# model). Base URL + model name are enough for `aiConfigured`, so the AI
+# controls (microphone, "Interpret with AI", model combo) show up in
+# screenshots without a running server, an API key, or a hand-built
+# throwaway config. An existing config.json is never overwritten.
 cargo run --release -p vergissmeinnicht-core --example seed_demo -- \
-    /tmp/vmn-demo/vergissmeinnicht/replica
-XDG_DATA_HOME=/tmp/vmn-demo ./target/debug/vergissmeinnicht
+    /tmp/vmn-demo/vergissmeinnicht/replica --ai-config /tmp/vmn-demo-cfg
+
+# The screenshot DoD wants the English locale; the config alone is not
+# enough — ki18n also needs the compiled catalog in XDG_DATA_HOME:
+mkdir -p /tmp/vmn-demo/locale/en/LC_MESSAGES
+msgfmt -o /tmp/vmn-demo/locale/en/LC_MESSAGES/vergissmeinnicht.mo po/en.po
+
+XDG_DATA_HOME=/tmp/vmn-demo XDG_CONFIG_HOME=/tmp/vmn-demo-cfg \
+    ./target/debug/vergissmeinnicht
+
+# Screenshots then go through the headless grab hooks. LANG covers the
+# framework strings (e.g. the settings search field) that our catalog does
+# not own; the three QT_* variables pin 1x rendering — on a scaled Wayland
+# session the grab otherwise comes out at 1.5x and no longer matches the
+# committed screenshots:
+LANG=en_US.UTF-8 LANGUAGE=en \
+QT_QPA_PLATFORM=xcb QT_ENABLE_HIGHDPI_SCALING=0 QT_FONT_DPI=96 \
+XDG_DATA_HOME=/tmp/vmn-demo XDG_CONFIG_HOME=/tmp/vmn-demo-cfg \
+    ./target/debug/vergissmeinnicht \
+    --test-dialog=settings-ai --test-grab=docs/screenshots/settings-ai.png
 ```
 
 ## Registration rules (the pbxproj of this repo)

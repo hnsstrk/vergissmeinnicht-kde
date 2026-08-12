@@ -150,7 +150,10 @@ platform.
   task titles (`+tag project:x`) into real properties.
 
 *(All screenshots show a seeded demo dataset —
-`cargo run --release -p vergissmeinnicht-core --example seed_demo -- <replica-path>`.)*
+`cargo run --release -p vergissmeinnicht-core --example seed_demo -- <replica-path>`.
+Screenshots with AI controls additionally use the demo AI configuration the
+same example writes with `--ai-config` — no server or API key involved, see
+`docs/building.md`.)*
 
 ## Architecture
 

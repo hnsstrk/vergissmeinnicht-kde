@@ -152,7 +152,10 @@ Oberfläche auf jeder Plattform.
   Aufgabentiteln (`+tag project:x`) in echte Eigenschaften.
 
 *(Alle Screenshots zeigen einen deterministischen Demo-Datensatz —
-`cargo run --release -p vergissmeinnicht-core --example seed_demo -- <replica-pfad>`.)*
+`cargo run --release -p vergissmeinnicht-core --example seed_demo -- <replica-pfad>`.
+Screenshots mit KI-Bedienelementen nutzen zusätzlich die Demo-KI-Konfiguration,
+die dasselbe Beispiel mit `--ai-config` schreibt — ohne Server und ohne
+API-Key, siehe `docs/building.md`.)*
 
 ## Architektur
 

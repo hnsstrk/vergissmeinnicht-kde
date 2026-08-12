@@ -20,6 +20,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Stage 1 release package (AI-B4, #16): the screenshot demo dataset
+  (`core/examples/seed_demo.rs`) can now also write a demo AI
+  configuration (`--ai-config <config-home>`) — English UI, Ollama base
+  URL, and the recommended model — so screenshot runs show the AI
+  controls (`aiConfigured`) without a running server, an API key, or a
+  hand-built throwaway config. Later stage release packages reuse this
+  (recipe in `docs/building.md`). The AI settings screenshot now shows
+  the demo configuration instead of the mock artifact `vmn-mock`.
+
 - Dictation flow in Quick Capture (AI-B2, #14): a microphone button —
   visible only when the dictation chain is available and the AI is
   configured — starts recording on the first click (the button pulses)
