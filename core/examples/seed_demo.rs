@@ -172,7 +172,7 @@ fn main() {
             match args.get(i + 1) {
                 Some(wert) => ai_config = Some(wert.clone()),
                 None => {
-                    eprintln!("--ai-config braucht einen Pfad (XDG_CONFIG_HOME des App-Starts)");
+                    eprintln!("--ai-config needs a path (the XDG_CONFIG_HOME the app starts with)");
                     process::exit(2);
                 }
             }
@@ -181,7 +181,7 @@ fn main() {
             path = Some(args[i].clone());
             i += 1;
         } else {
-            eprintln!("unbekanntes Argument: {}", args[i]);
+            eprintln!("unknown argument: {}", args[i]);
             process::exit(2);
         }
     }

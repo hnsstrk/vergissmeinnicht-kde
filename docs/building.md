@@ -156,6 +156,16 @@ XDG_DATA_HOME=/tmp/vmn-demo XDG_CONFIG_HOME=/tmp/vmn-demo-cfg \
     --test-dialog=settings-ai --test-grab=docs/screenshots/settings-ai.png
 ```
 
+Dialog names come from `testDialogTimer` in `app/qml/Main.qml` — note
+`quickcapture`, not `quick-capture`.
+
+One caveat for the AI page: the committed `settings-ai.png` shows a green
+reachability line ("Backend reachable — 1 model found."), and that line does
+need a reachable backend. The demo config is enough for `aiConfigured` and
+therefore for the controls to appear, but on a machine without a local Ollama
+the same recipe produces a screenshot with the unreachable state instead.
+Start Ollama before grabbing that particular dialog, or expect the difference.
+
 ## Registration rules (the pbxproj of this repo)
 
 Two places must be kept in sync by hand — forgetting either produces
