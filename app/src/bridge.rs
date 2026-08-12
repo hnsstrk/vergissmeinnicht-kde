@@ -144,6 +144,16 @@ mod qobject {
         // abgeschlossenen Diktats.
         #[qproperty(bool, dictation_available, cxx_name = "dictationAvailable")]
         #[qproperty(QString, dictation_text, cxx_name = "dictationText")]
+        // Diktier-Strang als eigener Zustandsautomat (AI-B2, #14):
+        // 0 = Ruhe, 1 = Aufnahme läuft, 2 = Transkription läuft. Bewusst
+        // getrennt von `aiBusy` — der gehört allein den LLM-Anfragen. Vorher
+        // teilten sich beide Stränge das Busy-Flag bei getrennten
+        // Generationszählern: `cancelDictation` löschte die Anzeige einer
+        // laufenden LLM-Anfrage, ein fertiges LLM-Ergebnis die einer
+        // laufenden Transkription. Mit je einem Zustand pro Strang bildet
+        // die Anzeige den Fluss „aufnehmen → transkribieren → interpretieren"
+        // ehrlich ab, ohne dass eine Phase die andere auslöscht.
+        #[qproperty(i32, dictation_state, cxx_name = "dictationState")]
         type AppContainer = super::AppContainerRust;
 
         // ── Modell-Overrides ────────────────────────────────────────────────
@@ -400,9 +410,16 @@ mod qobject {
         #[qinvokable]
         fn stop_dictation(self: Pin<&mut AppContainer>);
         /// Diktat verwerfen: laufende Aufnahme beenden und löschen, das
-        /// Ergebnis einer laufenden Transkription fallen lassen.
+        /// Ergebnis einer laufenden Transkription fallen lassen. Lässt eine
+        /// laufende LLM-Anfrage unberührt (eigener Strang, AI-B2).
         #[qinvokable]
         fn cancel_dictation(self: Pin<&mut AppContainer>);
+        /// Testhaken (--test-flow, AI-B2): das Konserven-Transkript aus
+        /// `VMN_STT_MOCK`, leer bei abgeschaltetem Diktat-Mock. Der Flow
+        /// überspringt den Diktat→Entwurf-Abschnitt ohne Konserve — mit
+        /// echter Kette stieße `stopDictation` einen echten Whisper-Lauf an.
+        #[qinvokable]
+        fn dictation_mock_transcript(self: &AppContainer) -> QString;
 
         /// Legacy-Reparatur: Token-Syntax in Descriptions → echte Properties.
         /// Rückgabe: Anzahl reparierter Aufgaben, -1 bei Fehler.
@@ -502,6 +519,7 @@ pub struct AppContainerRust {
     ai_draft_json: QString,
     dictation_available: bool,
     dictation_text: QString,
+    dictation_state: i32,
     /// Laufende Diktat-Aufnahme (AI-A5). Der Kindprozess-Handle liegt hier,
     /// damit kein `pw-record` die App überlebt: Wird der Container zerstört
     /// (Fenster zu) oder das Programm abgewickelt (Panik), räumt `Drop` auf
@@ -559,6 +577,7 @@ impl Default for AppContainerRust {
             ai_draft_json: QString::default(),
             dictation_available: false,
             dictation_text: QString::default(),
+            dictation_state: 0,
             dictation_recording: None,
             dictation_generationen: std::sync::Arc::new(ai::Generationen::default()),
             ai_generationen: std::sync::Arc::new(ai::Generationen::default()),
@@ -1775,6 +1794,7 @@ impl qobject::AppContainer {
                 // einem Fehlschlag noch das Transkript des vorigen Diktats da.
                 self.as_mut().set_dictation_text(QString::default());
                 self.as_mut().rust_mut().dictation_recording = Some(aufnahme);
+                self.as_mut().set_dictation_state(1);
                 true
             }
             Err(e) => {
@@ -1789,7 +1809,10 @@ impl qobject::AppContainer {
     /// (SIGINT/SIGTERM samt Abwarten) UND der Whisper-Lauf gehören in den
     /// Worker — beides dauert, und der Qt-Thread darf nicht stehen. Kontrakt
     /// im Übrigen wie `start_ai_request`: Generationszähler mit doppelter
-    /// Aktualitätsprüfung, Fehler nur in den KI-eigenen Kanal.
+    /// Aktualitätsprüfung, Fehler nur in den KI-eigenen Kanal. Der
+    /// Fortschritt läuft über `dictationState`, nie über `aiBusy` — sonst
+    /// löschte ein fertiges LLM-Ergebnis die Anzeige der Transkription
+    /// (AI-B2, Vorbefund aus dem A5-Review).
     fn stop_dictation(mut self: Pin<&mut Self>) {
         let Some(mut aufnahme) = self.as_mut().rust_mut().dictation_recording.take() else {
             return;
@@ -1797,7 +1820,7 @@ impl qobject::AppContainer {
         let settings = self.rust().state.settings.clone();
         let generationen = std::sync::Arc::clone(&self.rust().dictation_generationen);
         let generation = generationen.naechste();
-        self.as_mut().set_ai_busy(true);
+        self.as_mut().set_dictation_state(2);
         self.as_mut().set_ai_error(QString::default());
         let qt_thread = self.qt_thread();
         std::thread::spawn(move || {
@@ -1814,7 +1837,10 @@ impl qobject::AppContainer {
                 if !qobject.rust().dictation_generationen.ist_aktuell(generation) {
                     return;
                 }
-                qobject.as_mut().set_ai_busy(false);
+                // Zustand VOR dem Text zurück auf Ruhe: Wer auf
+                // `dictationText` reagiert (der Diktat-Fluss im Quick
+                // Capture), sieht den Strang dann bereits als beendet.
+                qobject.as_mut().set_dictation_state(0);
                 match ergebnis {
                     Ok(text) => qobject
                         .as_mut()
@@ -1836,11 +1862,21 @@ impl qobject::AppContainer {
     /// Diktat verwerfen (Dialog zu, Abbruch). Eine laufende Aufnahme endet
     /// hier: `Drop` schickt SIGINT/SIGTERM, wartet ab und löscht die Datei.
     /// Ein laufender Whisper-Lauf wird über den Generationszähler entwertet.
+    /// Fasst NUR den Diktier-Strang an — `aiBusy` gehört den LLM-Anfragen,
+    /// eine laufende Interpretation läuft sichtbar weiter (AI-B2).
     fn cancel_dictation(mut self: Pin<&mut Self>) {
         self.rust().dictation_generationen.verwerfen();
         let laufend = self.as_mut().rust_mut().dictation_recording.take();
         drop(laufend);
-        self.as_mut().set_ai_busy(false);
+        self.as_mut().set_dictation_state(0);
+    }
+
+    fn dictation_mock_transcript(&self) -> QString {
+        QString::from(
+            ai::transcribe::mock_transkript()
+                .unwrap_or_default()
+                .as_str(),
+        )
     }
 
     fn repair_legacy_tasks(mut self: Pin<&mut Self>) -> i32 {

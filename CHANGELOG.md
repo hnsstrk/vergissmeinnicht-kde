@@ -20,6 +20,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Dictation flow in Quick Capture (AI-B2, #14): a microphone button —
+  visible only when the dictation chain is available and the AI is
+  configured — starts recording on the first click (the button pulses)
+  and stops and transcribes on the second (spinner); the transcript
+  lands in the title field and automatically continues into the AI
+  interpretation from AI-B1. Recording and transcription can be
+  discarded at any point; errors appear in the dialog's own status area.
+  Dictation and LLM requests no longer share the busy flag: the
+  dictation strand got its own state machine (`dictationState`:
+  idle/recording/transcribing) while `aiBusy` now belongs to LLM
+  requests alone, so canceling a dictation no longer clears the display
+  of a running LLM request and a finishing LLM result no longer ends the
+  transcription spinner (A5 review finding). The dictation→draft path is
+  verified end-to-end in `--test-flow` through a canned transcript
+  (`VMN_STT_MOCK`, no microphone and no Whisper needed), which also runs
+  in CI; the canned mode only pretends the PATH programs are installed,
+  so the availability probe's negative checks stay real.
 - Dictation infrastructure (AI-A5, #13): recording through PipeWire's
   `pw-record` plus speech-to-text through one of two subprocess backends,
   `openai-whisper` (the `whisper` CLI from `PATH`) and `whisper.cpp` (a

@@ -7,5 +7,9 @@
                "recur": "monthly", "notes": "Vormittags anrufen"}},
   {"content": {"title": "Kaputt-Werte", "project": "", "tags": [],
                "due": "übermorgen vielleicht", "priority": "urgent",
-               "recur": "alle Jubeljahre", "notes": ""}}
+               "recur": "alle Jubeljahre", "notes": ""}},
+  {"content": {"title": "", "project": "flowdiktat", "tags": ["diktat"],
+               "due": "tomorrow", "priority": "M", "recur": "",
+               "notes": "Aus dem Diktat"}},
+  {"content": {"marker": "kontrolle"}, "delay_ms": 800}
 ]

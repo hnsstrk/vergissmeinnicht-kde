@@ -41,7 +41,11 @@ FormWindow {
     // die Antwort füllt über applyDraft() nur die Dialogfelder — angelegt
     // wird erst mit dem normalen Hinzufügen-Knopf (Vorschlagen, nie ausführen).
     function interpret() {
-        if (!app.aiConfigured || app.aiBusy || titleField.text.trim().length === 0)
+        // Kein Start, solange der Diktier-Strang läuft — die Phasen des
+        // Flusses „aufnehmen → transkribieren → interpretieren" laufen
+        // nacheinander (AI-B2).
+        if (!app.aiConfigured || app.aiBusy || app.dictationState !== 0
+                || titleField.text.trim().length === 0)
             return
         app.startAiInterpret(titleField.text)
     }
@@ -119,12 +123,27 @@ FormWindow {
             if (dialog.visible)
                 dialog.applyDraft(JSON.parse(app.aiDraftJson || "{}"))
         }
+        // Diktier-Fluss (AI-B2): das Transkript landet im Titelfeld und
+        // läuft automatisch in die Interpretation weiter — nur solange der
+        // Dialog offen ist. Ein leerer Wert (Start eines neuen Diktats oder
+        // Fehlschlag) füllt nichts.
+        function onDictationTextChanged() {
+            if (!dialog.visible || app.dictationText.length === 0)
+                return
+            titleField.text = app.dictationText
+            dialog.interpret()
+        }
     }
 
-    // Schließen während einer laufenden Anfrage verwirft deren Ergebnis.
+    // Schließen während einer laufenden Anfrage oder eines Diktats verwirft
+    // deren Ergebnis — je Strang über den eigenen Abbruchweg (AI-B2).
     onVisibleChanged: {
-        if (!visible && app.aiBusy)
-            app.cancelAiRequest()
+        if (!visible) {
+            if (app.dictationState !== 0)
+                app.cancelDictation()
+            if (app.aiBusy)
+                app.cancelAiRequest()
+        }
     }
 
     Shortcut {
@@ -228,20 +247,77 @@ FormWindow {
         spacing: Kirigami.Units.smallSpacing
 
         QQC2.BusyIndicator {
-            running: app.aiBusy
-            visible: app.aiBusy
+            running: app.aiBusy || app.dictationState === 2
+            visible: running
             Layout.preferredHeight: Kirigami.Units.iconSizes.small
             Layout.preferredWidth: Kirigami.Units.iconSizes.small
         }
 
         QQC2.Label {
             Layout.fillWidth: true
-            text: app.aiBusy
-                  ? i18n("Die KI liest den Titel …")
-                  : i18n("Freitext genügt — die KI füllt die Felder.")
+            // Phasen des Flusses „aufnehmen → transkribieren →
+            // interpretieren" — jede spricht für sich (AI-B2).
+            text: {
+                if (app.dictationState === 1)
+                    return i18n("Aufnahme läuft — Klick aufs Mikrofon beendet sie.")
+                if (app.dictationState === 2)
+                    return i18n("Die Aufnahme wird transkribiert …")
+                if (app.aiBusy)
+                    return i18n("Die KI liest den Titel …")
+                return i18n("Freitext genügt — die KI füllt die Felder.")
+            }
             wrapMode: Text.WordWrap
             opacity: 0.7
             font: Kirigami.Theme.smallFont
+        }
+
+        // Diktat verwerfen (AI-B2): bricht Aufnahme oder Transkription ab,
+        // das Ergebnis verfällt. Eine laufende LLM-Anfrage bleibt unberührt.
+        QQC2.Button {
+            id: dictationCancelButton
+            visible: app.dictationState !== 0
+            display: QQC2.AbstractButton.IconOnly
+            icon.name: "dialog-cancel"
+            text: i18n("Diktat verwerfen")
+            onClicked: app.cancelDictation()
+            QQC2.ToolTip.text: text
+            QQC2.ToolTip.visible: hovered
+            QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
+        }
+
+        // Mikrofon (AI-B2): sichtbar nur mit vollständiger Diktier-Kette
+        // (die Zeile selbst erscheint nur bei konfigurierter KI). Erster
+        // Klick nimmt auf (Knopf pulsiert), zweiter beendet und
+        // transkribiert; das Transkript läuft automatisch in die
+        // Interpretation weiter.
+        QQC2.Button {
+            id: dictationButton
+            visible: app.dictationAvailable
+            // Während Transkription oder laufender Interpretation kein
+            // neuer Start — die Phasen laufen nacheinander.
+            enabled: app.dictationState === 1
+                     || (app.dictationState === 0 && !app.aiBusy)
+            display: QQC2.AbstractButton.IconOnly
+            icon.name: app.dictationState === 1
+                       ? "media-record" : "audio-input-microphone"
+            text: app.dictationState === 1
+                  ? i18n("Aufnahme beenden und übernehmen")
+                  : i18n("Diktieren")
+            onClicked: app.dictationState === 1
+                       ? app.stopDictation() : app.startDictation()
+            QQC2.ToolTip.text: text
+            QQC2.ToolTip.visible: hovered
+            QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
+
+            // Pulsieren während der Aufnahme; endet die Aufnahme, springt
+            // die Deckkraft zurück auf voll.
+            SequentialAnimation on opacity {
+                running: app.dictationState === 1
+                loops: Animation.Infinite
+                onRunningChanged: if (!running) dictationButton.opacity = 1
+                NumberAnimation { from: 1.0; to: 0.35; duration: 600; easing.type: Easing.InOutQuad }
+                NumberAnimation { from: 0.35; to: 1.0; duration: 600; easing.type: Easing.InOutQuad }
+            }
         }
 
         QQC2.Button {
@@ -250,7 +326,8 @@ FormWindow {
             icon.name: "tools-wizard"
             // Hervorgehoben: die Aktion ist der Zweck dieser Zeile.
             highlighted: enabled
-            enabled: !app.aiBusy && titleField.text.trim().length > 0
+            enabled: !app.aiBusy && app.dictationState === 0
+                     && titleField.text.trim().length > 0
             onClicked: dialog.interpret()
             QQC2.ToolTip.text: i18n("Strg+J")
             QQC2.ToolTip.visible: hovered

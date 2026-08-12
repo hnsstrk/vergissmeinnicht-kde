@@ -569,7 +569,7 @@ Kirigami.ApplicationWindow {
             check(app.aiError.length === 0, "aiError anfangs leer")
             // AI-A5: Die Diktier-Sonde läuft beim Start — ihr Ergebnis hängt
             // davon ab, was auf dieser Maschine installiert ist. Die
-            // deterministisch prüfbare Negativrichtung steht in Schritt 8,
+            // deterministisch prüfbare Negativrichtung steht in Schritt 10,
             // wo die KI-Einstellungen ohnehin verstellt und wieder
             // hergestellt werden.
             check(typeof app.dictationAvailable === "boolean",
@@ -753,13 +753,107 @@ Kirigami.ApplicationWindow {
             check(draft.title === "Kaputt-Werte", "zweiter Entwurf publiziert")
             check(draft.due === "" && draft.priority === "" && draft.recur === "",
                   "ungültige due/priority/recur kommen leer an (Validierung)")
+            // Weiter zum Diktat→Entwurf-Teil (AI-B2) — der muss VOR den
+            // Einstellungs-Abschnitten laufen: saveAiSettings invalidiert
+            // den Llm-Halter, ein neuer Mock beginnt wieder bei Konserve 1
+            // und die Positionen 6–7 wären nicht mehr erreichbar.
+            aiDictationTimer.baseFailures = failures
+            aiDictationTimer.start()
+        }
+    }
+
+    // KI-Flow, Schritt 8 (AI-B2, #14): Diktat→Entwurf end-to-end über das
+    // Konserven-Transkript (VMN_STT_MOCK) — ohne Mikrofon und ohne Whisper.
+    // Ohne gesetzte Konserve wird übersprungen (FLOW-INFO): Mit echter
+    // Kette stieße stopDictation einen echten Whisper-Lauf an, und dessen
+    // Ergebnis wäre nicht deterministisch. Erwartete Konserve 6 (Entwurf
+    // OHNE Titel — so ist prüfbar, dass das Transkript im Titel stehen
+    // bleibt): {"title": "", "project": "flowdiktat", "tags": ["diktat"],
+    // "due": "tomorrow", "priority": "M", "recur": "", "notes":
+    // "Aus dem Diktat"}; Konserve 7 ist die verzögerte Kontroll-Anfrage
+    // des nächsten Schritts.
+    Timer {
+        id: aiDictationTimer
+        property int baseFailures: 0
+        interval: 100
+        onTriggered: {
+            let failures = baseFailures
+            function check(cond, label) {
+                console.log((cond ? "FLOW-OK  " : "FLOW-FAIL ") + label)
+                if (!cond) failures++
+            }
+            const transkript = app.dictationMockTranscript()
+            if (transkript.length === 0) {
+                console.log("FLOW-INFO Diktat-Fluss übersprungen (VMN_STT_MOCK nicht gesetzt)")
+                aiSettingsTimer.baseFailures = failures
+                aiSettingsTimer.start()
+                return
+            }
+            // Der Dialog muss offen sein: der automatische Weiterlauf
+            // Transkript → Titelfeld → Interpretation hängt an ihm.
+            quickCaptureDialog.openCapture()
+            check(app.startDictation(), "startDictation (Konserve) startet")
+            check(app.dictationState === 1, "dictationState meldet Aufnahme")
+            app.stopDictation()
+            check(app.dictationState === 2, "dictationState meldet Transkription")
+            // Kern des Zustandsproblems (#14, Vorbefund 1): Die
+            // Transkription läuft über den eigenen Strang, nie über aiBusy.
+            check(!app.aiBusy, "Transkription setzt aiBusy nicht (getrennte Stränge)")
+            aiDictationWaiter.transkript = transkript
+            aiDictationWaiter.baseFailures = failures
+            aiDictationWaiter.start()
+        }
+    }
+
+    // KI-Flow, Schritt 9: Ende der Diktat-Kette abwarten — Transkription
+    // und die automatisch angestoßene Interpretation. Danach die Gegenprobe
+    // zum Zustandsproblem: cancelDictation darf eine laufende LLM-Anfrage
+    // (Konserve 7, verzögert) nicht mehr aus der Anzeige werfen.
+    Timer {
+        id: aiDictationWaiter
+        property int baseFailures: 0
+        property string transkript: ""
+        property int versuche: 0
+        interval: 200
+        repeat: true
+        onTriggered: {
+            versuche++
+            if ((app.dictationState !== 0 || app.aiBusy) && versuche < 25)
+                return
+            aiDictationWaiter.running = false
+            let failures = baseFailures
+            function check(cond, label) {
+                console.log((cond ? "FLOW-OK  " : "FLOW-FAIL ") + label)
+                if (!cond) failures++
+            }
+            check(app.dictationState === 0 && !app.aiBusy,
+                  "Diktat-Kette meldet fertig (beide Stränge in Ruhe)")
+            check(app.aiError.length === 0, "kein aiError im Diktat-Fluss")
+            check(app.dictationText === transkript,
+                  "dictationText trägt das Konserven-Transkript")
+            const fv = quickCaptureDialog.testValues()
+            check(fv.title === transkript,
+                  "Transkript steht im Titel (Entwurf ohne Titel lässt ihn stehen)")
+            check(fv.project === "flowdiktat" && fv.tags === "diktat"
+                  && fv.dueIndex === 2 && fv.priorityIndex === 2
+                  && fv.notes === "Aus dem Diktat",
+                  "Entwurf aus dem Diktat füllt die Felder")
+            // Gegenprobe: LLM-Anfrage läuft (verzögerte Konserve 7),
+            // Diktatabbruch darf ihre Busy-Anzeige nicht löschen.
+            app.startAiRequest("Kontrolle — Diktatabbruch darf nicht stören")
+            check(app.aiBusy, "aiBusy während der Kontroll-Anfrage")
+            app.cancelDictation()
+            check(app.aiBusy, "cancelDictation lässt aiBusy der LLM-Anfrage stehen")
+            app.cancelAiRequest()
+            check(!app.aiBusy, "cancelAiRequest beendet die Kontroll-Anfrage")
+            quickCaptureDialog.close()
             // Weiter zum AI-A4-Teil (Einstellungs-Invokables).
             aiSettingsTimer.baseFailures = failures
             aiSettingsTimer.start()
         }
     }
 
-    // KI-Flow, Schritt 8 (AI-A4): Einstellungs-Invokables — Provider-Presets,
+    // KI-Flow, Schritt 10 (AI-A4): Einstellungs-Invokables — Provider-Presets,
     // aiConfigured-Live-Update beim Speichern, Modellliste über den Mock
     // (list_models verbraucht keine Konserve).
     Timer {
@@ -831,9 +925,12 @@ Kirigami.ApplicationWindow {
                   "dictationAvailable false bei nicht startfähigem whisper-cli")
             speichernMitDiktat(s.ai_stt_backend, s.ai_whisper_cpp_binary,
                                s.ai_whisper_cpp_model)
-            // Diktat verwerfen ohne laufende Aufnahme ist folgenlos.
+            // Diktat verwerfen ohne laufende Aufnahme ist folgenlos — seit
+            // dem Diktat-Fluss (Schritt 8) darf dictationText hier das
+            // letzte Transkript tragen; folgenlos heißt: unverändert.
+            const diktatTextVorher = app.dictationText
             app.cancelDictation()
-            check(app.dictationText.length === 0 && app.aiError.length === 0,
+            check(app.dictationText === diktatTextVorher && app.aiError.length === 0,
                   "cancelDictation ohne Aufnahme ist folgenlos")
             check(JSON.parse(app.aiModelsJson || "[]").length === 0, "aiModelsJson anfangs leer")
             app.startAiListModels()
@@ -843,7 +940,7 @@ Kirigami.ApplicationWindow {
         }
     }
 
-    // KI-Flow, Schritt 9: Modellliste abwarten — der Mock liefert
+    // KI-Flow, Schritt 11: Modellliste abwarten — der Mock liefert
     // ["vmn-mock"] aus dem Llm-Trait.
     Timer {
         id: aiModelsWaiter
@@ -874,7 +971,7 @@ Kirigami.ApplicationWindow {
         }
     }
 
-    // KI-Flow, Schritt 10 (UI-6, #33): leiser Abruf gegen einen
+    // KI-Flow, Schritt 12 (UI-6, #33): leiser Abruf gegen einen
     // unerreichbaren Endpunkt — der Mock simuliert den Ausfall, wenn die
     // Basis-URL den Marker unerreichbar.invalid trägt. Erwartung: Anzeige
     // negativ samt Grund, aiError bleibt leer, Modellliste unangetastet.
@@ -929,7 +1026,7 @@ Kirigami.ApplicationWindow {
         }
     }
 
-    // KI-Flow, Schritt 11 (UI-6, #33): Das Öffnen der KI-Einstellungsseite
+    // KI-Flow, Schritt 13 (UI-6, #33): Das Öffnen der KI-Einstellungsseite
     // stößt den Modelllisten-Abruf selbst an — die Anzeige springt vom
     // negativen Stand aus Schritt 10 zurück auf „erreichbar", ohne dass
     // jemand einen Knopf drückt.

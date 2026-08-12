@@ -50,7 +50,12 @@ platform.
   free-form title text to the model and fills the structured fields from the
   validated response — invalid due/recurrence/priority values are dropped,
   new project names are allowed, and nothing is created until the regular
-  Add button confirms.
+  Add button confirms. With a complete dictation chain (see AI assistant
+  below) a microphone button appears next to it: the first click records
+  (the button pulses), the second stops and transcribes, and the transcript
+  lands in the title field and automatically continues into the AI
+  interpretation. Recording and transcription can be discarded at any
+  point; errors show up in the dialog's own status area.
 
   ![Vergissmeinnicht — quick capture](docs/screenshots/quick-capture.png)
 - **Detail editor** — title, project, tags, due, scheduled, wait, priority,

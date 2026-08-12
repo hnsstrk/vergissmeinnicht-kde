@@ -50,7 +50,12 @@ Oberfläche auf jeder Plattform.
   die strukturierten Felder aus der validierten Antwort — ungültige
   Fälligkeits-/Wiederholungs-/Prioritätswerte werden verworfen, neue
   Projektnamen sind erlaubt, und angelegt wird erst über den normalen
-  Hinzufügen-Knopf.
+  Hinzufügen-Knopf. Mit vollständiger Diktier-Kette (siehe KI-Assistent
+  unten) erscheint daneben ein Mikrofonknopf: Der erste Klick nimmt auf
+  (der Knopf pulsiert), der zweite beendet und transkribiert — das
+  Transkript landet im Titelfeld und läuft automatisch in die
+  KI-Interpretation weiter. Aufnahme und Transkription lassen sich
+  jederzeit verwerfen; Fehler erscheinen im Statusbereich des Dialogs.
 - **Detail-Editor** — Titel, Projekt, Tags, Fällig, Geplant ab, Warten bis,
   Priorität, Wiederholung, Notizen, Abhängigkeits-Editor, Reaktivieren
   erledigter Aufgaben.

@@ -7,7 +7,10 @@
 //!   nie über `apply()` — KI-Statusänderungen erzwingen keinen Model-Reset:
 //!   - `aiConfigured` — Basis-URL und Modellname gesetzt (UI-Gate: ohne
 //!     Konfiguration bleiben alle KI-Bedienelemente versteckt, Spec §3.2).
-//!   - `aiBusy` — eine Anfrage läuft (Spinner).
+//!   - `aiBusy` — eine LLM-Anfrage läuft (Spinner). Gehört allein dem
+//!     LLM-Strang; das Diktat meldet seinen Fortschritt über den eigenen
+//!     Zustandsautomaten `dictationState` (AI-B2), damit keine Phase die
+//!     Anzeige der anderen löscht.
 //!   - `aiError` — eigener Fehlerkanal; der globale `errorMessage` bleibt
 //!     Sync und Mutationen vorbehalten (Spec §3.4).
 //!   - `aiResponseJson` — das validierte JSON-Objekt der jüngsten
@@ -17,6 +20,8 @@
 //!     (`transcribe::verfuegbarkeit`): `pw-record` plus das konfigurierte
 //!     Spracherkennungs-Backend. Fehlt etwas, bleibt das Mikrofon versteckt.
 //!   - `dictationText` — Transkript des jüngsten abgeschlossenen Diktats.
+//!   - `dictationState` — Phase des Diktier-Strangs (AI-B2): 0 = Ruhe,
+//!     1 = Aufnahme läuft, 2 = Transkription läuft.
 //! * **Worker**: [`starte_anfrage`] folgt dem `start_sync`-Muster — Thread
 //!   spawnen, blockierender Call im Worker, Ergebnis über
 //!   `qt_thread().queue(...)` zurück auf den Qt-Thread.

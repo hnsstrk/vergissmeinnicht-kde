@@ -33,6 +33,27 @@ use std::time::{Duration, Instant};
 /// das erspart eine Abhängigkeit auf qt6-multimedia (Spec §4.1).
 pub const PW_RECORD: &str = "pw-record";
 
+/// Umgebungsvariable (AI-B2, #14): Konserven-Transkript für den
+/// `--test-flow`. Nicht leer gesetzt, simuliert die Sonde installierte
+/// PATH-Programme (`pw-record`, `whisper`), [`Aufnahme::starte`] startet
+/// kein `pw-record`, und [`transkribiere`] liefert den Wert wörtlich
+/// (weißraum-normalisiert) — der Diktat→Entwurf-Fluss wird so ohne
+/// Mikrofon und ohne Whisper prüfbar (der CI-Container hat beides nicht).
+/// Konfigurations- und Pfadprüfungen (Backend-Name, whisper.cpp-Programm
+/// samt Startprobe, Modelldatei, Laufzeitverzeichnis) bleiben echt, damit
+/// die Negativ-Sonden des Flows weiter greifen. Pendant zu `VMN_AI_MOCK`
+/// in [`crate::ai::mock`].
+pub const ENV_STT_MOCK: &str = "VMN_STT_MOCK";
+
+/// Konserven-Transkript aus [`ENV_STT_MOCK`], bereits normalisiert;
+/// `None`, wenn die Variable fehlt oder nur Weißraum trägt (Mock aus).
+pub fn mock_transkript() -> Option<String> {
+    std::env::var(ENV_STT_MOCK)
+        .ok()
+        .map(|wert| normalisiere(&wert))
+        .filter(|wert| !wert.is_empty())
+}
+
 /// CLI des Backends `openai-whisper`, erwartet im PATH.
 pub const WHISPER_CLI: &str = "whisper";
 
@@ -178,9 +199,18 @@ impl std::fmt::Display for TranskriptFehler {
 /// 12.08.2026: 88 ms am GPU-Build der Referenzmaschine). Läuft billig genug
 /// für den Qt-Thread.
 pub fn verfuegbarkeit(settings: &Settings) -> Result<(), Fehlend> {
+    // Konserven-Betrieb (--test-flow): NUR die PATH-Programme gelten als
+    // installiert — alle übrigen Prüfungen laufen echt (siehe
+    // [`ENV_STT_MOCK`]), sonst könnten die Negativ-Sonden des Flows keine
+    // kaputte Konfiguration mehr erkennen.
+    let im_pfad: &dyn Fn(&str) -> bool = if mock_transkript().is_some() {
+        &|_| true
+    } else {
+        &im_pfad_ausfuehrbar
+    };
     verfuegbarkeit_mit(
         settings,
-        &im_pfad_ausfuehrbar,
+        im_pfad,
         &|pfad| ist_ausfuehrbar(pfad),
         &|| laufzeit_beschreibbar(&laufzeit_verzeichnis()),
         &startet,
@@ -366,6 +396,14 @@ impl Aufnahme {
     /// Startet `pw-record` in das Laufzeitverzeichnis. Der Prozess läuft, bis
     /// [`Aufnahme::stoppe`] ihn beendet — oder bis dieser Wert stirbt.
     pub fn starte() -> Result<Self, TranskriptFehler> {
+        // Konserven-Betrieb: kein Prozess, keine Datei — nur ein Platzhalter,
+        // damit Besitz und Abläufe (stoppe/Drop) unverändert funktionieren.
+        if mock_transkript().is_some() {
+            return Ok(Self {
+                kind: None,
+                wav: laufzeit_verzeichnis().join("diktat-konserve.wav"),
+            });
+        }
         let verzeichnis = laufzeit_verzeichnis();
         std::fs::create_dir_all(&verzeichnis).map_err(|e| {
             TranskriptFehler::Start(format!("{}: {e}", verzeichnis.display()))
@@ -499,6 +537,11 @@ impl Drop for Aufraeumer {
 /// Die WAV-Datei bleibt Sache des Aufrufers, das Transkript räumt diese
 /// Funktion selbst weg.
 pub fn transkribiere(settings: &Settings, wav: &Path) -> Result<String, TranskriptFehler> {
+    // Konserven-Betrieb: das Transkript kommt aus der Umgebung, kein
+    // Backend läuft.
+    if let Some(text) = mock_transkript() {
+        return Ok(text);
+    }
     verfuegbarkeit(settings).map_err(TranskriptFehler::NichtVerfuegbar)?;
     let backend = SttBackend::aus_config(&settings.ai_stt_backend).ok_or_else(|| {
         TranskriptFehler::NichtVerfuegbar(Fehlend::UnbekanntesBackend(
@@ -1172,5 +1215,43 @@ mod tests {
     fn letzte_zeile_meldet_die_aussagekraeftige_zeile() {
         assert_eq!(letzte_zeile("Lade Modell\nerror: no such file\n\n"), "error: no such file");
         assert_eq!(letzte_zeile("   "), "keine Fehlerausgabe");
+    }
+
+    // ─── Konserven-Transkript (AI-B2) ───────────────────────────────────────
+
+    /// Die Prozessumgebung ist global — Tests, die `VMN_STT_MOCK` anfassen,
+    /// laufen unter diesem Lock und räumen auch bei Panik auf.
+    static STT_ENV_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
+    fn mit_stt_konserve(wert: &str, test: impl FnOnce()) {
+        let _sperre =
+            STT_ENV_LOCK.lock().unwrap_or_else(|vergiftet| vergiftet.into_inner());
+        std::env::set_var(ENV_STT_MOCK, wert);
+        let ergebnis = std::panic::catch_unwind(std::panic::AssertUnwindSafe(test));
+        std::env::remove_var(ENV_STT_MOCK);
+        if let Err(panik) = ergebnis {
+            std::panic::resume_unwind(panik);
+        }
+    }
+
+    #[test]
+    fn stt_konserve_ueberbrueckt_die_ganze_kette() {
+        mit_stt_konserve("  Zahnarzt   morgen \n", || {
+            // Sonde grün, ohne dass irgendetwas installiert sein muss.
+            assert_eq!(verfuegbarkeit(&Settings::default()), Ok(()));
+            // Aufnahme ohne `pw-record`; das Transkript kommt wörtlich
+            // (weißraum-normalisiert) aus der Umgebung.
+            let mut aufnahme = Aufnahme::starte().expect("Konserven-Aufnahme");
+            aufnahme.stoppe().expect("Stoppen ohne Prozess ist folgenlos");
+            let text = transkribiere(&Settings::default(), aufnahme.wav()).unwrap();
+            assert_eq!(text, "Zahnarzt morgen");
+        });
+    }
+
+    #[test]
+    fn stt_konserve_nur_weissraum_ist_aus() {
+        mit_stt_konserve("   ", || {
+            assert_eq!(mock_transkript(), None);
+        });
     }
 }

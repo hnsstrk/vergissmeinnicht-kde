@@ -64,26 +64,38 @@ cargo test --workspace
 ### End-to-end hooks
 
 ```sh
-# Scripted smoke test through the real QML→bridge chain (129 checks; parts
+# Scripted smoke test through the real QML→bridge chain (142 checks; parts
 # whose prerequisites are missing — Secret Service, dictation chain — skip
 # with a FLOW-INFO line and reduce the count).
 # Use a disposable data dir — it mutates the replica!
 # The AI sections (8+) only run with a configured model. To run the full
 # flow without network or a local model, point VMN_AI_MOCK at the canned
-# answers the flow expects and set the model in a throwaway config — this
-# is exactly what the CI flow step does:
+# answers the flow expects and set the model in a throwaway config;
+# VMN_STT_MOCK holds a canned transcript for the dictation→draft section
+# (no microphone, no Whisper — without it that section skips with a
+# FLOW-INFO line). This is exactly what the CI flow step does:
 mkdir -p /tmp/vmn-test-cfg/vergissmeinnicht
 printf '{"ai_model": "vmn-mock", "ai_base_url": "http://localhost:11434/v1"}' \
     > /tmp/vmn-test-cfg/vergissmeinnicht/config.json
 VMN_AI_MOCK="$PWD/app/src/ai/fixtures/flow-konserven.json" \
+VMN_STT_MOCK="Zahnarzttermin für nächste Woche ausmachen" \
 XDG_DATA_HOME=/tmp/vmn-test XDG_CONFIG_HOME=/tmp/vmn-test-cfg \
     ./target/debug/vergissmeinnicht --test-flow
 
 # The canned file is positional: entries 1–3 feed the AI worker section
 # (stale-drop/cancel, hence the 800 ms delays), 4–5 the two interpret
-# drafts. If you extend the AI flow sections in Main.qml, extend
+# drafts, 6 the dictation draft (empty title — the transcript must survive
+# in the title field), 7 the delayed control request of the state-machine
+# counter-check. If you extend the AI flow sections in Main.qml, extend
 # app/src/ai/fixtures/flow-konserven.json to match (format: module comment
-# in app/src/ai/mock.rs).
+# in app/src/ai/mock.rs). Note that saveAiSettings invalidates the cached
+# client and a fresh mock starts over at entry 1 — sections that consume
+# canned answers must run before the settings sections.
+#
+# VMN_STT_MOCK only pretends the PATH programs (pw-record, whisper) are
+# installed and serves the transcript; backend-name, whisper.cpp path,
+# start probe, and runtime-dir checks stay real, so the flow's negative
+# probes keep working.
 
 # Render the window (optionally with a dialog) into a PNG and quit:
 ./target/debug/vergissmeinnicht --test-dialog=detail --test-grab=/tmp/shot.png
