@@ -1159,6 +1159,102 @@ Kirigami.ApplicationWindow {
             check(modelle.length === 1 && modelle[0] === "vmn-mock",
                   "Auto-Abruf füllt die Modellliste")
             settingsDialog.close()
+            // Weiter zum #42-Teil (Entwerten + Preview-Nachladen).
+            aiInvalidateTimer.baseFailures = failures
+            aiInvalidateTimer.start()
+        }
+    }
+
+    // KI-Flow, Schritt 14 (#42): Entwerten — nach Provider- oder URL-Wechsel
+    // ruft die Seite invalidateAiModels; weder die alte Liste noch die grüne
+    // Erreichbarkeitszeile dürfen neben dem neuen Endpunkt stehen bleiben.
+    Timer {
+        id: aiInvalidateTimer
+        property int baseFailures: 0
+        interval: 100
+        onTriggered: {
+            let failures = baseFailures
+            function check(cond, label) {
+                console.log((cond ? "FLOW-OK  " : "FLOW-FAIL ") + label)
+                if (!cond) failures++
+            }
+            // Vorbedingung aus Schritt 13: Liste gefüllt, Anzeige positiv.
+            app.invalidateAiModels()
+            check(JSON.parse(app.aiModelsJson || "[]").length === 0,
+                  "invalidateAiModels leert die Modellliste")
+            check(app.aiProbeStatus === 0,
+                  "invalidateAiModels setzt die Erreichbarkeitsanzeige zurück")
+            check(app.aiProbeDetail.length === 0, "invalidateAiModels löscht den Grund")
+            check(!app.aiBusy, "invalidateAiModels lässt kein Busy-Flag stehen")
+            // Preview gegen den unerreichbaren Endpunkt: leise und ohne zu
+            // persistieren — der Mock simuliert den Ausfall über den
+            // URL-Marker.
+            app.startAiListModelsPreview("http://unerreichbar.invalid/v1")
+            check(app.aiBusy, "aiBusy während des Preview-Abrufs")
+            aiPreviewFailWaiter.baseFailures = failures
+            aiPreviewFailWaiter.start()
+        }
+    }
+
+    // KI-Flow, Schritt 15 (#42): Preview-Fehlschlag — Anzeige negativ samt
+    // Grund, kein aiError, nichts persistiert; die entwertete Liste darf ein
+    // Fehlschlag nicht wiederbeleben (anders als in Schritt 12, wo eine
+    // GÜLTIGE Liste den Fehlschlag übersteht).
+    Timer {
+        id: aiPreviewFailWaiter
+        property int baseFailures: 0
+        property int versuche: 0
+        interval: 200
+        repeat: true
+        onTriggered: {
+            versuche++
+            if (app.aiBusy && versuche < 25)
+                return
+            aiPreviewFailWaiter.running = false
+            let failures = baseFailures
+            function check(cond, label) {
+                console.log((cond ? "FLOW-OK  " : "FLOW-FAIL ") + label)
+                if (!cond) failures++
+            }
+            check(!app.aiBusy, "Preview-Abruf meldet fertig (aiBusy false)")
+            check(app.aiProbeStatus === 2,
+                  "Preview gegen unerreichbaren Endpunkt meldet negativ")
+            check(app.aiProbeDetail.length > 0, "Preview nennt den Grund")
+            check(app.aiError.length === 0, "Preview setzt keinen aiError")
+            check(JSON.parse(app.aiModelsJson || "[]").length === 0,
+                  "fehlgeschlagener Preview lässt die entwertete Liste leer")
+            const s = JSON.parse(app.aiSettingsJson())
+            check(s.ai_base_url !== "http://unerreichbar.invalid/v1",
+                  "Preview persistiert die Basis-URL nicht")
+            // Preview gegen den erreichbaren Mock: füllt die Liste wieder.
+            app.startAiListModelsPreview(s.ai_base_url)
+            aiPreviewOkWaiter.baseFailures = failures
+            aiPreviewOkWaiter.start()
+        }
+    }
+
+    // KI-Flow, Schritt 16 (#42): Preview-Erfolg füllt Liste und Anzeige
+    // wieder — danach das Diktat-Finale (aus Schritt 13 hierher gewandert).
+    Timer {
+        id: aiPreviewOkWaiter
+        property int baseFailures: 0
+        property int versuche: 0
+        interval: 200
+        repeat: true
+        onTriggered: {
+            versuche++
+            if (app.aiBusy && versuche < 25)
+                return
+            aiPreviewOkWaiter.running = false
+            let failures = baseFailures
+            function check(cond, label) {
+                console.log((cond ? "FLOW-OK  " : "FLOW-FAIL ") + label)
+                if (!cond) failures++
+            }
+            check(app.aiProbeStatus === 1, "Preview-Erfolg meldet erreichbar")
+            const modelle = JSON.parse(app.aiModelsJson || "[]")
+            check(modelle.length === 1 && modelle[0] === "vmn-mock",
+                  "Preview-Erfolg füllt die Modellliste")
             // AI-A5: echte Aufnahme über die Bridge — nur wo die Kette steht.
             // Die zweite Aufnahme bleibt bewusst LAUFEN: Beim Beenden muss
             // `pw-record` mit dem Fenster sterben (Drop auf der Aufnahme).

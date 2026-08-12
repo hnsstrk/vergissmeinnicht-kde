@@ -396,6 +396,22 @@ mod qobject {
         /// laufen hat, wird beim Öffnen nicht angemeckert.
         #[qinvokable]
         fn start_ai_list_models_auto(self: Pin<&mut AppContainer>);
+        /// Modellliste und Erreichbarkeitsanzeige entwerten (#42): leert
+        /// `aiModelsJson`, setzt `aiProbeStatus` auf 0 und verwirft das
+        /// Ergebnis eines laufenden Abrufs. Die Seite ruft es bei Provider-
+        /// oder Basis-URL-Wechsel — sonst stünden die alte Liste und die
+        /// grüne Erreichbarkeitszeile neben dem neuen Endpunkt.
+        #[qinvokable]
+        fn invalidate_ai_models(self: Pin<&mut AppContainer>);
+        /// Leiser Modelllisten-Abruf gegen eine NOCH UNGESPEICHERTE
+        /// Basis-URL (#42): baut einen Einweg-Client aus dem übergebenen
+        /// Feldwert statt aus den gespeicherten Einstellungen — so lädt die
+        /// Seite nach einem Provider- oder URL-Wechsel sofort nach, ohne
+        /// etwas zu persistieren und ohne den gecachten Client anzufassen.
+        /// Fehler erreichen wie beim Auto-Abruf nur die
+        /// Erreichbarkeitsanzeige.
+        #[qinvokable]
+        fn start_ai_list_models_preview(self: Pin<&mut AppContainer>, base_url: &QString);
 
         /// Diktat starten (AI-A5): `pw-record` läuft, bis `stopDictation`
         /// oder `cancelDictation` kommt. Liefert false, wenn die Aufnahme
@@ -1771,6 +1787,34 @@ impl qobject::AppContainer {
         self.modellliste_abrufen(true);
     }
 
+    /// Modellliste samt Erreichbarkeitsanzeige entwerten (#42) — Kontrakt
+    /// siehe Bridge-Deklaration.
+    fn invalidate_ai_models(mut self: Pin<&mut Self>) {
+        // Laufende Abrufe entwerten, sonst füllte ein spätes Ergebnis des
+        // ALTEN Endpunkts die eben geleerte Liste wieder. Der Zähler ist mit
+        // den LLM-Anfragen geteilt — auf der Einstellungsseite läuft keine,
+        // und eine parallel laufende wäre nach dem Endpunktwechsel ohnehin
+        // wertlos.
+        self.rust().ai_generationen.verwerfen();
+        // Ein entwerteter Abruf meldet nie zurück (Stale-Drop VOR dem
+        // Busy-Reset im Callback) — das Flag muss hier fallen.
+        self.as_mut().set_ai_busy(false);
+        self.as_mut().set_ai_models_json(QString::default());
+        self.as_mut().set_ai_probe_status(0);
+        self.as_mut().set_ai_probe_detail(QString::default());
+    }
+
+    /// Leiser Abruf gegen eine ungespeicherte Basis-URL (#42) — Kontrakt
+    /// siehe Bridge-Deklaration.
+    fn start_ai_list_models_preview(self: Pin<&mut Self>, base_url: &QString) {
+        let mut settings = self.rust().state.settings.clone();
+        settings.ai_base_url = base_url.to_string().trim().to_string();
+        // Einweg-Halter: Der gecachte Client gehört zu den GESPEICHERTEN
+        // Einstellungen und bliebe sonst für den neuen Endpunkt stehen —
+        // bzw. würde von ungespeicherten Werten verdrängt.
+        self.modellliste_starten(settings, std::sync::Arc::new(ai::LlmHalter::default()), true);
+    }
+
     // ─── Diktat (Story AI-A5) ──────────────────────────────────────────────
 
     /// Aufnahme starten. Die Sonde läuft hier ein zweites Mal: Zwischen
@@ -2097,10 +2141,23 @@ impl qobject::AppContainer {
     /// `aiProbeDetail`). `leise` unterscheidet den automatischen Abruf beim
     /// Seitenöffnen vom manuellen: leise Fehler erreichen NUR die
     /// Erreichbarkeitsanzeige, nie den aiError-Kanal.
-    fn modellliste_abrufen(mut self: Pin<&mut Self>, leise: bool) {
+    fn modellliste_abrufen(self: Pin<&mut Self>, leise: bool) {
         let settings = self.rust().state.settings.clone();
-        let generationen = std::sync::Arc::clone(&self.rust().ai_generationen);
         let llm = std::sync::Arc::clone(&self.rust().ai_llm);
+        self.modellliste_starten(settings, llm, leise);
+    }
+
+    /// Startet den eigentlichen Worker — von `modellliste_abrufen`
+    /// (gespeicherte Einstellungen, geteilter Client-Cache) und
+    /// `start_ai_list_models_preview` (#42: ungespeicherte URL,
+    /// Einweg-Halter) gemeinsam genutzt.
+    fn modellliste_starten(
+        mut self: Pin<&mut Self>,
+        settings: Settings,
+        llm: std::sync::Arc<ai::LlmHalter>,
+        leise: bool,
+    ) {
+        let generationen = std::sync::Arc::clone(&self.rust().ai_generationen);
         self.as_mut().set_ai_busy(true);
         if !leise {
             self.as_mut().set_ai_error(QString::default());

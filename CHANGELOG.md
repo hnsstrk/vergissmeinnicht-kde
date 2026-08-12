@@ -22,6 +22,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   it; config round-trip tests cover the real load path for every
   settings field.
 
+- The model list no longer survives a provider switch, and the AI
+  settings page no longer reports success for a configuration that
+  cannot work (#42). Switching the provider or editing the base URL now
+  invalidates the fetched model list together with the reachability
+  line (previously both kept showing the old endpoint's models and a
+  green "backend reachable", and saving in that state produced a
+  provider/model pair that failed only at the first real request). A
+  provider switch also clears the selected model — provider model names
+  never overlap — while a URL edit keeps it, since e.g. a port change
+  under "custom" usually leaves the model valid. The page then quietly
+  refetches the list from the new endpoint without persisting anything
+  (a new `startAiListModelsPreview` invokable builds a throwaway client
+  from the unsaved field value); failures appear only in the
+  reachability line. OpenRouter's `/v1/models` answers without an API
+  key (measured: HTTP 200, 410 models), so the correct list appears
+  right after the switch, before a key is entered.
+
 - The whisper.cpp dictation backend now works with a GPU build's plain
   binary path (#37): the binary's directory is prepended to the child
   process's `LD_LIBRARY_PATH` (ROCm/HIP builds keep `libwhisper.so` and

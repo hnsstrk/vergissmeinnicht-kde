@@ -24,6 +24,23 @@ FormCard.FormCardPage {
     property var modelle: []
     // Statuszeile: erst nach „Speichern und testen" melden.
     property bool gespeichert: false
+    // Für welche Basis-URL Liste und Erreichbarkeitszeile gerade gelten
+    // (#42) — verhindert, dass ein bloßer Fokuswechsel ohne Änderung die
+    // Liste entwertet.
+    property string geltendeUrl: ""
+    // Zuletzt gewählter Provider-Index: `activated` feuert auch beim
+    // erneuten Wählen desselben Eintrags — das darf das Modell nicht leeren.
+    property int letzterProviderIndex: -1
+
+    // Anbieter- oder URL-Wechsel (#42): alte Liste und Erreichbarkeitszeile
+    // entwerten, dann still gegen den neuen Endpunkt nachladen — Fehler
+    // erscheinen nur in der Erreichbarkeitszeile. Nichts wird gespeichert.
+    function entwertenUndNachladen() {
+        app.invalidateAiModels()
+        geltendeUrl = baseUrlField.text.trim()
+        if (geltendeUrl.length > 0)
+            app.startAiListModelsPreview(geltendeUrl)
+    }
 
     // Lokale Endpunkte übertragen nichts nach außen — alles andere löst den
     // Datenschutzhinweis aus (leeres Feld zählt nicht als „entfernt").
@@ -48,6 +65,9 @@ FormCard.FormCardPage {
                            whisperCppModelField.text,
                            contextCombo.keys[contextCombo.currentIndex])
         app.setAiApiKey(keyField.text)
+        // Nach dem Speichern gilt der Listenzustand für diese URL — ein
+        // Fokuswechsel im URL-Feld darf danach nichts mehr entwerten.
+        geltendeUrl = baseUrlField.text.trim()
     }
 
     // Testhaken (UI-7, #34): füllt die Modell-Combo mit Beispielnamen und
@@ -73,7 +93,9 @@ FormCard.FormCardPage {
         app.clearAiError()
         const s = JSON.parse(app.aiSettingsJson())
         providerCombo.currentIndex = Math.max(0, providerCombo.keys.indexOf(s.ai_provider))
+        page.letzterProviderIndex = providerCombo.currentIndex
         baseUrlField.text = s.ai_base_url
+        page.geltendeUrl = s.ai_base_url
         modelCombo.editText = s.ai_model
         keyField.text = app.aiApiKey()
         sttCombo.currentIndex = Math.max(0, sttCombo.keys.indexOf(s.ai_stt_backend))
@@ -121,11 +143,23 @@ FormCard.FormCardPage {
             readonly property var keys: ["ollama", "openrouter", "custom"]
             model: [i18n("Ollama (lokal)"), i18n("OpenRouter (Cloud)"), i18n("Benutzerdefiniert")]
             onActivated: {
+                // `activated` feuert auch beim Wählen des schon aktiven
+                // Eintrags — dann ist nichts zu entwerten.
+                if (currentIndex === page.letzterProviderIndex)
+                    return
+                page.letzterProviderIndex = currentIndex
                 // Preset befüllt die Basis-URL vor; „Benutzerdefiniert"
                 // liefert leer und lässt das Feld unangetastet.
                 const vorgabe = page.app.aiProviderDefaultUrl(keys[currentIndex])
                 if (vorgabe.length > 0)
                     baseUrlField.text = vorgabe
+                // Anbieterwechsel (#42): Das gewählte Modell gehört sicher
+                // zum alten Anbieter (Ollama- und OpenRouter-Namen
+                // überschneiden sich nie) — mitleeren. Die Liste wird
+                // entwertet und still gegen den neuen Endpunkt nachgeladen.
+                modelCombo.currentIndex = -1
+                modelCombo.editText = ""
+                page.entwertenUndNachladen()
             }
         }
 
@@ -133,6 +167,15 @@ FormCard.FormCardPage {
             id: baseUrlField
             label: i18n("Basis-URL (inklusive /v1)")
             placeholderText: "http://localhost:11434/v1"
+            // Geänderte URL (#42): Liste und Erreichbarkeitszeile entwerten,
+            // still nachladen — das MODELL bleibt stehen, eine Portänderung
+            // unter „Benutzerdefiniert" lässt es fast immer gültig.
+            // `editingFinished` statt je Tastenanschlag; unveränderte URL
+            // (bloßer Fokuswechsel) ist kein Wechsel.
+            onEditingFinished: {
+                if (text.trim() !== page.geltendeUrl)
+                    page.entwertenUndNachladen()
+            }
         }
 
         // Kontextumfang der KI-Interpretation (AI-B1b, #31): drei Stufen —

@@ -86,7 +86,9 @@ platform.
   list (fetched automatically when the page opens; a reachability line
   shows whether the endpoint answered and how many models it offers, and
   "Load models" stays as an explicit refresh — manual entry keeps working
-  when the backend is offline), the API key in the Secret Service, and
+  when the backend is offline; switching the provider or editing the
+  base URL discards the stale list and reachability state and quietly
+  refetches from the new endpoint), the API key in the Secret Service, and
   the speech-to-text backend for dictation — either `openai-whisper` (the
   `whisper` CLI from `PATH`, CPU, model name configurable) or
   `whisper.cpp` (a `whisper-cli` binary plus a GGML model file, both given
