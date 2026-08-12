@@ -7,6 +7,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- The sync server URL no longer disappears from the configuration (#38).
+  The eater was the app's own test hooks: `--test-settings-ui` and
+  `--test-secrets` blanked the URL (and the credentials) during cleanup,
+  and `--test-flow` kept a window between blanking and restoring it —
+  any such run against the live `XDG_CONFIG_HOME` destroyed the real
+  configuration, while the credentials often survived because the Secret
+  Service was unreachable in headless runs. All three hooks now restore
+  the previous values, the flow's blank/restore window is closed, and
+  every `--test-*` run refuses to start (`TESTGUARD-FAIL`, exit 2)
+  unless both `XDG_CONFIG_HOME` and `XDG_DATA_HOME` point away from the
+  default locations. A new `--test-dialog=settings-sync` regression
+  guard proves the sync page shows the stored URL and that saving keeps
+  it; config round-trip tests cover the real load path for every
+  settings field.
+
 - The whisper.cpp dictation backend now works with a GPU build's plain
   binary path (#37): the binary's directory is prepended to the child
   process's `LD_LIBRARY_PATH` (ROCm/HIP builds keep `libwhisper.so` and

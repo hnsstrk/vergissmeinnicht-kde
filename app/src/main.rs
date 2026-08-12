@@ -13,7 +13,36 @@ use cxx_qt::casting::Upcast;
 use cxx_qt_lib::{QGuiApplication, QQmlApplicationEngine, QQmlEngine, QQuickStyle, QString, QUrl};
 use std::pin::Pin;
 
+/// Wächter für die Testhaken (#38): Jeder `--test-*`-Lauf schreibt durch die
+/// echten Speicherpfade — der Sync-Abschnitt des Flows leert zeitweise die
+/// Server-URL, der Settings-UI-Test tippt in die Sync-Felder. Läuft so ein
+/// Hook gegen die echte Konfiguration oder Replica des Nutzers, frisst er
+/// dessen Daten (so ging wiederholt die Sync-Server-URL verloren). Deshalb:
+/// Testhaken nur, wenn Konfigurations- UND Datenpfad vom Standardort
+/// wegzeigen (Wegwerf-`XDG_CONFIG_HOME`/`XDG_DATA_HOME`).
+fn verweigere_testlauf_auf_echten_daten() {
+    let testlauf = std::env::args().skip(1).any(|a| a.starts_with("--test-"));
+    if !testlauf {
+        return;
+    }
+    let Some(home) = dirs::home_dir() else {
+        return;
+    };
+    let config_echt = dirs::config_dir().is_none_or(|d| d == home.join(".config"));
+    let daten_echt = dirs::data_dir().is_none_or(|d| d == home.join(".local").join("share"));
+    if config_echt || daten_echt {
+        eprintln!(
+            "TESTGUARD-FAIL: --test-* verweigert — XDG_CONFIG_HOME und XDG_DATA_HOME müssen \
+             auf Wegwerf-Verzeichnisse zeigen, sonst überschreiben die Testhaken die echte \
+             Konfiguration und Replica des Nutzers (#38)."
+        );
+        std::process::exit(2);
+    }
+}
+
 fn main() {
+    verweigere_testlauf_auf_echten_daten();
+
     // KDE-nativer Look für QtQuick Controls, sofern der User nichts anderes erzwingt.
     if std::env::var("QT_QUICK_CONTROLS_STYLE").is_err() {
         QQuickStyle::set_style(&QString::from("org.kde.desktop"));

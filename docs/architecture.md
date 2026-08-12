@@ -132,8 +132,11 @@ locked and no input injection was possible):
 - `--test-flow` runs a scripted end-to-end smoke test through the real
   QML→bridge invokables (capture, search, edit, annotations, snooze,
   recurring follow-up, dependencies, legacy repair, bulk actions, saved
-  searches, rename, delete) and prints `FLOW-OK`/`FLOW-FAIL` lines. Run it
-  only against a disposable `XDG_DATA_HOME`.
+  searches, rename, delete) and prints `FLOW-OK`/`FLOW-FAIL` lines.
+- All `--test-*` hooks refuse to start unless both `XDG_CONFIG_HOME` and
+  `XDG_DATA_HOME` point away from the default locations (`TESTGUARD-FAIL`,
+  exit 2) — they write through the real save paths and have eaten the
+  user's sync server URL when run against the live config (#38).
 - `--test-input` drives the UI with synthetic `QMouseEvent`/`QKeyEvent`
   injection (C++ shim): click selection, Ctrl/Shift multi-selection,
   checkbox toggle, double click → detail dialog, right click → context

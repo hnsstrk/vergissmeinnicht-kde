@@ -103,6 +103,12 @@ Kirigami.ApplicationWindow {
         readonly property string url: "http://127.0.0.1:18080"
         readonly property string cid: "550e8400-e29b-41d4-a716-446655440000"
         readonly property string secret: "ui-test-geheimnis"
+        // Ausgangszustand — wird am Ende wiederhergestellt statt blank
+        // gewischt (#38): das alte Aufräumen mit Leerstrings hat die
+        // Sync-Server-URL der mitgebrachten Konfiguration zerstört.
+        property string urlZuvor: ""
+        property string cidZuvor: ""
+        property string secretZuvor: ""
         interval: 700
         repeat: true
 
@@ -123,6 +129,10 @@ Kirigami.ApplicationWindow {
             step++
             switch (step) {
             case 1:
+                // Ausgangszustand sichern, bevor irgendetwas tippt (#38).
+                urlZuvor = app.syncServerUrl
+                cidZuvor = app.syncClientId()
+                secretZuvor = app.syncSecret()
                 // Direkt auf der Sync-Seite öffnen (Kategorien seit UI-4) und
                 // das Fenster hoch ziehen: alle Formularzeilen im fertigen
                 // Layout, damit die synthetischen Klicks treffen.
@@ -187,9 +197,10 @@ Kirigami.ApplicationWindow {
                 const v = settingsDialog.testValues()
                 check(v.url === url && v.clientId === cid && v.secret === secret,
                       "Wiederöffnen lädt gespeicherte Werte")
-                // Aufräumen.
-                app.setSyncCredentials("", "")
-                app.setSyncServerUrlSetting("")
+                // Aufräumen: Ausgangszustand wiederherstellen (#38) — ein
+                // Leeren würde die mitgebrachte Sync-Konfiguration zerstören.
+                app.setSyncCredentials(cidZuvor, secretZuvor)
+                app.setSyncServerUrlSetting(urlZuvor)
                 console.log(failures === 0
                             ? "SETTINGS-ENDE: alles grün"
                             : `SETTINGS-ENDE: ${failures} Fehler`)
@@ -217,6 +228,12 @@ Kirigami.ApplicationWindow {
             const cid = "550e8400-e29b-41d4-a716-446655440000"
             const secret = "test-geheimnis-123"
 
+            // Ausgangszustand sichern — das Aufräumen im syncWaiter stellt
+            // ihn wieder her statt URL und Zugangsdaten zu leeren (#38).
+            syncWaiter.urlZuvor = app.syncServerUrl
+            syncWaiter.cidZuvor = app.syncClientId()
+            syncWaiter.secretZuvor = app.syncSecret()
+
             app.setSyncServerUrlSetting(url)
             check(app.syncServerUrl === url, "Server-URL gesetzt")
 
@@ -233,14 +250,18 @@ Kirigami.ApplicationWindow {
     }
     Timer {
         id: syncWaiter
+        property string urlZuvor: ""
+        property string cidZuvor: ""
+        property string secretZuvor: ""
         interval: 8000
         onTriggered: {
             console.log("SECRETS-INFO nach Sync: isSyncing=" + app.isSyncing
                         + " lastSyncAt=" + app.lastSyncAt
                         + " Fehler=" + (app.errorMessage.length > 0 ? app.errorMessage : "(keiner)"))
-            // Aufräumen: Test-Credentials wieder entfernen.
-            app.setSyncCredentials("", "")
-            app.setSyncServerUrlSetting("")
+            // Aufräumen: Ausgangszustand wiederherstellen (#38) — ein Leeren
+            // würde eine mitgebrachte Sync-Konfiguration zerstören.
+            app.setSyncCredentials(cidZuvor, secretZuvor)
+            app.setSyncServerUrlSetting(urlZuvor)
             console.log("SECRETS-ENDE")
             Qt.quit()
         }
@@ -429,6 +450,11 @@ Kirigami.ApplicationWindow {
             check(!app.syncConfigured, "syncConfigured false ohne Server-URL")
             check(!tasksPage.syncAction.visible, "Sync-Aktion ausgeblendet ohne Konfiguration")
             check(!tasksPage.syncAction.enabled, "Sync-Aktion deaktiviert ohne Konfiguration")
+            // URL sofort wiederherstellen (#38): zwischen Leeren und
+            // Zurückschreiben darf kein blockierender Secret-Service-Aufruf
+            // liegen — stirbt der Lauf dort (D-Bus-Timeout, timeout-Kill),
+            // bliebe die Konfiguration mit leerer URL auf der Platte zurück.
+            app.setSyncServerUrlSetting(syncUrlZuvor)
 
             // Der Positivfall braucht den Secret Service (Client-ID + Secret);
             // in Umgebungen ohne den Dienst (CI-Container) wird er wie der
@@ -440,13 +466,15 @@ Kirigami.ApplicationWindow {
                 check(app.syncConfigured, "syncConfigured true mit vollständiger Konfiguration")
                 check(tasksPage.syncAction.visible, "Sync-Aktion sichtbar bei konfiguriertem Sync-Server")
                 check(tasksPage.syncAction.enabled, "Sync-Aktion aktiv bei konfiguriertem Sync-Server")
-                // Aufräumen: ursprüngliche Credentials wiederherstellen.
+                // Aufräumen: ursprüngliche Credentials und URL wiederherstellen.
                 app.setSyncCredentials(syncCidZuvor, syncSecretZuvor)
+                app.setSyncServerUrlSetting(syncUrlZuvor)
             } else {
                 console.log("FLOW-INFO Sync-Positivfall übersprungen (kein Secret Service)")
                 app.clearError()
             }
-            app.setSyncServerUrlSetting(syncUrlZuvor)
+            check(app.syncServerUrl === syncUrlZuvor,
+                  "Server-URL nach Sync-Abschnitt unverändert (#38)")
 
             // 13. Sidebar-Zähler zählen offene Aufgaben, Alle-Zeile liefert
             // offen/gesamt (UI-1, #27). Zwei Aufgaben in Projekt+Tag anlegen,
@@ -1197,6 +1225,16 @@ Kirigami.ApplicationWindow {
                 testComboPopupTimer.start()
                 testHoverTimer.start()
                 break
+            case "settings-sync":
+                // Regressionswache #38: Sync-Seite direkt öffnen — der
+                // testSyncFillTimer prüft danach, ob das URL-Feld aus der
+                // gespeicherten Konfiguration gefüllt wurde und ob der
+                // Speicherpfad die URL erhält statt sie zu leeren.
+                settingsDialog.openSettings("sync")
+                settingsDialog.configViewItem.height = 760
+                testSyncFillTimer.start()
+                testHoverTimer.start()
+                break
             case "settings-purge":
                 // Regressionswache UI-8 (#35): Wartungsseite öffnen, dann die
                 // Lösch-Bestätigung — DIALOG-OK/DIALOG-FAIL meldet, ob sie im
@@ -1222,6 +1260,34 @@ Kirigami.ApplicationWindow {
     // Regressionswache UI-7 (#34), Schritt 2: Die KI-Seite entsteht asynchron
     // im ConfigWindow — erst danach lässt sich das Modell-Popup öffnen und
     // seine Höhenbegrenzung prüfen. Läuft vor dem Grab (3 s).
+    // Regressionswache #38, Schritt 2: Die Sync-Seite entsteht asynchron im
+    // ConfigWindow — erst danach lässt sich prüfen, ob ihr URL-Feld die
+    // gespeicherte Konfiguration zeigt (SYNCPAGE-…) und ob der anschließende
+    // Speichervorgang die URL unangetastet lässt (SYNCSAVE-…). Der
+    // Speicherschritt geht bewusst nur über setSyncServerUrlSetting, nicht
+    // über saveSync(): der Secret-Service-Teil würde im Testlauf die echten
+    // Zugangsdaten des Systems anfassen. Läuft vor dem Grab (3 s).
+    Timer {
+        id: testSyncFillTimer
+        interval: 1500
+        onTriggered: {
+            const seite = settingsDialog.syncPage
+            if (!seite) {
+                console.log("SYNCPAGE-FAIL settings-sync Seite nicht angemeldet")
+                return
+            }
+            const feldUrl = seite.testValues().url
+            console.log(feldUrl === app.syncServerUrl
+                        ? "SYNCPAGE-OK settings-sync Feld zeigt Konfiguration [" + feldUrl + "]"
+                        : "SYNCPAGE-FAIL settings-sync Feld [" + feldUrl + "] != Eigenschaft [" + app.syncServerUrl + "]")
+            const vorher = app.syncServerUrl
+            app.setSyncServerUrlSetting(feldUrl)
+            console.log(app.syncServerUrl === vorher
+                        ? "SYNCSAVE-OK settings-sync Speichern erhält die URL [" + app.syncServerUrl + "]"
+                        : "SYNCSAVE-FAIL settings-sync Speichern änderte [" + vorher + "] zu [" + app.syncServerUrl + "]")
+        }
+    }
+
     Timer {
         id: testComboPopupTimer
         interval: 1500

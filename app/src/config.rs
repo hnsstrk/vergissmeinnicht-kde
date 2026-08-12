@@ -149,6 +149,78 @@ mod tests {
     use super::*;
 
     #[test]
+    fn sync_url_ueberlebt_speichern_und_echten_ladeweg() {
+        // Akzeptanzkriterium #38: Konfiguration schreiben, über
+        // `Settings::load()` (den echten Ladeweg über config_path) neu
+        // einlesen — die Sync-Server-URL muss noch da sein, und die Felder
+        // der übrigen Einstellungsseiten ebenso.
+        let dir = std::env::temp_dir().join(format!("vmn-cfg-test-{}", std::process::id()));
+        std::env::set_var("XDG_CONFIG_HOME", &dir);
+        let s = Settings {
+            sync_server_url: "https://sync.example.org:8080".into(),
+            ai_model: "test-modell".into(),
+            language: "de".into(),
+            ..Settings::default()
+        };
+        s.save().unwrap();
+        let wieder = Settings::load();
+        std::env::remove_var("XDG_CONFIG_HOME");
+        let _ = std::fs::remove_dir_all(&dir);
+        assert_eq!(wieder.sync_server_url, "https://sync.example.org:8080");
+        assert_eq!(wieder.ai_model, "test-modell");
+        assert_eq!(wieder.language, "de");
+    }
+
+    #[test]
+    fn alle_felder_ueberleben_den_speicher_roundtrip() {
+        // #38-Absicherung für alle Einstellungsseiten: Jede Seite speichert
+        // die ganze Struktur — bleibt hier jedes Feld erhalten, kann kein
+        // Speichervorgang einer Seite die Felder einer anderen verlieren.
+        let s = Settings {
+            default_filter: "today".into(),
+            sort_key: "due".into(),
+            sort_ascending: false,
+            due_soon_days: 3,
+            hide_completed: true,
+            notify_overdue: true,
+            auto_sync: "m15".into(),
+            language: "en".into(),
+            sync_server_url: "https://sync.example.org".into(),
+            saved_searches: vec![SavedSearch {
+                id: "s1".into(),
+                name: "Suche".into(),
+                query: "project:x".into(),
+            }],
+            last_overdue_count: 4,
+            sidebar_width: 240,
+            collapsed_sections: vec!["tags".into()],
+            ai_provider: "custom".into(),
+            ai_base_url: "https://llm.example/v1".into(),
+            ai_model: "modell-x".into(),
+            ai_stt_backend: "whisper-cpp".into(),
+            ai_whisper_model: "medium".into(),
+            ai_whisper_cpp_binary: "/usr/bin/whisper-cli".into(),
+            ai_whisper_cpp_model: "/pfad/ggml.bin".into(),
+            ai_context_level: "all".into(),
+        };
+        let raw = serde_json::to_string(&s).unwrap();
+        let wieder: Settings = serde_json::from_str(&raw).unwrap();
+        let nochmal = serde_json::to_string(&wieder).unwrap();
+        assert_eq!(raw, nochmal);
+        assert_eq!(wieder.sync_server_url, "https://sync.example.org");
+    }
+
+    #[test]
+    fn sync_url_bleibt_beim_laden_alter_configs() {
+        // Fehlende Schlüssel (ältere Version) dürfen die vorhandene URL
+        // nicht verdrängen — serde-Default greift nur für fehlende Felder.
+        let wieder: Settings =
+            serde_json::from_str(r#"{"sync_server_url":"https://s.example"}"#).unwrap();
+        assert_eq!(wieder.sync_server_url, "https://s.example");
+        assert_eq!(wieder.default_filter, "inbox");
+    }
+
+    #[test]
     fn sidebar_settings_roundtrip() {
         let mut s = Settings::default();
         assert_eq!(s.sidebar_width, 0);

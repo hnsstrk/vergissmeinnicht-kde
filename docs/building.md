@@ -63,6 +63,14 @@ cargo test --workspace
 
 ### End-to-end hooks
 
+Every `--test-*` run refuses to start (exit 2, `TESTGUARD-FAIL`) unless both
+`XDG_CONFIG_HOME` and `XDG_DATA_HOME` point away from the default locations:
+the hooks write through the real save paths and have eaten the user's sync
+server URL when run against the live config (#38). Always export both
+variables to disposable directories. Note the guard cannot cover the Secret
+Service — `--test-secrets` and `--test-settings-ui` intentionally exercise
+the live KWallet/Secret Service and restore the previous entries afterwards.
+
 ```sh
 # Scripted smoke test through the real QML→bridge chain (151 checks; parts
 # whose prerequisites are missing — Secret Service, dictation chain — skip
@@ -99,12 +107,21 @@ XDG_DATA_HOME=/tmp/vmn-test XDG_CONFIG_HOME=/tmp/vmn-test-cfg \
 # probes keep working.
 
 # Render the window (optionally with a dialog) into a PNG and quit:
-./target/debug/vergissmeinnicht --test-dialog=detail --test-grab=/tmp/shot.png
+XDG_DATA_HOME=/tmp/vmn-test XDG_CONFIG_HOME=/tmp/vmn-test-cfg \
+    ./target/debug/vergissmeinnicht --test-dialog=detail --test-grab=/tmp/shot.png
+
+# Regression guard for #38: opens the sync settings page, checks that the
+# URL field mirrors the stored configuration (SYNCPAGE-…), and that saving
+# keeps the URL instead of blanking it (SYNCSAVE-…):
+XDG_DATA_HOME=/tmp/vmn-test XDG_CONFIG_HOME=/tmp/vmn-test-cfg \
+    ./target/debug/vergissmeinnicht \
+    --test-dialog=settings-sync --test-grab=/tmp/shot.png
 
 # Interaction test: injects synthetic QMouseEvent/QKeyEvent into the window
 # (click selection, Ctrl/Shift multi-selection, checkbox, double click,
 # context menu, quick-capture typing). Needs the seeded demo dataset.
-./target/debug/vergissmeinnicht --test-input
+XDG_DATA_HOME=/tmp/vmn-test XDG_CONFIG_HOME=/tmp/vmn-test-cfg \
+    ./target/debug/vergissmeinnicht --test-input
 ```
 
 The synthetic events carry monotonically increasing fake timestamps — without
