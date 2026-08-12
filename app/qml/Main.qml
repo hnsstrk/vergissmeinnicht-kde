@@ -762,8 +762,9 @@ Kirigami.ApplicationWindow {
         }
     }
 
-    // KI-Flow, Schritt 8 (AI-B2, #14): Diktat→Entwurf end-to-end über das
-    // Konserven-Transkript (VMN_STT_MOCK) — ohne Mikrofon und ohne Whisper.
+    // KI-Flow, Schritt 8 (AI-B2 #14, AI-B3b #15): Diktat→Entwurf→Anlegen
+    // end-to-end über das Konserven-Transkript (VMN_STT_MOCK) — ohne
+    // Mikrofon und ohne Whisper.
     // Ohne gesetzte Konserve wird übersprungen (FLOW-INFO): Mit echter
     // Kette stieße stopDictation einen echten Whisper-Lauf an, und dessen
     // Ergebnis wäre nicht deterministisch. Erwartete Konserve 6 (Entwurf
@@ -838,6 +839,31 @@ Kirigami.ApplicationWindow {
                   && fv.dueIndex === 2 && fv.priorityIndex === 2
                   && fv.notes === "Aus dem Diktat",
                   "Entwurf aus dem Diktat füllt die Felder")
+            // Letztes Glied der Kette (AI-B3b, #15): der Diktat-Entwurf wird
+            // über denselben Weg angelegt, den der Hinzufügen-Knopf nimmt —
+            // die KI schlägt nur vor, angelegt wird über addTaskDetailed.
+            quickCaptureDialog.commit()
+            app.applyFilter("project:flowdiktat")
+            const diktiert = Array.from(app.visibleUuids(0, 9999))
+            check(diktiert.length === 1,
+                  "Diktat-Entwurf über den normalen Anlege-Pfad committet")
+            if (diktiert.length === 1) {
+                const dt = JSON.parse(app.taskJson(diktiert[0]))
+                check(dt.description === transkript && dt.project === "flowdiktat"
+                      && dt.priority === "M" && dt.due > 0
+                      && dt.tags.indexOf("diktat") !== -1,
+                      "Transkript-Titel und Diktat-Metadaten persistiert")
+                check(dt.annotations.length === 1
+                      && dt.annotations[0].description === "Aus dem Diktat",
+                      "Diktat-Notizen als Annotation")
+                // Aufräumen wie in Schritt 6 — ein zweiter Lauf im selben
+                // Verzeichnis darf nicht an Resten dieses Abschnitts scheitern.
+                app.deleteTasks(diktiert)
+            }
+            app.applyFilter("all")
+            // commit() hat den Dialog geschlossen; der Neustart-Fall unten
+            // braucht ihn offen (Transkript→Titelfeld hängt am Dialog).
+            quickCaptureDialog.openCapture()
             // Schritt 9b (Review-Nacharbeit #14): Neustart WÄHREND laufender
             // Transkription — der Invokable ist der veröffentlichte
             // Kontrakt, B3b/Planer/Chat kennen die QML-Sperren des Knopfs

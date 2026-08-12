@@ -64,15 +64,16 @@ cargo test --workspace
 ### End-to-end hooks
 
 ```sh
-# Scripted smoke test through the real QML→bridge chain (148 checks; parts
+# Scripted smoke test through the real QML→bridge chain (151 checks; parts
 # whose prerequisites are missing — Secret Service, dictation chain — skip
 # with a FLOW-INFO line and reduce the count).
 # Use a disposable data dir — it mutates the replica!
 # The AI sections (8+) only run with a configured model. To run the full
 # flow without network or a local model, point VMN_AI_MOCK at the canned
 # answers the flow expects and set the model in a throwaway config;
-# VMN_STT_MOCK holds a canned transcript for the dictation→draft section
-# (no microphone, no Whisper — without it that section skips with a
+# VMN_STT_MOCK holds a canned transcript for the dictation→draft→commit
+# section, which ends by creating a real task through the dialog's commit
+# path (no microphone, no Whisper — without it that section skips with a
 # FLOW-INFO line). This is exactly what the CI flow step does:
 mkdir -p /tmp/vmn-test-cfg/vergissmeinnicht
 printf '{"ai_model": "vmn-mock", "ai_base_url": "http://localhost:11434/v1"}' \
