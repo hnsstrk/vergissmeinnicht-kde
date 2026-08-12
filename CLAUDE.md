@@ -34,8 +34,8 @@ deliberately identical between the ports so fixes can travel.
 
 ## Definition of Done — user-facing changes
 
-- `cargo test --workspace` green; `cargo clippy --workspace -- -D warnings`
-  clean.
+- `cargo test --workspace` green; `cargo clippy --workspace --all-targets
+  -- -D warnings` clean (`--all-targets` covers test and example code).
 - Functional changes: extend the `--test-flow` checks in `app/qml/Main.qml`
   when they touch bridge invokables, and run the flow against a disposable
   `XDG_DATA_HOME`. Grep the flow log for `I18N_ARGUMENT_MISSING` and

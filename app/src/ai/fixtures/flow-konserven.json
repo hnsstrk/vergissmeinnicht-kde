@@ -1,0 +1,11 @@
+[
+  {"content": {"marker": "veraltet"}, "delay_ms": 800},
+  {"content": {"marker": "aktuell"}},
+  {"content": {"marker": "abgebrochen"}, "delay_ms": 800},
+  {"content": {"title": "Zahnarzttermin vereinbaren", "project": "flowki",
+               "tags": ["gesundheit"], "due": "tomorrow", "priority": "H",
+               "recur": "monthly", "notes": "Vormittags anrufen"}},
+  {"content": {"title": "Kaputt-Werte", "project": "", "tags": [],
+               "due": "übermorgen vielleicht", "priority": "urgent",
+               "recur": "alle Jubeljahre", "notes": ""}}
+]

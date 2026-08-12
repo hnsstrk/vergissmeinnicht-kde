@@ -560,8 +560,11 @@ Kirigami.ApplicationWindow {
             // 15. KI-Gerüst (AI-A3): Property-Defaults der Bridge. Der
             // Worker-Teil (Stale-Drop, Abbruch) läuft nur, wenn der Aufruf
             // eine Mock-Konfiguration mitbringt (Wegwerf-config.json mit
-            // ai_model plus VMN_AI_MOCK-Konserve) — sonst wird er
-            // übersprungen, damit der Flow nie echte HTTP-Anfragen stellt.
+            // ai_model plus VMN_AI_MOCK-Konserve — die passende Konserve
+            // liegt in app/src/ai/fixtures/flow-konserven.json, Aufruf siehe
+            // docs/building.md; die CI nutzt exakt dieses Gespann, #36) —
+            // sonst wird er übersprungen, damit der Flow nie echte
+            // HTTP-Anfragen stellt.
             check(!app.aiBusy, "aiBusy anfangs false")
             check(app.aiError.length === 0, "aiError anfangs leer")
             // AI-A5: Die Diktier-Sonde läuft beim Start — ihr Ergebnis hängt

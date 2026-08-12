@@ -39,8 +39,10 @@ jobs:
         run: cargo test --workspace
 
       - name: Clippy
-        # Das Arch-rust-Paket bringt clippy bereits mit.
-        run: cargo clippy --workspace -- -D warnings
+        # Das Arch-rust-Paket bringt clippy bereits mit. --all-targets lintet
+        # auch Test- und Beispielcode (#36) — ohne das erreichen Verstöße im
+        # Testcode erst das Review statt die CI.
+        run: cargo clippy --workspace --all-targets -- -D warnings
 
       - name: Übersetzungen validieren
         run: |
@@ -52,14 +54,26 @@ jobs:
           desktop-file-validate data/de.hnsstrk.vergissmeinnicht.desktop
           appstreamcli validate --no-net data/de.hnsstrk.vergissmeinnicht.metainfo.xml
 
-      - name: i18n-Argument-Check (Flow-Test)
+      - name: Flow-Test (i18n-Argument-Check, KI über Mock)
         # ki18n meldet fehlende %1-Argumente nur zur Laufzeit — der Flow-Test
         # macht sie im Log sichtbar (I18N_ARGUMENT_MISSING / "instead of").
+        # Der KI-Teil (Abschnitte ab 8) läuft nur mit konfiguriertem Modell:
+        # Wegwerf-config.json plus VMN_AI_MOCK-Konserve, sonst endet der Flow
+        # nach dem Gerüst-Abschnitt (#36). Der Diktat-Teil überspringt sich im
+        # Container weiterhin per FLOW-INFO (kein pw-record installiert).
         run: |
           export XDG_DATA_HOME=/tmp/vmn-flow XDG_CONFIG_HOME=/tmp/vmn-flow-cfg
           export QT_QPA_PLATFORM=offscreen QT_FORCE_STDERR_LOGGING=1
+          export VMN_AI_MOCK="$PWD/app/src/ai/fixtures/flow-konserven.json"
+          mkdir -p "$XDG_CONFIG_HOME/vergissmeinnicht"
+          printf '{"ai_model": "vmn-mock", "ai_base_url": "http://localhost:11434/v1"}' \
+            > "$XDG_CONFIG_HOME/vergissmeinnicht/config.json"
           timeout 120 ./target/debug/vergissmeinnicht --test-flow > /tmp/flow.log 2>&1 || true
-          grep -q "FLOW-ENDE: alles grün" /tmp/flow.log
+          grep -q "FLOW-ENDE: alles grün" /tmp/flow.log || { cat /tmp/flow.log; exit 1; }
+          if grep -q "FLOW-INFO KI-Worker-Teil übersprungen" /tmp/flow.log; then
+            echo "::error::KI-Teil des Flows lief nicht (Mock-Konfiguration greift nicht)"; exit 1
+          fi
+          echo "Flow-Prüfungen: $(grep -c 'FLOW-OK' /tmp/flow.log || true)"
           if grep -E "I18N_ARGUMENT_MISSING|kf.i18n:.*instead of" /tmp/flow.log; then
             echo "::error::i18n-Argumentfehler im Flow-Log"; exit 1
           fi
