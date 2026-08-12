@@ -87,6 +87,9 @@ pub enum Fehlend {
     Whisperprogramm(String),
     /// GGML-Modelldatei des whisper.cpp-Backends fehlt.
     Modelldatei(String),
+    /// Das Laufzeitverzeichnis für Aufnahmen und Transkripte lässt sich
+    /// nicht anlegen oder nicht beschreiben.
+    Laufzeitverzeichnis(String),
 }
 
 impl std::fmt::Display for Fehlend {
@@ -103,6 +106,9 @@ impl std::fmt::Display for Fehlend {
             }
             Fehlend::Modelldatei(pfad) => {
                 write!(f, "Diktat nicht möglich: Modelldatei „{pfad}“ nicht gefunden")
+            }
+            Fehlend::Laufzeitverzeichnis(pfad) => {
+                write!(f, "Diktat nicht möglich: Laufzeitverzeichnis „{pfad}“ nicht beschreibbar")
             }
         }
     }
@@ -143,10 +149,13 @@ impl std::fmt::Display for TranskriptFehler {
 // ─── Verfügbarkeitsprüfung ──────────────────────────────────────────────────
 
 /// Startsonde (Spec §4.1): Ist die ganze Kette da? Speist die
-/// Bridge-Eigenschaft `dictationAvailable`. Reine Datei- und PATH-Prüfung,
-/// kein Prozessstart — läuft billig genug für den Qt-Thread.
+/// Bridge-Eigenschaft `dictationAvailable`. Datei- und PATH-Prüfung plus ein
+/// Schreibtest auf das Laufzeitverzeichnis, kein Prozessstart — läuft billig
+/// genug für den Qt-Thread.
 pub fn verfuegbarkeit(settings: &Settings) -> Result<(), Fehlend> {
-    verfuegbarkeit_mit(settings, &im_pfad_ausfuehrbar, &|pfad| ist_ausfuehrbar(pfad))
+    verfuegbarkeit_mit(settings, &im_pfad_ausfuehrbar, &|pfad| ist_ausfuehrbar(pfad), &|| {
+        laufzeit_beschreibbar(&laufzeit_verzeichnis())
+    })
 }
 
 /// Prüflogik mit austauschbarer Umgebung — so testen die Negativfälle ohne
@@ -155,6 +164,7 @@ fn verfuegbarkeit_mit(
     settings: &Settings,
     im_pfad: &dyn Fn(&str) -> bool,
     ausfuehrbar: &dyn Fn(&Path) -> bool,
+    laufzeit_schreibbar: &dyn Fn() -> bool,
 ) -> Result<(), Fehlend> {
     if !im_pfad(PW_RECORD) {
         return Err(Fehlend::Aufnahmeprogramm);
@@ -181,7 +191,33 @@ fn verfuegbarkeit_mit(
             }
         }
     }
+    // Ohne beschreibbares Laufzeitverzeichnis gibt es keine Aufnahme — dann
+    // gehört das Mikrofon versteckt, nicht erst der Aufnahmestart gescheitert.
+    if !laufzeit_schreibbar() {
+        return Err(Fehlend::Laufzeitverzeichnis(
+            laufzeit_verzeichnis().display().to_string(),
+        ));
+    }
     Ok(())
+}
+
+/// Schreibtest: Verzeichnis anlegen (wie [`Aufnahme::starte`] es tut), eine
+/// Probedatei erzeugen und sofort wieder entfernen — es bleibt nichts liegen.
+/// `create_dir_all` allein reicht nicht: Ein bereits existierendes, aber
+/// schreibgeschütztes Verzeichnis meldet dort keinen Fehler.
+fn laufzeit_beschreibbar(verzeichnis: &Path) -> bool {
+    if std::fs::create_dir_all(verzeichnis).is_err() {
+        return false;
+    }
+    let probe = verzeichnis.join(format!(".sonde-{}", std::process::id()));
+    match std::fs::File::create(&probe) {
+        Ok(datei) => {
+            drop(datei);
+            let _ = std::fs::remove_file(&probe);
+            true
+        }
+        Err(_) => false,
+    }
 }
 
 /// Liegt `name` als ausführbare Datei in einem PATH-Verzeichnis?
@@ -581,14 +617,15 @@ mod tests {
     // ─── Sonde: Negativfälle ────────────────────────────────────────────────
 
     /// Prüfung mit vollständig vorhandener Umgebung — die Positivkontrolle,
-    /// gegen die die Negativfälle abheben.
+    /// gegen die die Negativfälle abheben. Das Laufzeitverzeichnis gilt hier
+    /// als beschreibbar; seinen Negativfall prüft `sonde_ohne_schreibbares_…`.
     fn sonde(settings: &Settings, vorhanden: &[&str]) -> Result<(), Fehlend> {
         let namen: Vec<String> = vorhanden.iter().map(|s| s.to_string()).collect();
         let im_pfad = |name: &str| namen.iter().any(|n| n == name);
         let ausfuehrbar = |pfad: &Path| {
             namen.iter().any(|n| n.as_str() == pfad.to_string_lossy())
         };
-        verfuegbarkeit_mit(settings, &im_pfad, &ausfuehrbar)
+        verfuegbarkeit_mit(settings, &im_pfad, &ausfuehrbar, &|| true)
     }
 
     #[test]
@@ -658,6 +695,41 @@ mod tests {
             sonde(&s, &vorhanden),
             Err(Fehlend::Modelldatei("/gibt/es/nicht/ggml-large-v3.bin".into()))
         );
+    }
+
+    #[test]
+    fn sonde_ohne_schreibbares_laufzeitverzeichnis() {
+        // Kette vollständig installiert, aber das Laufzeitverzeichnis nicht
+        // beschreibbar — genau der Fall, in dem `Aufnahme::starte` scheitern
+        // würde. Die Sonde muss das Mikrofon vorher verstecken.
+        let ergebnis = verfuegbarkeit_mit(
+            &einstellungen("openai-whisper"),
+            &|_| true,
+            &|_| true,
+            &|| false,
+        );
+        assert!(matches!(ergebnis, Err(Fehlend::Laufzeitverzeichnis(_))));
+    }
+
+    #[test]
+    fn schreibtest_erkennt_schreibgeschuetztes_verzeichnis() {
+        use std::os::unix::fs::PermissionsExt;
+        let ordner = tempfile::tempdir().unwrap();
+        // Beschreibbar: Probe läuft durch und hinterlässt nichts.
+        assert!(laufzeit_beschreibbar(ordner.path()));
+        assert_eq!(
+            std::fs::read_dir(ordner.path()).unwrap().count(),
+            0,
+            "der Schreibtest darf keine Datei zurücklassen"
+        );
+        // Schreibgeschützt (chmod 555): existiert, ist aber nicht nutzbar.
+        std::fs::set_permissions(ordner.path(), std::fs::Permissions::from_mode(0o555)).unwrap();
+        assert!(!laufzeit_beschreibbar(ordner.path()));
+        // Untergeordnetes Verzeichnis unter dem geschützten: `create_dir_all`
+        // scheitert schon beim Anlegen — auch das ist „nicht beschreibbar".
+        assert!(!laufzeit_beschreibbar(&ordner.path().join("vergissmeinnicht")));
+        // Rechte zurück, damit das TempDir sich selbst wegräumen kann.
+        std::fs::set_permissions(ordner.path(), std::fs::Permissions::from_mode(0o755)).unwrap();
     }
 
     #[test]

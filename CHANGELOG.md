@@ -19,9 +19,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   with the window and with a crash; recordings and transcripts live in the
   XDG runtime directory and are deleted after use. A startup probe (also
   re-run after every settings save) feeds the new `dictationAvailable`
-  property: it requires `pw-record` and the configured backend, including
-  the model file for whisper.cpp, so a missing piece hides the microphone
-  instead of breaking it. The transcript is published as `dictationText`;
+  property: it requires `pw-record`, the configured backend including the
+  model file for whisper.cpp, and a writable runtime directory (verified
+  by a create-and-remove write probe), so a missing piece hides the
+  microphone instead of breaking it. The transcript is published as `dictationText`;
   the Quick Capture microphone button that uses all this follows in AI-B2.
 
 - The AI settings page now fetches the endpoint's model list
