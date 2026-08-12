@@ -16,6 +16,11 @@ FormWindow {
 
     property var preview: ({})
 
+    // Nach einem Transkript nennt die Bedienzeile den nächsten Schritt
+    // (#49/#50) — bis die Interpretation gestartet oder der Dialog neu
+    // geöffnet wird.
+    property bool transcriptPending: false
+
     function openCapture() {
         titleField.text = ""
         notesArea.text = ""
@@ -28,6 +33,7 @@ FormWindow {
         recurCombo.currentIndex = 0
         recurCustomField.text = ""
         preview = {}
+        transcriptPending = false
         app.clearAiError()
         openWindow()
         titleField.forceActiveFocus()
@@ -37,7 +43,7 @@ FormWindow {
         preview = JSON.parse(app.quickCapturePreviewJson(titleField.text))
     }
 
-    // „Mit KI interpretieren" (AI-B1): schickt den Titel-Freitext ans Modell;
+    // „Mit KI ausfüllen" (AI-B1): schickt den Titel-Freitext ans Modell;
     // die Antwort füllt über applyDraft() nur die Dialogfelder — angelegt
     // wird erst mit dem normalen Hinzufügen-Knopf (Vorschlagen, nie ausführen).
     function interpret() {
@@ -47,6 +53,7 @@ FormWindow {
         if (!app.aiConfigured || app.aiBusy || app.dictationState !== 0
                 || titleField.text.trim().length === 0)
             return
+        transcriptPending = false
         app.startAiInterpret(titleField.text)
     }
 
@@ -135,8 +142,12 @@ FormWindow {
             rowVisible: aiRow.visible,
             micVisible: dictationButton.visible,
             micEnabled: dictationButton.enabled,
+            micChecked: dictationButton.checked,
             micHovered: dictationHover.hovered,
             interpretEnabled: interpretButton.enabled,
+            cancelVisible: phaseCancelButton.visible,
+            cancelText: phaseCancelButton.text,
+            statusText: statusLabel.text,
             sharedTipVisible: geteilterTip ? geteilterTip.visible : false,
             sharedTipText: geteilterTip ? geteilterTip.text : "",
         }
@@ -158,15 +169,20 @@ FormWindow {
             if (dialog.visible)
                 dialog.applyDraft(JSON.parse(app.aiDraftJson || "{}"))
         }
-        // Diktier-Fluss (AI-B2): das Transkript landet im Titelfeld und
-        // läuft automatisch in die Interpretation weiter — nur solange der
-        // Dialog offen ist. Ein leerer Wert (Start eines neuen Diktats oder
-        // Fehlschlag) füllt nichts.
+        // Diktier-Fluss (#50): das Diktat schreibt nur den Text ins Feld —
+        // die Interpretation läuft ausschließlich über den KI-Knopf bzw.
+        // Strg+J. Ein nicht leeres Titelfeld bleibt stehen, das Transkript
+        // hängt mit trennendem Leerzeichen an (Diktieren in ein halb
+        // getipptes Feld darf nichts verwerfen). Ein leerer Wert (Start
+        // eines neuen Diktats oder Fehlschlag) füllt nichts.
         function onDictationTextChanged() {
             if (!dialog.visible || app.dictationText.length === 0)
                 return
-            titleField.text = app.dictationText
-            dialog.interpret()
+            const getippt = titleField.text.trim()
+            titleField.text = getippt.length > 0
+                              ? getippt + " " + app.dictationText
+                              : app.dictationText
+            dialog.transcriptPending = true
         }
     }
 
@@ -260,83 +276,38 @@ FormWindow {
         visible: dialog.visible && app.aiError.length > 0
     }
 
-    FormCard.FormTextFieldDelegate {
-        Layout.fillWidth: true
-        id: titleField
-        label: i18n("Titel")
-        placeholderText: i18n("z. B. Bericht schreiben +arbeit project:Büro due:tomorrow")
-        onTextChanged: dialog.updatePreview()
-        onAccepted: dialog.commit()
-    }
-
-    // „Mit KI interpretieren" (AI-B1) — die Zeile ist immer sichtbar (#41):
-    // Diktat und KI-Interpretation sind unabhängige Stränge, und was nicht
-    // eingerichtet ist, wird gesperrt statt versteckt — den Grund nennt der
-    // Tooltip. Bewusst ein echter Knopf statt eines Formular-Delegates:
-    // als Listenzeile mit Chevron las sich die Aktion wie ein Navigationsziel.
+    // Bedienzeile (#51): in Leserichtung VOR dem Titelfeld — buchstäblich
+    // links neben das Feld geht nicht, FormTextFieldDelegate hat ein festes
+    // contentItem ohne Slot für nachgestellte Elemente. Die Zeile ist immer
+    // sichtbar (#41): Diktat und KI-Interpretation sind unabhängige
+    // Stränge, und was nicht eingerichtet ist, wird gesperrt statt
+    // versteckt — den Grund nennt der Tooltip. Reihenfolge: beide
+    // Aktionsknöpfe links und ortsfest, dann Spinner und Statustext,
+    // Abbrechen ganz rechts — dort verdrängt sein Erscheinen nichts.
     RowLayout {
         id: aiRow
         Layout.fillWidth: true
         Layout.topMargin: Kirigami.Units.smallSpacing
-        Layout.bottomMargin: Kirigami.Units.largeSpacing
+        Layout.bottomMargin: Kirigami.Units.smallSpacing
         Layout.leftMargin: Kirigami.Units.smallSpacing
         Layout.rightMargin: Kirigami.Units.smallSpacing
         spacing: Kirigami.Units.smallSpacing
 
-        QQC2.BusyIndicator {
-            running: app.aiBusy || app.dictationState === 2
-            visible: running
-            Layout.preferredHeight: Kirigami.Units.iconSizes.small
-            Layout.preferredWidth: Kirigami.Units.iconSizes.small
-        }
-
-        QQC2.Label {
-            Layout.fillWidth: true
-            // Phasen des Flusses „aufnehmen → transkribieren →
-            // interpretieren" — jede spricht für sich (AI-B2). In Ruhe
-            // benennt der Text, was eingerichtet ist (#41).
-            text: {
-                if (app.dictationState === 1)
-                    return i18n("Aufnahme läuft — Klick aufs Mikrofon beendet sie.")
-                if (app.dictationState === 2)
-                    return i18n("Die Aufnahme wird transkribiert …")
-                if (app.aiBusy)
-                    return i18n("Die KI liest den Titel …")
-                if (app.aiConfigured)
-                    return i18n("Freitext genügt — die KI füllt die Felder.")
-                if (app.dictationAvailable)
-                    return i18n("Diktieren ist bereit — die KI-Interpretation braucht ein konfiguriertes Modell.")
-                return i18n("KI und Diktat sind nicht eingerichtet — die gesperrten Knöpfe nennen den Grund.")
-            }
-            wrapMode: Text.WordWrap
-            opacity: 0.7
-            font: Kirigami.Theme.smallFont
-        }
-
-        // Diktat verwerfen (AI-B2): bricht Aufnahme oder Transkription ab,
-        // das Ergebnis verfällt. Eine laufende LLM-Anfrage bleibt unberührt.
-        QQC2.Button {
-            id: dictationCancelButton
-            visible: app.dictationState !== 0
-            display: QQC2.AbstractButton.IconOnly
-            icon.name: "dialog-cancel"
-            text: i18n("Diktat verwerfen")
-            onClicked: app.cancelDictation()
-            QQC2.ToolTip.text: text
-            QQC2.ToolTip.visible: hovered
-            QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
-        }
-
         // Mikrofon (AI-B2, #41): immer sichtbar; ohne vollständige
-        // Diktier-Kette gesperrt statt versteckt. Erster Klick nimmt auf
-        // (Knopf pulsiert), zweiter beendet und transkribiert; das
-        // Transkript läuft automatisch in die Interpretation weiter.
+        // Diktier-Kette gesperrt statt versteckt. Erster Klick nimmt auf,
+        // zweiter beendet und transkribiert; das Transkript landet nur im
+        // Titelfeld (#50). Der laufende Zustand wird als gedrückter Knopf
+        // gezeigt (checked) — das Icon bleibt das Mikrofon, denn ein Knopf
+        // benennt seine Aktion, nicht seinen Zustand (#51).
         // Gesperrte Controls bekommen in Qt Quick keine Hover-Ereignisse —
         // der Tooltip mit dem Sonden-Grund hängt deshalb an einem
         // umschließenden Item mit HoverHandler (Muster: TasksPage-Fußzeile).
         Item {
-            Layout.preferredWidth: dictationButton.implicitWidth
-            Layout.preferredHeight: dictationButton.implicitHeight
+            // Beide Aktionsknöpfe gleich groß (#52).
+            Layout.preferredWidth: Math.max(dictationButton.implicitWidth,
+                                            interpretButton.implicitWidth)
+            Layout.preferredHeight: Math.max(dictationButton.implicitHeight,
+                                             interpretButton.implicitHeight)
 
             QQC2.Button {
                 id: dictationButton
@@ -347,14 +318,26 @@ FormWindow {
                          && (app.dictationState === 1
                              || (app.dictationState === 0 && !app.aiBusy))
                 display: QQC2.AbstractButton.IconOnly
-                icon.name: app.dictationState === 1
-                           ? "media-record" : "audio-input-microphone"
+                icon.name: "audio-input-microphone"
+                checkable: true
+                checked: app.dictationState === 1
                 text: app.dictationState === 1
                       ? i18n("Aufnahme beenden und übernehmen")
                       : i18n("Diktieren")
-                onClicked: app.dictationState === 1
-                           ? app.stopDictation() : app.startDictation()
-                QQC2.ToolTip.text: text
+                onClicked: {
+                    // Der Klick hat das Binding an checked überschrieben —
+                    // wiederherstellen, damit der Zustand weiter aus der
+                    // Bridge kommt und ein fehlgeschlagener Start den Knopf
+                    // nicht gedrückt zurücklässt.
+                    checked = Qt.binding(() => app.dictationState === 1)
+                    app.dictationState === 1
+                        ? app.stopDictation() : app.startDictation()
+                }
+                // Unbeschriftete Knöpfe (#52): der Tooltip trägt die ganze
+                // Erklärung.
+                QQC2.ToolTip.text: app.dictationState === 1
+                                   ? i18n("Aufnahme beenden — das Transkript wird ins Titelfeld übernommen.")
+                                   : i18n("Diktieren — die Aufnahme wird transkribiert und landet als Text im Titelfeld.")
                 QQC2.ToolTip.visible: hovered
                 QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
 
@@ -378,18 +361,25 @@ FormWindow {
             QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
         }
 
-        // KI-Knopf (#41): ohne konfigurierte KI gesperrt statt versteckt;
-        // der Tooltip nennt den festen Grund (aiConfigured kennt nur
-        // Basis-URL und Modell). Gleiches HoverHandler-Muster wie beim
-        // Mikrofon, weil der gesperrte Knopf selbst kein Hover meldet.
+        // KI-Knopf (#41, #52): nur Icon, gleich groß wie das Mikrofon — die
+        // Erklärung wohnt in Tooltip und Hilfe, nicht auf dem Knopf
+        // (Nutzerentscheidung). tools-wizard bleibt: Breeze und Adwaita
+        // führen kein Chip-/Hirn-/Schaltkreis-Symbol. Ohne konfigurierte KI
+        // gesperrt statt versteckt; der Tooltip nennt den festen Grund
+        // (aiConfigured kennt nur Basis-URL und Modell). Gleiches
+        // HoverHandler-Muster wie beim Mikrofon, weil der gesperrte Knopf
+        // selbst kein Hover meldet.
         Item {
-            Layout.preferredWidth: interpretButton.implicitWidth
-            Layout.preferredHeight: interpretButton.implicitHeight
+            Layout.preferredWidth: Math.max(dictationButton.implicitWidth,
+                                            interpretButton.implicitWidth)
+            Layout.preferredHeight: Math.max(dictationButton.implicitHeight,
+                                             interpretButton.implicitHeight)
 
             QQC2.Button {
                 id: interpretButton
                 anchors.fill: parent
-                text: i18n("Mit KI interpretieren")
+                display: QQC2.AbstractButton.IconOnly
+                text: i18n("Mit KI ausfüllen")
                 icon.name: "tools-wizard"
                 // Hervorgehoben: die Aktion ist der Zweck dieser Zeile.
                 highlighted: enabled
@@ -397,7 +387,7 @@ FormWindow {
                          && app.dictationState === 0
                          && titleField.text.trim().length > 0
                 onClicked: dialog.interpret()
-                QQC2.ToolTip.text: i18n("Strg+J")
+                QQC2.ToolTip.text: i18n("Mit KI ausfüllen — liest den Titel und füllt die Felder darunter aus (Strg+J).")
                 QQC2.ToolTip.visible: hovered
                 QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
             }
@@ -410,6 +400,77 @@ FormWindow {
             QQC2.ToolTip.visible: interpretHover.hovered && !app.aiConfigured
             QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
         }
+
+        QQC2.BusyIndicator {
+            running: app.aiBusy || app.dictationState === 2
+            visible: running
+            Layout.preferredHeight: Kirigami.Units.iconSizes.small
+            Layout.preferredWidth: Kirigami.Units.iconSizes.small
+        }
+
+        QQC2.Label {
+            id: statusLabel
+            Layout.fillWidth: true
+            // Phasen des Flusses „aufnehmen → transkribieren →
+            // interpretieren" — jede spricht für sich (AI-B2). Nach einem
+            // Transkript nennt die Zeile den nächsten Schritt (#50); in
+            // Ruhe schweigt sie (#49) — die Knöpfe erklären sich über
+            // ihre Tooltips.
+            text: {
+                if (app.dictationState === 1)
+                    return i18n("Aufnahme läuft — Klick aufs Mikrofon beendet sie.")
+                if (app.dictationState === 2)
+                    return i18n("Die Aufnahme wird transkribiert …")
+                if (app.aiBusy)
+                    return i18n("Die KI liest den Titel …")
+                if (dialog.transcriptPending && app.aiConfigured)
+                    return i18n("Transkript übernommen — mit Strg+J ausfüllen lassen.")
+                return ""
+            }
+            wrapMode: Text.WordWrap
+            opacity: 0.7
+            font: Kirigami.Theme.smallFont
+        }
+
+        // Abbrechen ganz rechts (#51): bedient beide Stränge mit
+        // phasenabhängiger Beschriftung — Aufnahme und Transkription über
+        // cancelDictation, die laufende KI-Anfrage über cancelAiRequest.
+        // Die Backend-Kanäle sind getrennt; der jeweils andere Strang
+        // bleibt unberührt.
+        QQC2.Button {
+            id: phaseCancelButton
+            visible: app.dictationState !== 0 || app.aiBusy
+            display: QQC2.AbstractButton.IconOnly
+            icon.name: "dialog-cancel"
+            text: {
+                if (app.dictationState === 1)
+                    return i18n("Aufnahme verwerfen")
+                if (app.dictationState === 2)
+                    return i18n("Transkription abbrechen")
+                return i18n("KI-Anfrage abbrechen")
+            }
+            onClicked: app.dictationState !== 0
+                       ? app.cancelDictation() : app.cancelAiRequest()
+            QQC2.ToolTip.text: text
+            QQC2.ToolTip.visible: hovered
+            QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
+        }
+    }
+
+    FormCard.FormTextFieldDelegate {
+        Layout.fillWidth: true
+        id: titleField
+        label: i18n("Titel")
+        placeholderText: i18n("z. B. Bericht schreiben +arbeit project:Büro due:tomorrow")
+        onTextChanged: {
+            dialog.updatePreview()
+            // Leert der Nutzer den Titel, verfällt der Strg+J-Hinweis —
+            // sonst forderte die Zeile zu etwas auf, was der gesperrte
+            // Knopf verweigert (#49).
+            if (text.trim().length === 0)
+                dialog.transcriptPending = false
+        }
+        onAccepted: dialog.commit()
     }
 
     // Live-Vorschau der erkannten Tokens.

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-12 21:19+0200\n"
+"POT-Creation-Date: 2026-08-12 21:36+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -204,15 +204,15 @@ msgstr ""
 msgid "Speichern"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:91 app/qml/QuickCaptureDialog.qml:239
+#: app/qml/DetailDialog.qml:91 app/qml/QuickCaptureDialog.qml:255
 msgid "Abbrechen"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:109 app/qml/QuickCaptureDialog.qml:266
+#: app/qml/DetailDialog.qml:109 app/qml/QuickCaptureDialog.qml:463
 msgid "Titel"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:117 app/qml/QuickCaptureDialog.qml:437
+#: app/qml/DetailDialog.qml:117 app/qml/QuickCaptureDialog.qml:498
 #: app/qml/TasksPage.qml:229
 msgid "Projekt"
 msgstr ""
@@ -225,11 +225,11 @@ msgstr ""
 msgid "z. B. arbeit dringend"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:134 app/qml/QuickCaptureDialog.qml:452
+#: app/qml/DetailDialog.qml:134 app/qml/QuickCaptureDialog.qml:513
 msgid "Fällig"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:140 app/qml/QuickCaptureDialog.qml:460
+#: app/qml/DetailDialog.qml:140 app/qml/QuickCaptureDialog.qml:521
 msgid "Fällig am"
 msgstr ""
 
@@ -259,63 +259,63 @@ msgstr ""
 msgid "Ablaufdatum"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:185 app/qml/QuickCaptureDialog.qml:481
+#: app/qml/DetailDialog.qml:185 app/qml/QuickCaptureDialog.qml:542
 #: app/qml/TasksPage.qml:476
 msgid "Priorität"
 msgstr ""
 
 #: app/qml/DetailDialog.qml:186 app/qml/DetailDialog.qml:193
-#: app/qml/QuickCaptureDialog.qml:482 app/qml/QuickCaptureDialog.qml:489
+#: app/qml/QuickCaptureDialog.qml:543 app/qml/QuickCaptureDialog.qml:550
 #: app/qml/TasksPage.qml:482 app/qml/TasksPage.qml:492
 msgid "Keine"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:186 app/qml/QuickCaptureDialog.qml:482
+#: app/qml/DetailDialog.qml:186 app/qml/QuickCaptureDialog.qml:543
 msgid "Hoch (H)"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:186 app/qml/QuickCaptureDialog.qml:482
+#: app/qml/DetailDialog.qml:186 app/qml/QuickCaptureDialog.qml:543
 msgid "Mittel (M)"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:186 app/qml/QuickCaptureDialog.qml:482
+#: app/qml/DetailDialog.qml:186 app/qml/QuickCaptureDialog.qml:543
 msgid "Niedrig (L)"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:192 app/qml/QuickCaptureDialog.qml:488
+#: app/qml/DetailDialog.qml:192 app/qml/QuickCaptureDialog.qml:549
 msgid "Wiederholung"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:193 app/qml/QuickCaptureDialog.qml:489
+#: app/qml/DetailDialog.qml:193 app/qml/QuickCaptureDialog.qml:550
 msgid "Täglich"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:193 app/qml/QuickCaptureDialog.qml:489
+#: app/qml/DetailDialog.qml:193 app/qml/QuickCaptureDialog.qml:550
 msgid "Wöchentlich"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:193 app/qml/QuickCaptureDialog.qml:489
+#: app/qml/DetailDialog.qml:193 app/qml/QuickCaptureDialog.qml:550
 msgid "Monatlich"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:193 app/qml/QuickCaptureDialog.qml:489
+#: app/qml/DetailDialog.qml:193 app/qml/QuickCaptureDialog.qml:550
 msgid "Jährlich"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:193 app/qml/QuickCaptureDialog.qml:453
-#: app/qml/QuickCaptureDialog.qml:489
+#: app/qml/DetailDialog.qml:193 app/qml/QuickCaptureDialog.qml:514
+#: app/qml/QuickCaptureDialog.qml:550
 msgid "Benutzerdefiniert …"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:199 app/qml/QuickCaptureDialog.qml:495
+#: app/qml/DetailDialog.qml:199 app/qml/QuickCaptureDialog.qml:556
 msgid "Intervall (Nd / Nw / Nm / Ny)"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:200 app/qml/QuickCaptureDialog.qml:496
+#: app/qml/DetailDialog.qml:200 app/qml/QuickCaptureDialog.qml:557
 msgid "z. B. 3d oder 2w"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:202 app/qml/QuickCaptureDialog.qml:498
+#: app/qml/DetailDialog.qml:202 app/qml/QuickCaptureDialog.qml:559
 msgid "Nicht erkanntes Intervall"
 msgstr ""
 
@@ -374,7 +374,7 @@ msgstr ""
 msgid "Aufgabe wählen …"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:303 app/qml/QuickCaptureDialog.qml:506
+#: app/qml/DetailDialog.qml:303 app/qml/QuickCaptureDialog.qml:567
 msgid "Notizen"
 msgstr ""
 
@@ -450,7 +450,7 @@ msgid "Eingang"
 msgstr ""
 
 #: app/qml/GeneralSettingsPage.qml:25 app/qml/Main.qml:42
-#: app/qml/QuickCaptureDialog.qml:453 app/qml/Sidebar.qml:58
+#: app/qml/QuickCaptureDialog.qml:514 app/qml/Sidebar.qml:58
 #: app/qml/TasksPage.qml:487
 msgid "Heute"
 msgstr ""
@@ -525,7 +525,7 @@ msgid "Neue Aufgabe"
 msgstr ""
 
 #: app/qml/HelpDialog.qml:35
-msgid "Schnelleingabe mit KI interpretieren (nur bei konfigurierter KI)"
+msgid "Schnelleingabe mit KI ausfüllen (nur bei konfigurierter KI)"
 msgstr ""
 
 #: app/qml/HelpDialog.qml:37
@@ -862,122 +862,129 @@ msgstr ""
 msgid "Wiederherstellen"
 msgstr ""
 
-#: app/qml/QuickCaptureDialog.qml:233
+#: app/qml/QuickCaptureDialog.qml:249
 msgid "Hinzufügen"
 msgstr ""
 
-#: app/qml/QuickCaptureDialog.qml:267
-msgid "z. B. Bericht schreiben +arbeit project:Büro due:tomorrow"
-msgstr ""
-
-#: app/qml/QuickCaptureDialog.qml:300
-msgid "Aufnahme läuft — Klick aufs Mikrofon beendet sie."
-msgstr ""
-
-#: app/qml/QuickCaptureDialog.qml:302
-msgid "Die Aufnahme wird transkribiert …"
-msgstr ""
-
-#: app/qml/QuickCaptureDialog.qml:304
-msgid "Die KI liest den Titel …"
-msgstr ""
-
-#: app/qml/QuickCaptureDialog.qml:306
-msgid "Freitext genügt — die KI füllt die Felder."
-msgstr ""
-
-#: app/qml/QuickCaptureDialog.qml:308
-msgid ""
-"Diktieren ist bereit — die KI-Interpretation braucht ein konfiguriertes "
-"Modell."
-msgstr ""
-
-#: app/qml/QuickCaptureDialog.qml:309
-msgid ""
-"KI und Diktat sind nicht eingerichtet — die gesperrten Knöpfe nennen den "
-"Grund."
-msgstr ""
-
-#: app/qml/QuickCaptureDialog.qml:323
-msgid "Diktat verwerfen"
-msgstr ""
-
-#: app/qml/QuickCaptureDialog.qml:353
+#: app/qml/QuickCaptureDialog.qml:325
 msgid "Aufnahme beenden und übernehmen"
 msgstr ""
 
-#: app/qml/QuickCaptureDialog.qml:354
+#: app/qml/QuickCaptureDialog.qml:326
 msgid "Diktieren"
 msgstr ""
 
-#: app/qml/QuickCaptureDialog.qml:392
-msgid "Mit KI interpretieren"
+#: app/qml/QuickCaptureDialog.qml:339
+msgid "Aufnahme beenden — das Transkript wird ins Titelfeld übernommen."
 msgstr ""
 
-#: app/qml/QuickCaptureDialog.qml:400
-msgid "Strg+J"
+#: app/qml/QuickCaptureDialog.qml:340
+msgid ""
+"Diktieren — die Aufnahme wird transkribiert und landet als Text im Titelfeld."
 msgstr ""
 
-#: app/qml/QuickCaptureDialog.qml:409
+#: app/qml/QuickCaptureDialog.qml:382
+msgid "Mit KI ausfüllen"
+msgstr ""
+
+#: app/qml/QuickCaptureDialog.qml:390
+msgid ""
+"Mit KI ausfüllen — liest den Titel und füllt die Felder darunter aus "
+"(Strg+J)."
+msgstr ""
+
+#: app/qml/QuickCaptureDialog.qml:399
 msgid ""
 "KI nicht eingerichtet — in den KI-Einstellungen fehlen Adresse oder Modell."
 msgstr ""
 
-#: app/qml/QuickCaptureDialog.qml:422
+#: app/qml/QuickCaptureDialog.qml:421
+msgid "Aufnahme läuft — Klick aufs Mikrofon beendet sie."
+msgstr ""
+
+#: app/qml/QuickCaptureDialog.qml:423
+msgid "Die Aufnahme wird transkribiert …"
+msgstr ""
+
+#: app/qml/QuickCaptureDialog.qml:425
+msgid "Die KI liest den Titel …"
+msgstr ""
+
+#: app/qml/QuickCaptureDialog.qml:427
+msgid "Transkript übernommen — mit Strg+J ausfüllen lassen."
+msgstr ""
+
+#: app/qml/QuickCaptureDialog.qml:447
+msgid "Aufnahme verwerfen"
+msgstr ""
+
+#: app/qml/QuickCaptureDialog.qml:449
+msgid "Transkription abbrechen"
+msgstr ""
+
+#: app/qml/QuickCaptureDialog.qml:450
+msgid "KI-Anfrage abbrechen"
+msgstr ""
+
+#: app/qml/QuickCaptureDialog.qml:464
+msgid "z. B. Bericht schreiben +arbeit project:Büro due:tomorrow"
+msgstr ""
+
+#: app/qml/QuickCaptureDialog.qml:483
 msgid "Erkannt"
 msgstr ""
 
-#: app/qml/QuickCaptureDialog.qml:426
+#: app/qml/QuickCaptureDialog.qml:487
 msgid "Projekt: %1"
 msgstr ""
 
-#: app/qml/QuickCaptureDialog.qml:428
+#: app/qml/QuickCaptureDialog.qml:489
 msgid "Fällig: %1"
 msgstr ""
 
-#: app/qml/QuickCaptureDialog.qml:428
+#: app/qml/QuickCaptureDialog.qml:489
 msgid "Fällig (nicht erkannt): %1"
 msgstr ""
 
-#: app/qml/QuickCaptureDialog.qml:429
+#: app/qml/QuickCaptureDialog.qml:490
 msgid "Priorität: %1"
 msgstr ""
 
-#: app/qml/QuickCaptureDialog.qml:445 app/qml/Sidebar.qml:159
+#: app/qml/QuickCaptureDialog.qml:506 app/qml/Sidebar.qml:159
 msgid "Tags"
 msgstr ""
 
-#: app/qml/QuickCaptureDialog.qml:446
+#: app/qml/QuickCaptureDialog.qml:507
 msgid "durch Leerzeichen getrennt"
 msgstr ""
 
-#: app/qml/QuickCaptureDialog.qml:453
+#: app/qml/QuickCaptureDialog.qml:514
 msgid "Keine Angabe"
 msgstr ""
 
-#: app/qml/QuickCaptureDialog.qml:453 app/qml/TasksPage.qml:420
+#: app/qml/QuickCaptureDialog.qml:514 app/qml/TasksPage.qml:420
 #: app/qml/TasksPage.qml:488
 msgid "Morgen"
 msgstr ""
 
-#: app/qml/QuickCaptureDialog.qml:453 app/qml/TasksPage.qml:428
+#: app/qml/QuickCaptureDialog.qml:514 app/qml/TasksPage.qml:428
 #: app/qml/TasksPage.qml:490
 msgid "+1 Woche"
 msgstr ""
 
-#: app/qml/QuickCaptureDialog.qml:453
+#: app/qml/QuickCaptureDialog.qml:514
 msgid "Datum wählen …"
 msgstr ""
 
-#: app/qml/QuickCaptureDialog.qml:470
+#: app/qml/QuickCaptureDialog.qml:531
 msgid "Fälligkeits-Ausdruck"
 msgstr ""
 
-#: app/qml/QuickCaptureDialog.qml:471
+#: app/qml/QuickCaptureDialog.qml:532
 msgid "z. B. +3d, eow oder 2026-12-31"
 msgstr ""
 
-#: app/qml/QuickCaptureDialog.qml:475
+#: app/qml/QuickCaptureDialog.qml:536
 msgid "Nicht erkannter Ausdruck"
 msgstr ""
 

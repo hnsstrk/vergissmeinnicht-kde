@@ -287,6 +287,39 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Quick capture: dictation and interpretation are now two separate steps
+  (#50). The transcript only lands in the title field — appended with a
+  separating space when something is already typed — and no AI request
+  starts on its own anymore: interpretation runs only via the AI button
+  or Ctrl+J. Reasons: the draft rewrites several fields at once, a cloud
+  endpoint would receive the text unasked, and a misheard transcript can
+  now be corrected before spending the model call. After a transcript
+  the status line names the next step ("Transcript inserted — press
+  Ctrl+J to fill the fields.").
+- Quick capture: the control row moved above the title field and was
+  reordered (#51, #52): both action buttons sit fixed on the left as
+  equal-sized icon-only buttons (microphone unchanged, `tools-wizard`
+  for the AI action — Breeze and Adwaita carry no chip/brain/circuit
+  symbol; the explanation lives in the tooltips and the help dialog),
+  followed by the spinner and the status text, with a cancel button at
+  the far right that no longer pushes the main buttons aside when it
+  appears. The cancel button now also covers a running AI request
+  (previously only closing the dialog could abort one) with a
+  phase-dependent label — discard recording, cancel transcription,
+  cancel AI request. The recording state is shown as a pressed
+  (checked) microphone button instead of swapping the icon to
+  `media-record`, which read as "start" while the click actually
+  stopped (#51); the pulse stays. The AI button label changed from
+  "Interpret with AI" to "Fill in with AI"; the help dialog's Ctrl+J row
+  follows the new wording.
+- Quick capture: the hint line is silent when idle (#49). The removed
+  sentence ("Free-form text is enough — the AI fills the fields.")
+  suggested an automatic action and hid that interpretation replaces
+  filled fields; the line now speaks only for the three real phases
+  (recording / transcribing / AI reading) and for the next-step hint
+  after a transcript; that hint disappears again when the title field is
+  cleared, so the line never invites an action the greyed-out button
+  refuses.
 - The settings are now split into categories (UI-4, #30): General,
   Synchronization, AI assistant (filled by AI-A4, #12) and
   Maintenance live on separate pages of a Kirigami Addons

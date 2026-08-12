@@ -840,11 +840,21 @@ Kirigami.ApplicationWindow {
                 aiSettingsTimer.start()
                 return
             }
-            // Der Dialog muss offen sein: der automatische Weiterlauf
-            // Transkript → Titelfeld → Interpretation hängt an ihm.
+            // Der Dialog muss offen sein: der Weiterlauf Transkript →
+            // Titelfeld hängt an ihm.
             quickCaptureDialog.openCapture()
+            // #49: In Ruhe schweigt die Bedienzeile — kein Hinweissatz.
+            check(quickCaptureDialog.testUiStates().statusText === "",
+                  "Bedienzeile schweigt in Ruhe (#49)")
             check(app.startDictation(), "startDictation (Konserve) startet")
             check(app.dictationState === 1, "dictationState meldet Aufnahme")
+            // #51: laufende Aufnahme als gedrückter Knopf, Abbrechen rechts
+            // sichtbar.
+            const uiAufnahme = quickCaptureDialog.testUiStates()
+            check(uiAufnahme.micChecked,
+                  "Mikrofon zeigt die laufende Aufnahme als gedrückt (#51)")
+            check(uiAufnahme.cancelVisible,
+                  "Abbrechen-Knopf sichtbar während der Aufnahme (#51)")
             app.stopDictation()
             check(app.dictationState === 2, "dictationState meldet Transkription")
             // Kern des Zustandsproblems (#14, Vorbefund 1): Die
@@ -856,10 +866,10 @@ Kirigami.ApplicationWindow {
         }
     }
 
-    // KI-Flow, Schritt 9: Ende der Diktat-Kette abwarten — Transkription
-    // und die automatisch angestoßene Interpretation. Danach die Gegenprobe
-    // zum Zustandsproblem: cancelDictation darf eine laufende LLM-Anfrage
-    // (Konserve 7, verzögert) nicht mehr aus der Anzeige werfen.
+    // KI-Flow, Schritt 9 (#50): Ende der Transkription abwarten. Die
+    // Interpretation startet NICHT mehr automatisch — das Diktat schreibt
+    // nur den Text ins Titelfeld, danach passiert nichts. Erst der
+    // ausdrückliche Aufruf (KI-Knopf/Strg+J) verbraucht Konserve 6.
     Timer {
         id: aiDictationWaiter
         property int baseFailures: 0
@@ -869,7 +879,7 @@ Kirigami.ApplicationWindow {
         repeat: true
         onTriggered: {
             versuche++
-            if ((app.dictationState !== 0 || app.aiBusy) && versuche < 25)
+            if (app.dictationState !== 0 && versuche < 25)
                 return
             aiDictationWaiter.running = false
             let failures = baseFailures
@@ -878,10 +888,61 @@ Kirigami.ApplicationWindow {
                 if (!cond) failures++
             }
             check(app.dictationState === 0 && !app.aiBusy,
-                  "Diktat-Kette meldet fertig (beide Stränge in Ruhe)")
+                  "Diktat meldet fertig — keine automatische Interpretation (#50)")
             check(app.aiError.length === 0, "kein aiError im Diktat-Fluss")
             check(app.dictationText === transkript,
                   "dictationText trägt das Konserven-Transkript")
+            let fv = quickCaptureDialog.testValues()
+            check(fv.title === transkript, "Transkript steht im Titelfeld (#50)")
+            // Kern von #50: nach dem Transkript passiert nichts — kein
+            // Feld gefüllt, keine Anfrage unterwegs.
+            check(fv.project === "" && fv.tags === "" && fv.notes === ""
+                  && fv.dueIndex === 0 && fv.priorityIndex === 0,
+                  "nach dem Transkript passiert nichts — Felder bleiben leer (#50)")
+            // #49/#50: Die Bedienzeile nennt den nächsten Schritt, sonst
+            // bezahlt niemand den zusätzlichen Klick.
+            check(quickCaptureDialog.testUiStates().statusText.indexOf("Strg+J") !== -1,
+                  "Bedienzeile nennt nach dem Transkript den nächsten Schritt (#49)")
+            // Jetzt der ausdrückliche KI-Schritt — derselbe Weg wie
+            // KI-Knopf und Strg+J; verbraucht Konserve 6.
+            quickCaptureDialog.interpret()
+            check(app.aiBusy, "ausdrücklicher KI-Schritt startet die Anfrage (#50)")
+            // #51: Eine laufende KI-Anfrage ist über den Abbrechen-Knopf
+            // rückholbar — hier nur Sichtbarkeit und Beschriftung; das
+            // Abbrechen selbst prüft Schritt 9d über cancelAiRequest.
+            const uiKi = quickCaptureDialog.testUiStates()
+            check(uiKi.cancelVisible,
+                  "Abbrechen-Knopf sichtbar während der KI-Anfrage (#51)")
+            check(uiKi.cancelText.indexOf("KI") !== -1,
+                  "Abbrechen-Knopf benennt den KI-Strang (#51)")
+            aiInterpretWaiter.transkript = transkript
+            aiInterpretWaiter.baseFailures = failures
+            aiInterpretWaiter.start()
+        }
+    }
+
+    // KI-Flow, Schritt 9b (#50): Ende der ausdrücklich gestarteten
+    // Interpretation abwarten — Entwurf (Konserve 6) füllt die Felder,
+    // der Titel bleibt das Transkript, Anlegen über den normalen Pfad.
+    Timer {
+        id: aiInterpretWaiter
+        property int baseFailures: 0
+        property string transkript: ""
+        property int versuche: 0
+        interval: 200
+        repeat: true
+        onTriggered: {
+            versuche++
+            if (app.aiBusy && versuche < 25)
+                return
+            aiInterpretWaiter.running = false
+            let failures = baseFailures
+            function check(cond, label) {
+                console.log((cond ? "FLOW-OK  " : "FLOW-FAIL ") + label)
+                if (!cond) failures++
+            }
+            check(!app.aiBusy, "Interpretation meldet fertig")
+            check(app.aiError.length === 0, "kein aiError bei der Interpretation")
             const fv = quickCaptureDialog.testValues()
             check(fv.title === transkript,
                   "Transkript steht im Titel (Entwurf ohne Titel lässt ihn stehen)")
@@ -911,10 +972,46 @@ Kirigami.ApplicationWindow {
                 app.deleteTasks(diktiert)
             }
             app.applyFilter("all")
-            // commit() hat den Dialog geschlossen; der Neustart-Fall unten
-            // braucht ihn offen (Transkript→Titelfeld hängt am Dialog).
+            // Schritt 9c (#50): Diktieren in ein halb getipptes Feld —
+            // das Transkript hängt mit trennendem Leerzeichen an, statt
+            // die Eingabe zu ersetzen. commit() hat den Dialog
+            // geschlossen; neu öffnen und vortippen (applyDraft setzt
+            // das Titelfeld wie eine Tastatureingabe).
             quickCaptureDialog.openCapture()
-            // Schritt 9b (Review-Nacharbeit #14): Neustart WÄHREND laufender
+            quickCaptureDialog.applyDraft({title: "Vorgetippt"})
+            app.startDictation()
+            app.stopDictation()
+            aiDictationAppendWaiter.transkript = transkript
+            aiDictationAppendWaiter.baseFailures = failures
+            aiDictationAppendWaiter.start()
+        }
+    }
+
+    // KI-Flow, Schritt 9c (#50), Teil 2: Ende der Anhänge-Transkription
+    // abwarten, dann der Neustart-Fall.
+    Timer {
+        id: aiDictationAppendWaiter
+        property int baseFailures: 0
+        property string transkript: ""
+        property int versuche: 0
+        interval: 200
+        repeat: true
+        onTriggered: {
+            versuche++
+            if (app.dictationState !== 0 && versuche < 25)
+                return
+            aiDictationAppendWaiter.running = false
+            let failures = baseFailures
+            function check(cond, label) {
+                console.log((cond ? "FLOW-OK  " : "FLOW-FAIL ") + label)
+                if (!cond) failures++
+            }
+            check(quickCaptureDialog.testValues().title === "Vorgetippt " + transkript,
+                  "Transkript hängt an den vorhandenen Titel an (#50)")
+            // Neustart-Fall — Dialog zurücksetzen (Transkript→Titelfeld
+            // hängt am offenen Dialog).
+            quickCaptureDialog.openCapture()
+            // Schritt 9d (Review-Nacharbeit #14): Neustart WÄHREND laufender
             // Transkription — der Invokable ist der veröffentlichte
             // Kontrakt, B3b/Planer/Chat kennen die QML-Sperren des Knopfs
             // nicht. Das alte Worker-Ergebnis muss verfallen: kein
@@ -931,7 +1028,7 @@ Kirigami.ApplicationWindow {
         }
     }
 
-    // KI-Flow, Schritt 9b: dem entwerteten Transkriptions-Worker Zeit
+    // KI-Flow, Schritt 9d: dem entwerteten Transkriptions-Worker Zeit
     // lassen — sein Ergebnis darf weder den Zustand zurücksetzen noch ein
     // Transkript publizieren (sonst liefe die Aufnahme nach dem
     // Dialogschluss weiter, der auf dictationState prüft). Danach die
@@ -1117,11 +1214,12 @@ Kirigami.ApplicationWindow {
 
     // KI-Flow, Schritt 11b (#41, Abnahmekriterium): Diktat mit vollständiger
     // Kette, aber OHNE konfiguriertes Modell. Das Transkript muss im
-    // Titelfeld landen, und die automatisch angestoßene Interpretation
-    // bricht still ab — kein aiError, kein hängendes aiBusy. Läuft nur mit
-    // Konserven-Transkript (wie Schritt 8: eine echte Kette stieße einen
-    // echten Whisper-Lauf an). saveAiSettings ist hier unkritisch: Ab
-    // Schritt 11 zieht der Flow keine positionsabhängigen Konserven mehr.
+    // Titelfeld landen; seit #50 stößt das Diktat keine Interpretation
+    // mehr an — es darf also weder aiError noch aiBusy geben, und der
+    // Strg+J-Hinweis der Bedienzeile bleibt ohne Modell aus (#49). Läuft
+    // nur mit Konserven-Transkript (wie Schritt 8: eine echte Kette stieße
+    // einen echten Whisper-Lauf an). saveAiSettings ist hier unkritisch:
+    // Ab Schritt 11 zieht der Flow keine positionsabhängigen Konserven mehr.
     Timer {
         id: comboDictationTimer
         property int baseFailures: 0
@@ -1159,8 +1257,7 @@ Kirigami.ApplicationWindow {
     }
 
     // KI-Flow, Schritt 11b, Teil 2: Ende der Diktat-Kette abwarten. aiBusy
-    // darf dabei nie anspringen — interpret() bricht ohne aiConfigured vor
-    // startAiInterpret ab.
+    // darf dabei nie anspringen — das Diktat endet am Titelfeld (#50).
     Timer {
         id: comboDictationWaiter
         property int baseFailures: 0
@@ -1184,9 +1281,11 @@ Kirigami.ApplicationWindow {
             check(quickCaptureDialog.testValues().title === transkript,
                   "Transkript füllt den Titel ohne konfiguriertes Modell (#41)")
             check(app.aiError.length === 0,
-                  "stiller Abbruch der Interpretation: kein aiError (#41)")
+                  "Diktat ohne Modell: kein aiError (#41/#50)")
             check(!app.aiBusy,
-                  "stiller Abbruch der Interpretation: aiBusy bleibt frei (#41)")
+                  "Diktat ohne Modell: keine Interpretation, aiBusy bleibt frei (#41/#50)")
+            check(quickCaptureDialog.testUiStates().statusText === "",
+                  "kein Strg+J-Hinweis ohne konfiguriertes Modell (#49)")
             quickCaptureDialog.close()
             const s = settingsVorher
             app.saveAiSettings(s.ai_provider, s.ai_base_url, s.ai_model, s.ai_context_level)

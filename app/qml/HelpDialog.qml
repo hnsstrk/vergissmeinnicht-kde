@@ -32,7 +32,7 @@ Kirigami.Dialog {
             QQC2.Label { text: "Strg+N" ; font.family: "monospace" }
             QQC2.Label { text: i18n("Neue Aufgabe") }
             QQC2.Label { text: "Strg+J" ; font.family: "monospace" }
-            QQC2.Label { text: i18n("Schnelleingabe mit KI interpretieren (nur bei konfigurierter KI)") }
+            QQC2.Label { text: i18n("Schnelleingabe mit KI ausfüllen (nur bei konfigurierter KI)") }
             QQC2.Label { text: "Strg+F" ; font.family: "monospace" }
             QQC2.Label { text: i18n("Suche fokussieren") }
             QQC2.Label { text: "Strg+Z" ; font.family: "monospace" }

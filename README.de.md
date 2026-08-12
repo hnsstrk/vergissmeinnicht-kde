@@ -46,7 +46,7 @@ Oberfläche auf jeder Plattform.
   Live-Vorschau. Wie Detail-Editor und Einstellungen öffnet sie sich als
   eigenständiges Dialogfenster (frei beweg- und skalierbar), nicht als
   Modal im Hauptfenster. Mit konfiguriertem KI-Backend schickt **Mit KI
-  interpretieren** (Strg+J) den Freitext des Titels ans Modell und füllt
+  ausfüllen** (Strg+J) den Freitext des Titels ans Modell und füllt
   die strukturierten Felder aus der validierten Antwort — ungültige
   Fälligkeits-/Wiederholungs-/Prioritätswerte werden verworfen, neue
   Projektnamen sind erlaubt, Felder, die das Modell leer lässt, behalten
@@ -54,14 +54,19 @@ Oberfläche auf jeder Plattform.
   füllt), und angelegt wird erst über den normalen Hinzufügen-Knopf. Mit
   vollständiger Diktier-Kette (siehe KI-Assistent unten) — sie ist vom
   konfigurierten Modell unabhängig, Diktieren funktioniert also auch auf
-  Maschinen, die kein Sprachmodell stemmen — nimmt der Mikrofonknopf
-  daneben beim ersten Klick auf (der Knopf pulsiert), der zweite beendet
-  und transkribiert — das Transkript landet im Titelfeld und läuft
-  automatisch in die KI-Interpretation weiter. Was von den beiden
-  Strängen nicht eingerichtet ist, erscheint als gesperrter Knopf mit dem
-  Grund im Tooltip, statt versteckt zu werden. Aufnahme und Transkription
-  lassen sich jederzeit verwerfen; Fehler erscheinen im Statusbereich des
-  Dialogs.
+  Maschinen, die kein Sprachmodell stemmen — nimmt der Mikrofonknopf beim
+  ersten Klick auf (der Knopf pulsiert und erscheint gedrückt), der zweite
+  beendet und transkribiert — das Transkript landet im Titelfeld und hängt
+  sich an bereits Getipptes an. Das Diktat endet am Titelfeld: Die
+  Interpretation läuft nur auf ausdrückliches Auslösen, und nach einem
+  Transkript nennt die Statuszeile diesen nächsten Schritt. Beide Aktionen
+  sitzen als gleich große Icon-Knöpfe in einer Bedienzeile über dem
+  Titelfeld; die Erklärung tragen ihre Tooltips, und ein Abbrechen-Knopf
+  ganz rechts in der Zeile beendet die laufende Phase — Aufnahme,
+  Transkription oder KI-Anfrage. Was von den beiden Strängen nicht
+  eingerichtet ist, erscheint als gesperrter Knopf mit dem Grund im
+  Tooltip, statt versteckt zu werden. Fehler erscheinen im Statusbereich
+  des Dialogs.
 - **Detail-Editor** — Titel, Projekt, Tags, Fällig, Geplant ab, Warten bis,
   Priorität, Wiederholung, Notizen, Abhängigkeits-Editor, Reaktivieren
   erledigter Aufgaben.

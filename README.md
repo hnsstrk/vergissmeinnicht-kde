@@ -46,7 +46,7 @@ platform.
   tokens (`+tag project:foo due:tomorrow priority:H`) with a live preview.
   Like the detail editor and the settings, it opens as a separate dialog
   window (movable and resizable), not as a modal inside the main window.
-  With a configured AI backend, **Interpret with AI** (Ctrl+J) sends the
+  With a configured AI backend, **Fill in with AI** (Ctrl+J) sends the
   free-form title text to the model and fills the structured fields from the
   validated response — invalid due/recurrence/priority values are dropped,
   new project names are allowed, fields the model leaves empty keep the
@@ -54,13 +54,17 @@ platform.
   nothing is created until the regular Add button confirms. With a complete
   dictation chain (see AI assistant below) — which is independent of the
   configured model, so dictation works on machines too weak to run one —
-  the microphone button next to it records on the first click (the button
-  pulses), stops and transcribes on the second, and the transcript lands
-  in the title field and automatically continues into the AI
-  interpretation. Whatever part of the two strands is not set up shows as
-  a disabled button with the reason in its tooltip instead of being
-  hidden. Recording and transcription can be discarded at any point;
-  errors show up in the dialog's own status area.
+  the microphone button records on the first click (the button pulses and
+  shows as pressed), stops and transcribes on the second, and the
+  transcript lands in the title field — appended to whatever is already
+  typed there. Dictation ends at the title field: interpretation only runs
+  when you trigger it, and the status line names that next step after a
+  transcript. Both actions sit as equal icon-only buttons in a control row
+  above the title field; their tooltips carry the explanation, and a cancel
+  button at the far right of the row aborts the running phase — recording,
+  transcription, or the AI request. Whatever part of the two strands is not
+  set up shows as a disabled button with the reason in its tooltip instead
+  of being hidden. Errors show up in the dialog's own status area.
 
   ![Vergissmeinnicht — quick capture](docs/screenshots/quick-capture.png)
 - **Detail editor** — title, project, tags, due, scheduled, wait, priority,
