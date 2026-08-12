@@ -1771,6 +1771,9 @@ impl qobject::AppContainer {
         match ai::transcribe::Aufnahme::starte() {
             Ok(aufnahme) => {
                 self.as_mut().set_ai_error(QString::default());
+                // Ein neues Diktat beginnt ohne Alttext — sonst stünde nach
+                // einem Fehlschlag noch das Transkript des vorigen Diktats da.
+                self.as_mut().set_dictation_text(QString::default());
                 self.as_mut().rust_mut().dictation_recording = Some(aufnahme);
                 true
             }
@@ -1816,9 +1819,15 @@ impl qobject::AppContainer {
                     Ok(text) => qobject
                         .as_mut()
                         .set_dictation_text(QString::from(text.as_str())),
-                    Err(e) => qobject
-                        .as_mut()
-                        .set_ai_error(QString::from(e.to_string().as_str())),
+                    Err(e) => {
+                        // Fehlschlag lässt keinen Alttext stehen — wer auf
+                        // `dictationText` reagiert, sähe sonst das Transkript
+                        // eines früheren Diktats als frisches Ergebnis.
+                        qobject.as_mut().set_dictation_text(QString::default());
+                        qobject
+                            .as_mut()
+                            .set_ai_error(QString::from(e.to_string().as_str()));
+                    }
                 }
             });
         });
