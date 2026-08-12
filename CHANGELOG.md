@@ -7,6 +7,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Dictation infrastructure (AI-A5, #13): recording through PipeWire's
+  `pw-record` plus speech-to-text through one of two subprocess backends,
+  `openai-whisper` (the `whisper` CLI from `PATH`) and `whisper.cpp` (a
+  configurable `whisper-cli` binary with a GGML model file), each with its
+  own JSON output format. The recorder is stopped with SIGINT, then
+  SIGTERM if needed, and awaited — never killed outright, because
+  `pw-record` writes the RIFF size fields only on an orderly exit and a
+  killed recorder leaves a WAV that every backend reads as silence. The
+  child-process handle is owned by the bridge, so a running recording dies
+  with the window and with a crash; recordings and transcripts live in the
+  XDG runtime directory and are deleted after use. A startup probe (also
+  re-run after every settings save) feeds the new `dictationAvailable`
+  property: it requires `pw-record` and the configured backend, including
+  the model file for whisper.cpp, so a missing piece hides the microphone
+  instead of breaking it. The transcript is published as `dictationText`;
+  the Quick Capture microphone button that uses all this follows in AI-B2.
+
 - The AI settings page now fetches the endpoint's model list
   automatically when it opens (UI-6, #33, customer report) — no "Load
   models" click needed in the normal case; the button stays as an

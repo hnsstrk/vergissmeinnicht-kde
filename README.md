@@ -82,7 +82,14 @@ platform.
   shows whether the endpoint answered and how many models it offers, and
   "Load models" stays as an explicit refresh — manual entry keeps working
   when the backend is offline), the API key in the Secret Service, and
-  the speech-to-text backend. A context-scope setting controls how much task data the AI
+  the speech-to-text backend for dictation — either `openai-whisper` (the
+  `whisper` CLI from `PATH`, CPU, model name configurable) or
+  `whisper.cpp` (a `whisper-cli` binary plus a GGML model file, both given
+  as paths; this is the way to use a GPU build). Dictation additionally
+  needs PipeWire's `pw-record`; if any part of that chain is missing, the
+  app keeps the microphone hidden instead of failing at record time.
+  Recordings and transcripts live in the XDG runtime directory and are
+  deleted after use. A context-scope setting controls how much task data the AI
   sees when interpreting input: project and tag names only (default),
   plus open task titles, or all non-deleted tasks compactly — deleted
   tasks are never sent. "Save and test" verifies the connection via the
@@ -233,7 +240,8 @@ server. TaskChampion resolves conflicts CRDT-style via its operation log.
 │   ├── src/            cxx-qt bridge, filters, parsers, state, backups
 │   │   └── ai/         opt-in AI assistance (in progress): LLM client,
 │   │                   prompt builders, validated drafts, canned-response
-│   │                   mock, request worker
+│   │                   mock, request worker, dictation (recording +
+│   │                   speech-to-text)
 │   ├── qml/            Main window, sidebar, dialogs
 │   └── cpp/            small shims (KLocalizedContext, window grab)
 ├── data/               desktop file, icon, AppStream metainfo

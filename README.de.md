@@ -80,7 +80,14 @@ Oberfläche auf jeder Plattform.
   geladen; eine Erreichbarkeitszeile zeigt, ob der Endpunkt antwortet und
   wie viele Modelle er anbietet, „Modelle laden" bleibt als manuelle
   Aktualisierung — manuelle Eingabe bleibt auch offline möglich), API-Key
-  im Secret Service und das Spracherkennungs-Backend. Der Kontextumfang bestimmt, wie viele
+  im Secret Service und das Spracherkennungs-Backend fürs Diktat — entweder
+  `openai-whisper` (das `whisper`-Programm aus dem `PATH`, CPU, Modellname
+  einstellbar) oder `whisper.cpp` (ein `whisper-cli`-Programm plus
+  GGML-Modelldatei, beides als Pfad; so lässt sich ein GPU-Build nutzen).
+  Zusätzlich braucht das Diktat `pw-record` aus PipeWire; fehlt ein Glied
+  dieser Kette, bleibt das Mikrofon versteckt, statt erst bei der Aufnahme
+  zu scheitern. Aufnahmen und Transkripte liegen im XDG-Laufzeitverzeichnis
+  und werden nach Gebrauch gelöscht. Der Kontextumfang bestimmt, wie viele
   Aufgabendaten die KI beim Interpretieren sieht: nur Projekt- und
   Schlagwortnamen (Standard), zusätzlich Titel offener Aufgaben oder alle
   nicht gelöschten Aufgaben kompakt — Gelöschtes wird nie übertragen.
@@ -233,7 +240,8 @@ ab. TaskChampion löst Konflikte CRDT-artig über sein Operation-Log.
 │   ├── src/            cxx-qt-Bridge, Filter, Parser, State, Backups
 │   │   └── ai/         Opt-in-KI-Assistenz (im Aufbau): LLM-Client,
 │   │                   Prompt-Bausteine, validierte Entwürfe,
-│   │                   Konserven-Mock, Anfrage-Worker
+│   │                   Konserven-Mock, Anfrage-Worker, Diktat (Aufnahme +
+│   │                   Spracherkennung)
 │   ├── qml/            Hauptfenster, Seitenleiste, Dialoge
 │   └── cpp/            kleine Shims (KLocalizedContext, Fenster-Grab)
 ├── data/               Desktop-Datei, Icon, AppStream-Metainfo

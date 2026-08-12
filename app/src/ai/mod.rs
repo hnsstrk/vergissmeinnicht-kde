@@ -13,8 +13,10 @@
 //!   - `aiResponseJson` — das validierte JSON-Objekt der jüngsten
 //!     abgeschlossenen Anfrage; veraltete oder abgebrochene Ergebnisse
 //!     lassen es unverändert.
-//!   - `dictationAvailable` — konstant `false`, bis die Startup-Sonde aus
-//!     Story AI-A5 sie füllt.
+//!   - `dictationAvailable` — Ergebnis der Startsonde aus Story AI-A5
+//!     (`transcribe::verfuegbarkeit`): `pw-record` plus das konfigurierte
+//!     Spracherkennungs-Backend. Fehlt etwas, bleibt das Mikrofon versteckt.
+//!   - `dictationText` — Transkript des jüngsten abgeschlossenen Diktats.
 //! * **Worker**: [`starte_anfrage`] folgt dem `start_sync`-Muster — Thread
 //!   spawnen, blockierender Call im Worker, Ergebnis über
 //!   `qt_thread().queue(...)` zurück auf den Qt-Thread.
@@ -31,6 +33,7 @@
 pub mod client;
 pub mod mock;
 pub mod prompts;
+pub mod transcribe;
 pub mod types;
 
 use client::{AiError, Llm};

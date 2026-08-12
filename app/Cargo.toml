@@ -21,6 +21,9 @@ dirs = "6"
 # können nicht koexistieren (native `links`-Grenze).
 rusqlite = "0.39"
 keyring = { version = "3", features = ["sync-secret-service"] }
+# Nur für `kill(2)`: Die Diktat-Aufnahme wird über SIGINT/SIGTERM beendet
+# (ai/transcribe.rs) — `Child::kill` kann ausschließlich SIGKILL.
+libc = "0.2"
 notify-rust = "4"
 uuid.workspace = true
 # Blockierender HTTP-Client für den KI-Endpunkt (ai/client.rs). rustls statt

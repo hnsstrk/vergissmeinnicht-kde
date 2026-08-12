@@ -53,6 +53,13 @@ cargo test --workspace
 - `cargo test -p vergissmeinnicht-app -- --ignored secrets` — real
   Secret Service roundtrip (needs an unlocked session with a running
   `org.freedesktop.secrets` provider).
+- `cargo test -p vergissmeinnicht-app -- --ignored diktat --nocapture` —
+  real dictation: records two seconds through `pw-record` (checks that the
+  RIFF header is complete after the orderly stop) and runs the configured
+  speech-to-text backend once. Needs PipeWire; the roundtrip also needs an
+  installed backend. Everything else about dictation is covered by the
+  regular unit tests (output parsers against recorded fixtures,
+  availability probe, termination chain).
 
 ### End-to-end hooks
 

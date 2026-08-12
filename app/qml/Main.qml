@@ -564,7 +564,13 @@ Kirigami.ApplicationWindow {
             // übersprungen, damit der Flow nie echte HTTP-Anfragen stellt.
             check(!app.aiBusy, "aiBusy anfangs false")
             check(app.aiError.length === 0, "aiError anfangs leer")
-            check(!app.dictationAvailable, "dictationAvailable ohne Sonde false")
+            // AI-A5: Die Diktier-Sonde läuft beim Start — ihr Ergebnis hängt
+            // davon ab, was auf dieser Maschine installiert ist. Die
+            // deterministisch prüfbare Negativrichtung steht in Schritt 8,
+            // wo die KI-Einstellungen ohnehin verstellt und wieder
+            // hergestellt werden.
+            check(typeof app.dictationAvailable === "boolean",
+                  "dictationAvailable ist gesetzt")
             app.cancelAiRequest()
             check(!app.aiBusy && app.aiError.length === 0,
                   "cancelAiRequest ohne laufende Anfrage ist folgenlos")
@@ -799,6 +805,26 @@ Kirigami.ApplicationWindow {
             check(previewC.indexOf("Aktuelles Datum:") > previewC.indexOf("Alle Aufgaben (kompakt):"),
                   "Datum steht hinter der Aufgabenliste (Präfix-Cache)")
             speichernMitStufe("taxonomy")
+            // AI-A5: Diktier-Sonde. Fehlt irgendein Teil der Kette, bleibt
+            // das Mikrofon versteckt — unabhängig davon, was auf der
+            // Maschine installiert ist. Danach der gespeicherte Stand zurück.
+            function speichernMitDiktat(backend, binary, modell) {
+                app.saveAiSettings(s.ai_provider, s.ai_base_url, s.ai_model, backend,
+                                   s.ai_whisper_model, binary, modell, s.ai_context_level)
+            }
+            speichernMitDiktat("whisperx", s.ai_whisper_cpp_binary, s.ai_whisper_cpp_model)
+            check(!app.dictationAvailable,
+                  "dictationAvailable false bei unbekanntem STT-Backend")
+            speichernMitDiktat("whisper-cpp", "/gibt/es/nicht/whisper-cli",
+                               "/gibt/es/nicht/ggml-large-v3.bin")
+            check(!app.dictationAvailable,
+                  "dictationAvailable false ohne whisper-cli-Programm")
+            speichernMitDiktat(s.ai_stt_backend, s.ai_whisper_cpp_binary,
+                               s.ai_whisper_cpp_model)
+            // Diktat verwerfen ohne laufende Aufnahme ist folgenlos.
+            app.cancelDictation()
+            check(app.dictationText.length === 0 && app.aiError.length === 0,
+                  "cancelDictation ohne Aufnahme ist folgenlos")
             check(JSON.parse(app.aiModelsJson || "[]").length === 0, "aiModelsJson anfangs leer")
             app.startAiListModels()
             check(app.aiBusy, "aiBusy während Modelllisten-Abruf")
@@ -933,6 +959,21 @@ Kirigami.ApplicationWindow {
             check(modelle.length === 1 && modelle[0] === "vmn-mock",
                   "Auto-Abruf füllt die Modellliste")
             settingsDialog.close()
+            // AI-A5: echte Aufnahme über die Bridge — nur wo die Kette steht.
+            // Die zweite Aufnahme bleibt bewusst LAUFEN: Beim Beenden muss
+            // `pw-record` mit dem Fenster sterben (Drop auf der Aufnahme).
+            // Nachweis außerhalb des Flows: `pgrep -af pw-record` und ein
+            // leeres Laufzeitverzeichnis.
+            if (app.dictationAvailable) {
+                check(app.startDictation(), "startDictation startet die Aufnahme")
+                check(app.startDictation(), "zweiter Start bei laufender Aufnahme folgenlos")
+                app.cancelDictation()
+                check(app.aiError.length === 0, "cancelDictation räumt ohne Fehler auf")
+                check(app.startDictation(), "Aufnahme nach dem Verwerfen wieder startbar")
+                console.log("FLOW-INFO Aufnahme läuft absichtlich weiter — muss mit dem Fenster sterben")
+            } else {
+                console.log("FLOW-INFO Diktat-Teil übersprungen (dictationAvailable false)")
+            }
             console.log(failures === 0 ? "FLOW-ENDE: alles grün" : `FLOW-ENDE: ${failures} Fehler`)
             Qt.quit()
         }

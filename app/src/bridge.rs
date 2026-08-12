@@ -139,7 +139,11 @@ mod qobject {
         // Stufen-Ergebnis der NL-Erfassung (AI-B1): validierter Entwurf als
         // JSON, siehe `ai::types::AiDraft`.
         #[qproperty(QString, ai_draft_json, cxx_name = "aiDraftJson")]
+        // Diktat (AI-A5): Sonde beim Start bzw. nach jedem Speichern der
+        // KI-Einstellungen; `dictationText` trägt das Transkript des jüngsten
+        // abgeschlossenen Diktats.
         #[qproperty(bool, dictation_available, cxx_name = "dictationAvailable")]
+        #[qproperty(QString, dictation_text, cxx_name = "dictationText")]
         type AppContainer = super::AppContainerRust;
 
         // ── Modell-Overrides ────────────────────────────────────────────────
@@ -383,6 +387,23 @@ mod qobject {
         #[qinvokable]
         fn start_ai_list_models_auto(self: Pin<&mut AppContainer>);
 
+        /// Diktat starten (AI-A5): `pw-record` läuft, bis `stopDictation`
+        /// oder `cancelDictation` kommt. Liefert false, wenn die Aufnahme
+        /// nicht anlief (Grund steht dann in `aiError`); ein zweiter Aufruf
+        /// bei laufender Aufnahme ist folgenlos.
+        #[qinvokable]
+        fn start_dictation(self: Pin<&mut AppContainer>) -> bool;
+        /// Diktat beenden und transkribieren: Die Aufnahme wird geordnet
+        /// gestoppt (SIGINT/SIGTERM, abgewartet), das Backend läuft im
+        /// Worker-Thread. Ergebnis in `dictationText`, Fehler in `aiError`,
+        /// Fortschritt über `aiBusy`.
+        #[qinvokable]
+        fn stop_dictation(self: Pin<&mut AppContainer>);
+        /// Diktat verwerfen: laufende Aufnahme beenden und löschen, das
+        /// Ergebnis einer laufenden Transkription fallen lassen.
+        #[qinvokable]
+        fn cancel_dictation(self: Pin<&mut AppContainer>);
+
         /// Legacy-Reparatur: Token-Syntax in Descriptions → echte Properties.
         /// Rückgabe: Anzahl reparierter Aufgaben, -1 bei Fehler.
         #[qinvokable]
@@ -480,6 +501,15 @@ pub struct AppContainerRust {
     ai_probe_detail: QString,
     ai_draft_json: QString,
     dictation_available: bool,
+    dictation_text: QString,
+    /// Laufende Diktat-Aufnahme (AI-A5). Der Kindprozess-Handle liegt hier,
+    /// damit kein `pw-record` die App überlebt: Wird der Container zerstört
+    /// (Fenster zu) oder das Programm abgewickelt (Panik), räumt `Drop` auf
+    /// `Aufnahme` Prozess und WAV-Datei ab.
+    dictation_recording: Option<ai::transcribe::Aufnahme>,
+    /// Eigener Generationszähler fürs Diktat — eine abgebrochene
+    /// Transkription darf keine laufende KI-Anfrage mitreißen und umgekehrt.
+    dictation_generationen: std::sync::Arc<ai::Generationen>,
     /// Generationszähler der KI-Anfragen — geteilt mit den Worker-Threads,
     /// damit Worker und Queue-Callback dieselbe Wahrheit prüfen.
     ai_generationen: std::sync::Arc<ai::Generationen>,
@@ -528,6 +558,9 @@ impl Default for AppContainerRust {
             ai_probe_detail: QString::default(),
             ai_draft_json: QString::default(),
             dictation_available: false,
+            dictation_text: QString::default(),
+            dictation_recording: None,
+            dictation_generationen: std::sync::Arc::new(ai::Generationen::default()),
             ai_generationen: std::sync::Arc::new(ai::Generationen::default()),
             ai_llm: std::sync::Arc::new(ai::LlmHalter::default()),
             state,
@@ -540,11 +573,13 @@ impl cxx_qt::Initialize for qobject::AppContainer {
         let configured = compute_sync_configured(&self.rust().state.settings);
         self.as_mut().set_sync_configured(configured);
         // KI-Gate (Spec §3.2): ohne Konfiguration bleiben alle
-        // KI-Bedienelemente versteckt. Die Diktier-Sonde kommt mit Story
-        // AI-A5 — bis dahin bleibt das Mikrofon konstant versteckt.
+        // KI-Bedienelemente versteckt.
         let ai_configured = compute_ai_configured(&self.rust().state.settings);
         self.as_mut().set_ai_configured(ai_configured);
-        self.as_mut().set_dictation_available(false);
+        // Diktier-Sonde (AI-A5): fehlt irgendein Teil der Kette, bleibt das
+        // Mikrofon versteckt statt kaputt zu sein (Spec §7).
+        let dictation = compute_dictation_available(&self.rust().state.settings);
+        self.as_mut().set_dictation_available(dictation);
         self.as_mut().publish();
     }
 }
@@ -564,6 +599,14 @@ fn compute_sync_configured(settings: &Settings) -> bool {
 /// brauchen keinen. Speist die Bridge-Property `aiConfigured`.
 fn compute_ai_configured(settings: &Settings) -> bool {
     !settings.ai_base_url.trim().is_empty() && !settings.ai_model.trim().is_empty()
+}
+
+/// Diktat gilt als verfügbar, wenn die ganze Kette steht (AI-A5):
+/// `pw-record` plus das konfigurierte Spracherkennungs-Backend samt
+/// Modelldatei. Speist die Bridge-Eigenschaft `dictationAvailable`; die
+/// Prüfung selbst liegt Qt-frei in `ai::transcribe`.
+fn compute_dictation_available(settings: &Settings) -> bool {
+    ai::transcribe::verfuegbarkeit(settings).is_ok()
 }
 
 fn opt_string(q: &QString) -> Option<String> {
@@ -1670,6 +1713,10 @@ impl qobject::AppContainer {
         self.rust().ai_llm.invalidiere();
         let configured = compute_ai_configured(&self.rust().state.settings);
         self.as_mut().set_ai_configured(configured);
+        // Diktier-Sonde erneut (AI-A5): Backend-Wechsel oder geänderte Pfade
+        // schlagen sofort aufs Mikrofon durch, ohne Neustart.
+        let dictation = compute_dictation_available(&self.rust().state.settings);
+        self.as_mut().set_dictation_available(dictation);
     }
 
     fn ai_settings_json(&self) -> QString {
@@ -1703,6 +1750,88 @@ impl qobject::AppContainer {
     /// Kontrakt siehe Bridge-Deklaration.
     fn start_ai_list_models_auto(self: Pin<&mut Self>) {
         self.modellliste_abrufen(true);
+    }
+
+    // ─── Diktat (Story AI-A5) ──────────────────────────────────────────────
+
+    /// Aufnahme starten. Die Sonde läuft hier ein zweites Mal: Zwischen
+    /// Programmstart und Mikrofonklick kann das Backend deinstalliert oder
+    /// die Modelldatei verschoben worden sein.
+    fn start_dictation(mut self: Pin<&mut Self>) -> bool {
+        if self.rust().dictation_recording.is_some() {
+            // Läuft schon — ein zweiter Klick ist kein Fehler.
+            return true;
+        }
+        if let Err(fehlend) = ai::transcribe::verfuegbarkeit(&self.rust().state.settings) {
+            self.as_mut().set_dictation_available(false);
+            self.as_mut()
+                .set_ai_error(QString::from(fehlend.to_string().as_str()));
+            return false;
+        }
+        match ai::transcribe::Aufnahme::starte() {
+            Ok(aufnahme) => {
+                self.as_mut().set_ai_error(QString::default());
+                self.as_mut().rust_mut().dictation_recording = Some(aufnahme);
+                true
+            }
+            Err(e) => {
+                self.as_mut()
+                    .set_ai_error(QString::from(e.to_string().as_str()));
+                false
+            }
+        }
+    }
+
+    /// Aufnahme beenden und transkribieren. Das geordnete Beenden
+    /// (SIGINT/SIGTERM samt Abwarten) UND der Whisper-Lauf gehören in den
+    /// Worker — beides dauert, und der Qt-Thread darf nicht stehen. Kontrakt
+    /// im Übrigen wie `start_ai_request`: Generationszähler mit doppelter
+    /// Aktualitätsprüfung, Fehler nur in den KI-eigenen Kanal.
+    fn stop_dictation(mut self: Pin<&mut Self>) {
+        let Some(mut aufnahme) = self.as_mut().rust_mut().dictation_recording.take() else {
+            return;
+        };
+        let settings = self.rust().state.settings.clone();
+        let generationen = std::sync::Arc::clone(&self.rust().dictation_generationen);
+        let generation = generationen.naechste();
+        self.as_mut().set_ai_busy(true);
+        self.as_mut().set_ai_error(QString::default());
+        let qt_thread = self.qt_thread();
+        std::thread::spawn(move || {
+            let ergebnis = aufnahme
+                .stoppe()
+                .and_then(|()| ai::transcribe::transkribiere(&settings, aufnahme.wav()));
+            // Die Aufnahme stirbt hier — ihr `Drop` löscht die WAV-Datei aus
+            // dem Laufzeitverzeichnis, auch im Fehlerfall.
+            drop(aufnahme);
+            if !generationen.ist_aktuell(generation) {
+                return;
+            }
+            let _ = qt_thread.queue(move |mut qobject| {
+                if !qobject.rust().dictation_generationen.ist_aktuell(generation) {
+                    return;
+                }
+                qobject.as_mut().set_ai_busy(false);
+                match ergebnis {
+                    Ok(text) => qobject
+                        .as_mut()
+                        .set_dictation_text(QString::from(text.as_str())),
+                    Err(e) => qobject
+                        .as_mut()
+                        .set_ai_error(QString::from(e.to_string().as_str())),
+                }
+            });
+        });
+    }
+
+    /// Diktat verwerfen (Dialog zu, Abbruch). Eine laufende Aufnahme endet
+    /// hier: `Drop` schickt SIGINT/SIGTERM, wartet ab und löscht die Datei.
+    /// Ein laufender Whisper-Lauf wird über den Generationszähler entwertet.
+    fn cancel_dictation(mut self: Pin<&mut Self>) {
+        self.rust().dictation_generationen.verwerfen();
+        let laufend = self.as_mut().rust_mut().dictation_recording.take();
+        drop(laufend);
+        self.as_mut().set_ai_busy(false);
     }
 
     fn repair_legacy_tasks(mut self: Pin<&mut Self>) -> i32 {
