@@ -724,6 +724,16 @@ mod tests {
         );
         // Schreibgeschützt (chmod 555): existiert, ist aber nicht nutzbar.
         std::fs::set_permissions(ordner.path(), std::fs::Permissions::from_mode(0o555)).unwrap();
+        // Für root sind Dateirechte wirkungslos — die CI läuft im
+        // Arch-Container als root, dort prüft der Rest des Tests nichts.
+        // Die Sonde selbst hängt nicht daran: der Negativfall ist über
+        // `sonde_ohne_schreibbares_laufzeitverzeichnis` injiziert abgedeckt
+        // und läuft überall.
+        if unsafe { libc::geteuid() } == 0 {
+            std::fs::set_permissions(ordner.path(), std::fs::Permissions::from_mode(0o755))
+                .unwrap();
+            return;
+        }
         assert!(!laufzeit_beschreibbar(ordner.path()));
         // Untergeordnetes Verzeichnis unter dem geschützten: `create_dir_all`
         // scheitert schon beim Anlegen — auch das ist „nicht beschreibbar".
