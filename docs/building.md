@@ -72,7 +72,7 @@ Service — `--test-secrets` and `--test-settings-ui` intentionally exercise
 the live KWallet/Secret Service and restore the previous entries afterwards.
 
 ```sh
-# Scripted smoke test through the real QML→bridge chain (187 checks; parts
+# Scripted smoke test through the real QML→bridge chain (189 checks; parts
 # whose prerequisites are missing — Secret Service, dictation chain — skip
 # with a FLOW-INFO line and reduce the count).
 # Use a disposable data dir — it mutates the replica!
@@ -179,8 +179,8 @@ since #47) is grabbed the same way with
 `--test-dialog=settings-dictation --test-grab=docs/screenshots/settings-dictation.png`.
 
 One caveat for the AI page: the committed `settings-ai.png` shows a green
-reachability line ("Backend reachable — 1 model found."), and that line does
-need a reachable backend. The demo config is enough for `aiConfigured` and
+reachability line ("Backend reachable — 15 models found."; the count simply
+mirrors the local Ollama), and that line does need a reachable backend. The demo config is enough for `aiConfigured` and
 therefore for the controls to appear, but on a machine without a local Ollama
 the same recipe produces a screenshot with the unreachable state instead.
 Start Ollama before grabbing that particular dialog, or expect the difference.
