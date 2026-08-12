@@ -72,7 +72,7 @@ Service — `--test-secrets` and `--test-settings-ui` intentionally exercise
 the live KWallet/Secret Service and restore the previous entries afterwards.
 
 ```sh
-# Scripted smoke test through the real QML→bridge chain (174 checks; parts
+# Scripted smoke test through the real QML→bridge chain (187 checks; parts
 # whose prerequisites are missing — Secret Service, dictation chain — skip
 # with a FLOW-INFO line and reduce the count).
 # Use a disposable data dir — it mutates the replica!
