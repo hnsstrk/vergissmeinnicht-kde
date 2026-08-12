@@ -64,7 +64,7 @@ cargo test --workspace
 ### End-to-end hooks
 
 ```sh
-# Scripted smoke test through the real QML→bridge chain (142 checks; parts
+# Scripted smoke test through the real QML→bridge chain (148 checks; parts
 # whose prerequisites are missing — Secret Service, dictation chain — skip
 # with a FLOW-INFO line and reduce the count).
 # Use a disposable data dir — it mutates the replica!

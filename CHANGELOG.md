@@ -32,7 +32,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   idle/recording/transcribing) while `aiBusy` now belongs to LLM
   requests alone, so canceling a dictation no longer clears the display
   of a running LLM request and a finishing LLM result no longer ends the
-  transcription spinner (A5 review finding). The dictation→draft path is
+  transcription spinner (A5 review finding). Starting a new dictation
+  while a transcription is still running invalidates the old worker's
+  result, so it can neither reset the state nor publish a stale
+  transcript into the new recording. The dictation→draft path is
   verified end-to-end in `--test-flow` through a canned transcript
   (`VMN_STT_MOCK`, no microphone and no Whisper needed), which also runs
   in CI; the canned mode only pretends the PATH programs are installed,

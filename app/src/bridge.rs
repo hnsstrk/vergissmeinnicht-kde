@@ -1781,6 +1781,16 @@ impl qobject::AppContainer {
             // Läuft schon — ein zweiter Klick ist kein Fehler.
             return true;
         }
+        // Kontrakt-Härtung (AI-B2-Review): Ein Start während laufender
+        // Transkription entwertet deren Worker-Ergebnis. Sonst setzte der
+        // alte Worker den Zustand auf Ruhe zurück, publizierte sein
+        // Transkript mitten in die neue Aufnahme, und der Dialogschluss
+        // räumte die Aufnahme nicht mehr ab (er prüft `dictationState`) —
+        // die Aufnahme liefe bis zum App-Ende weiter. Der Knopf ist in
+        // Phase 2 zwar gesperrt, aber der Invokable ist der
+        // veröffentlichte Kontrakt (B3b, Planer, Chat). Ohne laufenden
+        // Worker ist der Bump folgenlos.
+        self.rust().dictation_generationen.verwerfen();
         if let Err(fehlend) = ai::transcribe::verfuegbarkeit(&self.rust().state.settings) {
             self.as_mut().set_dictation_available(false);
             self.as_mut()

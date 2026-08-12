@@ -838,6 +838,45 @@ Kirigami.ApplicationWindow {
                   && fv.dueIndex === 2 && fv.priorityIndex === 2
                   && fv.notes === "Aus dem Diktat",
                   "Entwurf aus dem Diktat füllt die Felder")
+            // Schritt 9b (Review-Nacharbeit #14): Neustart WÄHREND laufender
+            // Transkription — der Invokable ist der veröffentlichte
+            // Kontrakt, B3b/Planer/Chat kennen die QML-Sperren des Knopfs
+            // nicht. Das alte Worker-Ergebnis muss verfallen: kein
+            // Rücksetzer auf Ruhe, kein altes Transkript in der neuen
+            // Aufnahme. Die Aufrufe hier laufen synchron auf dem Qt-Thread,
+            // der entwertete Worker kann nicht dazwischenfunken.
+            app.startDictation()
+            app.stopDictation()
+            check(app.dictationState === 2, "Transkription läuft für den Neustart-Fall")
+            check(app.startDictation(), "startDictation während Transkription startet neu")
+            check(app.dictationState === 1, "Neustart meldet Aufnahme")
+            aiDictationRestartWaiter.baseFailures = failures
+            aiDictationRestartWaiter.start()
+        }
+    }
+
+    // KI-Flow, Schritt 9b: dem entwerteten Transkriptions-Worker Zeit
+    // lassen — sein Ergebnis darf weder den Zustand zurücksetzen noch ein
+    // Transkript publizieren (sonst liefe die Aufnahme nach dem
+    // Dialogschluss weiter, der auf dictationState prüft). Danach die
+    // Gegenprobe zum Zustandsproblem und weiter zu den
+    // Einstellungs-Abschnitten.
+    Timer {
+        id: aiDictationRestartWaiter
+        property int baseFailures: 0
+        interval: 400
+        onTriggered: {
+            let failures = baseFailures
+            function check(cond, label) {
+                console.log((cond ? "FLOW-OK  " : "FLOW-FAIL ") + label)
+                if (!cond) failures++
+            }
+            check(app.dictationState === 1,
+                  "entwertetes Transkriptions-Ergebnis setzt den Zustand nicht zurück")
+            check(app.dictationText.length === 0,
+                  "kein altes Transkript in der neuen Aufnahme")
+            app.cancelDictation()
+            check(app.dictationState === 0, "Verwerfen räumt die Neustart-Aufnahme ab")
             // Gegenprobe: LLM-Anfrage läuft (verzögerte Konserve 7),
             // Diktatabbruch darf ihre Busy-Anzeige nicht löschen.
             app.startAiRequest("Kontrolle — Diktatabbruch darf nicht stören")
@@ -1028,7 +1067,7 @@ Kirigami.ApplicationWindow {
 
     // KI-Flow, Schritt 13 (UI-6, #33): Das Öffnen der KI-Einstellungsseite
     // stößt den Modelllisten-Abruf selbst an — die Anzeige springt vom
-    // negativen Stand aus Schritt 10 zurück auf „erreichbar", ohne dass
+    // negativen Stand aus Schritt 12 zurück auf „erreichbar", ohne dass
     // jemand einen Knopf drückt.
     Timer {
         id: aiPageOpenTimer
