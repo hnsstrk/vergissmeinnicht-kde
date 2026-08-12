@@ -126,14 +126,27 @@ FormWindow {
 
     // Sperr- und Sichtbarkeitszustände der KI-Zeile für den Headless-Flow
     // (#41) — gleiches Muster wie testValues(): interne IDs bleiben
-    // außerhalb der Datei unsichtbar.
+    // außerhalb der Datei unsichtbar. QQC2-Tooltips teilen sich eine
+    // Engine-weite Instanz (ToolTip.toolTip); über sie weist der Flow
+    // nach, dass der Tooltip am gesperrten Mikrofon wirklich erscheint.
     function testUiStates() {
+        const geteilterTip = QQC2.ToolTip.toolTip
         return {
             rowVisible: aiRow.visible,
             micVisible: dictationButton.visible,
             micEnabled: dictationButton.enabled,
+            micHovered: dictationHover.hovered,
             interpretEnabled: interpretButton.enabled,
+            sharedTipVisible: geteilterTip ? geteilterTip.visible : false,
+            sharedTipText: geteilterTip ? geteilterTip.text : "",
         }
+    }
+
+    // Mitte des Mikrofonknopfs in Fensterkoordinaten — Ziel der
+    // synthetischen Mausbewegung im Flow (#41).
+    function micCenterInWindow() {
+        return dictationButton.mapToItem(null, dictationButton.width / 2,
+                                         dictationButton.height / 2)
     }
 
     // Ein KI-Ergebnis füllt die Felder nur, solange der Dialog offen ist —

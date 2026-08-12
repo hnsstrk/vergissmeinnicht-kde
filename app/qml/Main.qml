@@ -1102,6 +1102,174 @@ Kirigami.ApplicationWindow {
                   "Modellliste des Mocks publiziert (aiModelsJson)")
             check(app.aiProbeStatus === 1,
                   "Erreichbarkeitsanzeige positiv nach Modelllisten-Abruf")
+            // Weiter zum Kombinationsfall (#41), danach UI-6.
+            comboDictationTimer.baseFailures = failures
+            comboDictationTimer.start()
+        }
+    }
+
+    // KI-Flow, Schritt 11b (#41, Abnahmekriterium): Diktat mit vollständiger
+    // Kette, aber OHNE konfiguriertes Modell. Das Transkript muss im
+    // Titelfeld landen, und die automatisch angestoßene Interpretation
+    // bricht still ab — kein aiError, kein hängendes aiBusy. Läuft nur mit
+    // Konserven-Transkript (wie Schritt 8: eine echte Kette stieße einen
+    // echten Whisper-Lauf an). saveAiSettings ist hier unkritisch: Ab
+    // Schritt 11 zieht der Flow keine positionsabhängigen Konserven mehr.
+    Timer {
+        id: comboDictationTimer
+        property int baseFailures: 0
+        interval: 100
+        onTriggered: {
+            let failures = baseFailures
+            function check(cond, label) {
+                console.log((cond ? "FLOW-OK  " : "FLOW-FAIL ") + label)
+                if (!cond) failures++
+            }
+            const transkript = app.dictationMockTranscript()
+            if (transkript.length === 0) {
+                console.log("FLOW-INFO Kombinationsfall übersprungen (VMN_STT_MOCK nicht gesetzt)")
+                hoverTipTimer.baseFailures = failures
+                hoverTipTimer.start()
+                return
+            }
+            const s = JSON.parse(app.aiSettingsJson())
+            comboDictationWaiter.settingsVorher = s
+            // Modell wegkonfigurieren: Die Diktier-Sonde liest Basis-URL und
+            // Modell nie — das Diktat bleibt verfügbar, die KI nicht.
+            app.saveAiSettings(s.ai_provider, s.ai_base_url, "", s.ai_stt_backend,
+                               s.ai_whisper_model, s.ai_whisper_cpp_binary,
+                               s.ai_whisper_cpp_model, s.ai_context_level)
+            check(!app.aiConfigured && app.dictationAvailable,
+                  "Kombination hergestellt: Diktat verfügbar, KI unkonfiguriert (#41)")
+            quickCaptureDialog.openCapture()
+            const ui = quickCaptureDialog.testUiStates()
+            check(ui.micVisible && ui.micEnabled,
+                  "Mikrofon sichtbar und bedienbar ohne Modell (#41)")
+            check(app.startDictation(), "startDictation ohne Modell startet (#41)")
+            app.stopDictation()
+            comboDictationWaiter.transkript = transkript
+            comboDictationWaiter.baseFailures = failures
+            comboDictationWaiter.start()
+        }
+    }
+
+    // KI-Flow, Schritt 11b, Teil 2: Ende der Diktat-Kette abwarten. aiBusy
+    // darf dabei nie anspringen — interpret() bricht ohne aiConfigured vor
+    // startAiInterpret ab.
+    Timer {
+        id: comboDictationWaiter
+        property int baseFailures: 0
+        property string transkript: ""
+        property var settingsVorher: null
+        property int versuche: 0
+        interval: 200
+        repeat: true
+        onTriggered: {
+            versuche++
+            if (app.dictationState !== 0 && versuche < 25)
+                return
+            comboDictationWaiter.running = false
+            let failures = baseFailures
+            function check(cond, label) {
+                console.log((cond ? "FLOW-OK  " : "FLOW-FAIL ") + label)
+                if (!cond) failures++
+            }
+            check(app.dictationState === 0,
+                  "Diktat-Kette ohne Modell meldet fertig (#41)")
+            check(quickCaptureDialog.testValues().title === transkript,
+                  "Transkript füllt den Titel ohne konfiguriertes Modell (#41)")
+            check(app.aiError.length === 0,
+                  "stiller Abbruch der Interpretation: kein aiError (#41)")
+            check(!app.aiBusy,
+                  "stiller Abbruch der Interpretation: aiBusy bleibt frei (#41)")
+            quickCaptureDialog.close()
+            const s = settingsVorher
+            app.saveAiSettings(s.ai_provider, s.ai_base_url, s.ai_model, s.ai_stt_backend,
+                               s.ai_whisper_model, s.ai_whisper_cpp_binary,
+                               s.ai_whisper_cpp_model, s.ai_context_level)
+            check(app.aiConfigured, "Modell nach Kombinationsfall wiederhergestellt (#41)")
+            hoverTipTimer.baseFailures = failures
+            hoverTipTimer.start()
+        }
+    }
+
+    // KI-Flow, Schritt 11c (#41): Der Tooltip am GESPERRTEN Mikrofon muss
+    // wirklich erscheinen — enabled:false schluckt Hover am Control selbst,
+    // der HoverHandler am umschließenden Item nicht. Synthetische
+    // Mausbewegung (derselbe Weg wie --test-input) auf die Knopfmitte; die
+    // geteilte ToolTip-Instanz der Engine wird nach der Verzögerung
+    // sichtbar und trägt den Sonden-Grund. Läuft ohne Mock — die
+    // Negativ-Sonde (unbekanntes Backend) ist echt.
+    Timer {
+        id: hoverTipTimer
+        property int baseFailures: 0
+        interval: 100
+        onTriggered: {
+            let failures = baseFailures
+            function check(cond, label) {
+                console.log((cond ? "FLOW-OK  " : "FLOW-FAIL ") + label)
+                if (!cond) failures++
+            }
+            const s = JSON.parse(app.aiSettingsJson())
+            hoverTipWaiter.settingsVorher = s
+            // Diktier-Kette kaputt konfigurieren (wie Schritt 10) — das
+            // Mikrofon ist dann sichtbar, aber gesperrt.
+            app.saveAiSettings(s.ai_provider, s.ai_base_url, s.ai_model, "whisperx",
+                               s.ai_whisper_model, s.ai_whisper_cpp_binary,
+                               s.ai_whisper_cpp_model, s.ai_context_level)
+            check(!app.dictationAvailable,
+                  "Diktat gesperrt für den Tooltip-Nachweis (#41)")
+            quickCaptureDialog.openCapture()
+            hoverTipWaiter.baseFailures = failures
+            hoverTipWaiter.start()
+        }
+    }
+
+    // KI-Flow, Schritt 11c, Teil 2: Erst hovern (Phase 0 — das Fenster
+    // braucht einen Moment fürs Layout, sonst trifft die Mausbewegung
+    // daneben), dann die Tooltip-Verzögerung abwarten (Phase 1).
+    Timer {
+        id: hoverTipWaiter
+        property int baseFailures: 0
+        property var settingsVorher: null
+        property int phase: 0
+        property int versuche: 0
+        interval: 300
+        repeat: true
+        onTriggered: {
+            versuche++
+            let failures = baseFailures
+            function check(cond, label) {
+                console.log((cond ? "FLOW-OK  " : "FLOW-FAIL ") + label)
+                if (!cond) failures++
+            }
+            if (phase === 0) {
+                const mitte = quickCaptureDialog.micCenterInWindow()
+                app.testMove(mitte.x, mitte.y)
+                if (!quickCaptureDialog.testUiStates().micHovered && versuche < 5)
+                    return
+                check(quickCaptureDialog.testUiStates().micHovered,
+                      "HoverHandler meldet Hover am gesperrten Mikrofon (#41)")
+                baseFailures = failures
+                phase = 1
+                versuche = 0
+                return
+            }
+            const ui = quickCaptureDialog.testUiStates()
+            if (!ui.sharedTipVisible && versuche < 25)
+                return
+            hoverTipWaiter.running = false
+            check(ui.sharedTipVisible,
+                  "Tooltip erscheint am gesperrten Mikrofon (#41)")
+            check(ui.sharedTipText === app.dictationUnavailableReason,
+                  "Tooltip trägt den Sonden-Grund (#41)")
+            // Aufräumen: Maus aus dem Knopf, Dialog zu, Einstellungen zurück.
+            app.testMove(1, 1)
+            quickCaptureDialog.close()
+            const s = settingsVorher
+            app.saveAiSettings(s.ai_provider, s.ai_base_url, s.ai_model, s.ai_stt_backend,
+                               s.ai_whisper_model, s.ai_whisper_cpp_binary,
+                               s.ai_whisper_cpp_model, s.ai_context_level)
             // Weiter zum UI-6-Teil (leiser Abruf + Auto-Abruf beim Öffnen).
             aiProbeSilentTimer.baseFailures = failures
             aiProbeSilentTimer.start()
