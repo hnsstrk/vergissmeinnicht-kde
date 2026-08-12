@@ -48,6 +48,16 @@ pub enum AiError {
     Config(String),
 }
 
+impl AiError {
+    /// Antwortete der Endpunkt mit „nicht berechtigt" (HTTP 401/403)?
+    /// Der Preview-Pfad (#42) unterscheidet damit „Backend verlangt auch
+    /// für die Modellliste einen Schlüssel" von echter Unerreichbarkeit —
+    /// der Preview sendet bewusst keinen Schlüssel.
+    pub fn ist_berechtigungsfehler(&self) -> bool {
+        matches!(self, AiError::Api(m) if m.starts_with("HTTP 401") || m.starts_with("HTTP 403"))
+    }
+}
+
 impl std::fmt::Display for AiError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -144,6 +154,19 @@ impl LlmClient {
     pub fn from_settings(settings: &crate::config::Settings) -> Result<Self, AiError> {
         let api_key = crate::secrets::get_ai_api_key().map_err(AiError::Config)?;
         Self::new(&settings.ai_base_url, &settings.ai_model, api_key)
+    }
+
+    /// Client OHNE API-Schlüssel (#42, Preview-Pfad): liest den Secret
+    /// Service gar nicht erst — was nicht geladen wird, kann nicht
+    /// verschickt werden. Der Modelllisten-Preview läuft gegen eine noch
+    /// ungespeicherte, frisch eingetippte Basis-URL; der GESPEICHERTE
+    /// Schlüssel gehört zum gespeicherten Endpunkt und darf nicht als
+    /// Bearer-Token an einen fremden Host gehen. OpenRouter wie Ollama
+    /// liefern `/v1/models` ohne Schlüssel (gemessen); ein abgesichertes
+    /// Backend antwortet mit 401/403 — diesen Fall erklärt die
+    /// Erreichbarkeitszeile.
+    pub fn ohne_schluessel(settings: &crate::config::Settings) -> Result<Self, AiError> {
+        Self::new(&settings.ai_base_url, &settings.ai_model, None)
     }
 
     /// Hängt den Pfad an die normalisierte Basis-URL an.
@@ -609,6 +632,67 @@ pub mod tests {
             }
             andere => panic!("Api-Fehler erwartet, war: {andere:?}"),
         }
+    }
+
+    #[test]
+    fn berechtigungsfehler_erkennt_401_und_403() {
+        // Grundlage der Preview-Erklärung (#42): nur echte
+        // Berechtigungsantworten zählen, keine anderen API- oder
+        // Transportfehler.
+        assert!(AiError::Api("HTTP 401 Unauthorized: nope".into()).ist_berechtigungsfehler());
+        assert!(AiError::Api("HTTP 403 Forbidden: nope".into()).ist_berechtigungsfehler());
+        assert!(!AiError::Api("HTTP 500 Internal Server Error: kaputt".into())
+            .ist_berechtigungsfehler());
+        assert!(!AiError::Network("connection refused".into()).ist_berechtigungsfehler());
+    }
+
+    #[test]
+    fn vorschau_client_sendet_keinen_authorization_header() {
+        // Review-Befund #42: Der Preview-Abruf läuft gegen eine noch
+        // ungespeicherte, frisch eingetippte URL — der gespeicherte
+        // Schlüssel darf dort nicht als Bearer-Token ankommen. Nachweis auf
+        // Draht-Ebene gegen einen Mini-HTTP-Server: erst die Kontrollprobe
+        // (Client MIT Schlüssel sendet den Header — sonst bewiese der leere
+        // zweite Request nichts), dann der schlüssellose Preview-Client.
+        use std::io::{Read, Write};
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let adresse = listener.local_addr().unwrap();
+        let server = std::thread::spawn(move || {
+            let mut koepfe = Vec::new();
+            for _ in 0..2 {
+                let (mut verbindung, _) = listener.accept().unwrap();
+                let mut puffer = [0u8; 4096];
+                let gelesen = verbindung.read(&mut puffer).unwrap();
+                koepfe.push(String::from_utf8_lossy(&puffer[..gelesen]).to_lowercase());
+                let body = r#"{"data": []}"#;
+                let antwort = format!(
+                    "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\
+                     Content-Length: {}\r\nConnection: close\r\n\r\n{body}",
+                    body.len()
+                );
+                verbindung.write_all(antwort.as_bytes()).unwrap();
+            }
+            koepfe
+        });
+        let basis = format!("http://{adresse}/v1");
+        // Kontrollprobe: Test-Dummy-Schlüssel, kein echtes Geheimnis.
+        let mit = LlmClient::new(&basis, "m", Some("test-dummy".into())).unwrap();
+        mit.list_models().unwrap();
+        let einstellungen =
+            crate::config::Settings { ai_base_url: basis, ..Default::default() };
+        let ohne = LlmClient::ohne_schluessel(&einstellungen).unwrap();
+        ohne.list_models().unwrap();
+        let koepfe = server.join().unwrap();
+        assert!(
+            koepfe[0].contains("authorization: bearer test-dummy"),
+            "Kontrollprobe: mit Schlüssel muss der Header ankommen\n{}",
+            koepfe[0]
+        );
+        assert!(
+            !koepfe[1].contains("authorization"),
+            "Preview-Request darf keinen Authorization-Header tragen\n{}",
+            koepfe[1]
+        );
     }
 
     /// Echter Roundtrip gegen ein lokales Ollama — braucht den laufenden

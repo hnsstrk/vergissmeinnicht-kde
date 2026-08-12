@@ -35,9 +35,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   refetches the list from the new endpoint without persisting anything
   (a new `startAiListModelsPreview` invokable builds a throwaway client
   from the unsaved field value); failures appear only in the
-  reachability line. OpenRouter's `/v1/models` answers without an API
-  key (measured: HTTP 200, 410 models), so the correct list appears
-  right after the switch, before a key is entered.
+  reachability line. The preview never reads the stored API key — the
+  saved key belongs to the saved endpoint and must not travel as a
+  Bearer token to a freshly typed foreign address (verified down to the
+  wire: the preview request carries no `Authorization` header). A
+  backend that requires the key even for its model list answers 401/403;
+  the reachability line then explains that the preview deliberately
+  sends no key and that "Load models" after saving fetches the list with
+  it. OpenRouter's `/v1/models` answers without an API key (measured:
+  HTTP 200, 410 models), so the correct list appears right after the
+  switch, before a key is entered.
 
 - The whisper.cpp dictation backend now works with a GPU build's plain
   binary path (#37): the binary's directory is prepended to the child

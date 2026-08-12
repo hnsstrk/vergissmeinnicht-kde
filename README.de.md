@@ -87,7 +87,8 @@ Oberfläche auf jeder Plattform.
   Aktualisierung — manuelle Eingabe bleibt auch offline möglich; ein
   Provider-Wechsel oder eine geänderte Basis-URL verwirft die veraltete
   Liste samt Erreichbarkeitsanzeige und lädt still gegen den neuen
-  Endpunkt nach), API-Key
+  Endpunkt nach — ohne den gespeicherten API-Schlüssel mitzusenden, der
+  zum gespeicherten Endpunkt gehört), API-Key
   im Secret Service und das Spracherkennungs-Backend fürs Diktat — entweder
   `openai-whisper` (das `whisper`-Programm aus dem `PATH`, CPU, Modellname
   einstellbar) oder `whisper.cpp` (ein `whisper-cli`-Programm plus

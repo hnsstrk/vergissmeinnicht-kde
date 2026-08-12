@@ -1809,10 +1809,12 @@ impl qobject::AppContainer {
     fn start_ai_list_models_preview(self: Pin<&mut Self>, base_url: &QString) {
         let mut settings = self.rust().state.settings.clone();
         settings.ai_base_url = base_url.to_string().trim().to_string();
-        // Einweg-Halter: Der gecachte Client gehört zu den GESPEICHERTEN
-        // Einstellungen und bliebe sonst für den neuen Endpunkt stehen —
-        // bzw. würde von ungespeicherten Werten verdrängt.
-        self.modellliste_starten(settings, std::sync::Arc::new(ai::LlmHalter::default()), true);
+        // Einweg-Halter OHNE API-Schlüssel: Der gecachte Client gehört zu
+        // den GESPEICHERTEN Einstellungen und bliebe sonst für den neuen
+        // Endpunkt stehen — und der gespeicherte Schlüssel gehört zum
+        // gespeicherten Endpunkt: Er darf nicht als Bearer-Token an eine
+        // frisch eingetippte fremde Adresse gehen (Review-Befund #42).
+        self.modellliste_starten(settings, std::sync::Arc::new(ai::LlmHalter::fuer_vorschau()), true);
     }
 
     // ─── Diktat (Story AI-A5) ──────────────────────────────────────────────
@@ -2150,13 +2152,17 @@ impl qobject::AppContainer {
     /// Startet den eigentlichen Worker — von `modellliste_abrufen`
     /// (gespeicherte Einstellungen, geteilter Client-Cache) und
     /// `start_ai_list_models_preview` (#42: ungespeicherte URL,
-    /// Einweg-Halter) gemeinsam genutzt.
+    /// schlüsselloser Einweg-Halter) gemeinsam genutzt. Ob es ein Preview
+    /// ist, sagt der Halter selbst (`ist_vorschau`) — ein 401/403 heißt
+    /// dann „Backend verlangt auch für die Modellliste einen Schlüssel",
+    /// nicht „nicht erreichbar", und die Anzeige erklärt das.
     fn modellliste_starten(
         mut self: Pin<&mut Self>,
         settings: Settings,
         llm: std::sync::Arc<ai::LlmHalter>,
         leise: bool,
     ) {
+        let vorschau = llm.ist_vorschau();
         let generationen = std::sync::Arc::clone(&self.rust().ai_generationen);
         self.as_mut().set_ai_busy(true);
         if !leise {
@@ -2184,7 +2190,19 @@ impl qobject::AppContainer {
                     // Fehler in den KI-eigenen Kanal, nie in `errorMessage` —
                     // und beim leisen Abruf nur in die Erreichbarkeitsanzeige.
                     Err(e) => {
-                        let text = e.to_string();
+                        let mut text = e.to_string();
+                        // Preview ohne Schlüssel (#42): 401/403 heißt hier
+                        // meist nur, dass das Backend auch für die
+                        // Modellliste einen Schlüssel verlangt — ein
+                        // „nicht erreichbar" ohne diese Erklärung wäre
+                        // irreführend.
+                        if vorschau && e.ist_berechtigungsfehler() {
+                            text.push_str(
+                                " — die Vorschau sendet bewusst keinen \
+                                 API-Schlüssel; nach dem Speichern holt \
+                                 „Modelle laden\" die Liste mit Schlüssel.",
+                            );
+                        }
                         qobject.as_mut().set_ai_probe_status(2);
                         qobject
                             .as_mut()

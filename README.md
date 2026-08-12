@@ -88,7 +88,9 @@ platform.
   "Load models" stays as an explicit refresh — manual entry keeps working
   when the backend is offline; switching the provider or editing the
   base URL discards the stale list and reachability state and quietly
-  refetches from the new endpoint), the API key in the Secret Service, and
+  refetches from the new endpoint — without sending the stored API key,
+  which belongs to the saved endpoint), the API key in the Secret
+  Service, and
   the speech-to-text backend for dictation — either `openai-whisper` (the
   `whisper` CLI from `PATH`, CPU, model name configurable) or
   `whisper.cpp` (a `whisper-cli` binary plus a GGML model file, both given

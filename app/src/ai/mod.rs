@@ -54,6 +54,23 @@ use std::sync::{Arc, Mutex};
 pub fn make_llm(
     settings: &crate::config::Settings,
 ) -> Result<Box<dyn Llm + Send + Sync>, AiError> {
+    make_llm_mit(settings, true)
+}
+
+/// Wie [`make_llm`], aber ohne API-Schlüssel (#42): Der Secret Service wird
+/// gar nicht erst gelesen. Für den Modelllisten-Preview gegen ungespeicherte
+/// Feldwerte — der gespeicherte Schlüssel darf nicht an einen frisch
+/// eingetippten fremden Host gehen.
+pub fn make_llm_ohne_schluessel(
+    settings: &crate::config::Settings,
+) -> Result<Box<dyn Llm + Send + Sync>, AiError> {
+    make_llm_mit(settings, false)
+}
+
+fn make_llm_mit(
+    settings: &crate::config::Settings,
+    mit_schluessel: bool,
+) -> Result<Box<dyn Llm + Send + Sync>, AiError> {
     match mock::CannedLlm::from_env()? {
         Some(mut canned) => {
             // Simulierter Ausfall (UI-6, #33): trägt die Basis-URL den
@@ -61,7 +78,8 @@ pub fn make_llm(
             canned.setze_unerreichbar(settings.ai_base_url.contains(mock::MOCK_UNERREICHBAR));
             Ok(Box::new(canned))
         }
-        None => Ok(Box::new(client::LlmClient::from_settings(settings)?)),
+        None if mit_schluessel => Ok(Box::new(client::LlmClient::from_settings(settings)?)),
+        None => Ok(Box::new(client::LlmClient::ohne_schluessel(settings)?)),
     }
 }
 
@@ -77,9 +95,24 @@ pub fn make_llm(
 #[derive(Default)]
 pub struct LlmHalter {
     llm: Mutex<Option<Arc<dyn Llm + Send + Sync>>>,
+    /// Preview-Pfad (#42): baut über [`make_llm_ohne_schluessel`] — der
+    /// gespeicherte API-Schlüssel wird nie gelesen und nie mitgesendet.
+    ohne_schluessel: bool,
 }
 
 impl LlmHalter {
+    /// Einweg-Halter für den Modelllisten-Preview (#42): baut Clients ohne
+    /// API-Schlüssel. Der Default-Halter der Bridge bleibt der mit Schlüssel.
+    pub fn fuer_vorschau() -> Self {
+        Self { llm: Mutex::new(None), ohne_schluessel: true }
+    }
+
+    /// Ist dies der schlüssellose Preview-Halter? Die Bridge erklärt dann
+    /// einen 401/403 in der Erreichbarkeitszeile.
+    pub fn ist_vorschau(&self) -> bool {
+        self.ohne_schluessel
+    }
+
     /// Liefert den geteilten Client; beim ersten Aufruf wird er gebaut.
     /// Wird bewusst im Worker-Thread aufgerufen — der API-Key-Zugriff auf
     /// den Secret Service ist ein D-Bus-Roundtrip und gehört nicht auf den
@@ -92,7 +125,11 @@ impl LlmHalter {
         if let Some(llm) = &*slot {
             return Ok(Arc::clone(llm));
         }
-        let neu: Arc<dyn Llm + Send + Sync> = Arc::from(make_llm(settings)?);
+        let neu: Arc<dyn Llm + Send + Sync> = if self.ohne_schluessel {
+            Arc::from(make_llm_ohne_schluessel(settings)?)
+        } else {
+            Arc::from(make_llm(settings)?)
+        };
         *slot = Some(Arc::clone(&neu));
         Ok(neu)
     }
