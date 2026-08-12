@@ -56,6 +56,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   controls receive no hover events in Qt Quick, so the tooltips hang on a
   wrapping item with a `HoverHandler`.
 
+- AI interpretation no longer overwrites fields the user filled in (#43):
+  `applyDraft()` now applies the rule the title always had to all six
+  fields — draft fields the model leaves empty keep their current values,
+  fields the model fills still replace them. A model that says nothing
+  about a field has not decided anything about it. An explicitly emptied
+  field is deliberately not distinguishable from an absent one: the JSON
+  draft schema cannot express "deliberately none", and no use case asks
+  for it.
+
 - The whisper.cpp dictation backend now works with a GPU build's plain
   binary path (#37): the binary's directory is prepended to the child
   process's `LD_LIBRARY_PATH` (ROCm/HIP builds keep `libwhisper.so` and

@@ -49,8 +49,9 @@ platform.
   With a configured AI backend, **Interpret with AI** (Ctrl+J) sends the
   free-form title text to the model and fills the structured fields from the
   validated response — invalid due/recurrence/priority values are dropped,
-  new project names are allowed, and nothing is created until the regular
-  Add button confirms. With a complete
+  new project names are allowed, fields the model leaves empty keep the
+  values you entered (the model only replaces what it actually fills), and
+  nothing is created until the regular Add button confirms. With a complete
   dictation chain (see AI assistant below) — which is independent of the
   configured model, so dictation works on machines too weak to run one —
   the microphone button next to it records on the first click (the button

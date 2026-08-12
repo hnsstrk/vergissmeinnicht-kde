@@ -49,8 +49,9 @@ Oberfläche auf jeder Plattform.
   interpretieren** (Strg+J) den Freitext des Titels ans Modell und füllt
   die strukturierten Felder aus der validierten Antwort — ungültige
   Fälligkeits-/Wiederholungs-/Prioritätswerte werden verworfen, neue
-  Projektnamen sind erlaubt, und angelegt wird erst über den normalen
-  Hinzufügen-Knopf. Mit
+  Projektnamen sind erlaubt, Felder, die das Modell leer lässt, behalten
+  die eingegebenen Werte (ersetzt wird nur, was das Modell wirklich
+  füllt), und angelegt wird erst über den normalen Hinzufügen-Knopf. Mit
   vollständiger Diktier-Kette (siehe KI-Assistent unten) — sie ist vom
   konfigurierten Modell unabhängig, Diktieren funktioniert also auch auf
   Maschinen, die kein Sprachmodell stemmen — nimmt der Mikrofonknopf

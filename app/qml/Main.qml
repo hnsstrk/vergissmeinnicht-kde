@@ -554,9 +554,11 @@ Kirigami.ApplicationWindow {
             app.applySearch("")
             app.deleteTasks(purgeAlle.concat([nachzuegler]))
 
-            // 14. Füllfunktion (AI-B1): Entwurf → Dialogfelder als von außen
-            // aufrufbare Funktion — Wert→Preset|Custom-Zuordnung in beide
-            // Sechser-Fälle (due, recur) plus Datumswähler-Entscheidung.
+            // 14. Füllfunktion (AI-B1, #43): Entwurf → Dialogfelder als von
+            // außen aufrufbare Funktion — Wert→Preset|Custom-Zuordnung in
+            // beide Sechser-Fälle (due, recur) plus Datumswähler-
+            // Entscheidung. Leere Entwurfsfelder lassen bestehende Werte
+            // stehen, gefüllte ersetzen (#43).
             // Läuft ohne Mock und ohne KI-Konfiguration.
             quickCaptureDialog.applyDraft({title: "KI-Titel", project: "flowki-projekt",
                                            tags: ["ki", "flow"], due: "tomorrow",
@@ -574,6 +576,9 @@ Kirigami.ApplicationWindow {
             check(fv.recurIndex === 5 && fv.recurCustom === "quarterly",
                   "freies recur-Intervall landet im Custom-Feld")
             check(fv.title === "KI-Titel", "Entwurf ohne Titel lässt Titel stehen")
+            check(fv.project === "flowki-projekt" && fv.tags === "ki flow"
+                  && fv.priorityIndex === 1 && fv.notes === "KI-Notiz",
+                  "Teil-Entwurf lässt gefüllte Felder stehen (#43)")
             quickCaptureDialog.applyDraft({due: "2027-01-15"})
             fv = quickCaptureDialog.testValues()
             check(fv.dueIndex === 4 && fv.dueDate.getFullYear() === 2027
@@ -581,9 +586,15 @@ Kirigami.ApplicationWindow {
                   "ISO-Datum landet im Datumswähler")
             quickCaptureDialog.applyDraft({})
             fv = quickCaptureDialog.testValues()
-            check(fv.project === "" && fv.tags === "" && fv.dueIndex === 0
-                  && fv.priorityIndex === 0 && fv.recurIndex === 0 && fv.notes === "",
-                  "leerer Entwurf setzt Metadaten-Felder zurück")
+            check(fv.project === "flowki-projekt" && fv.tags === "ki flow"
+                  && fv.dueIndex === 4 && fv.priorityIndex === 1
+                  && fv.recurIndex === 5 && fv.notes === "KI-Notiz",
+                  "leerer Entwurf überschreibt keine Nutzereingaben (#43)")
+            quickCaptureDialog.applyDraft({project: "flowki-ersetzt", priority: "L"})
+            fv = quickCaptureDialog.testValues()
+            check(fv.project === "flowki-ersetzt" && fv.priorityIndex === 3
+                  && fv.notes === "KI-Notiz",
+                  "gefüllte Entwurfsfelder ersetzen weiterhin (#43)")
 
             // 15. KI-Gerüst (AI-A3): Property-Defaults der Bridge. Der
             // Worker-Teil (Stale-Drop, Abbruch) läuft nur, wenn der Aufruf

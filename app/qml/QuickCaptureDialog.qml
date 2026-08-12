@@ -51,17 +51,27 @@ FormWindow {
     }
 
     // Füllfunktion (AI-B1): validierter Entwurf → Dialogfelder. Von außen
-    // aufrufbar (auch im --test-flow); der Titel bleibt stehen, wenn die KI
-    // keinen liefert — die Eingabe des Users wird nie geleert.
+    // aufrufbar (auch im --test-flow). Leere Entwurfsfelder lassen
+    // bestehende Werte stehen (#43) — dieselbe Regel, der der Titel von
+    // Anfang an folgte: Ein Modell, das zu einem Feld nichts sagt, hat
+    // darüber nichts entschieden. Nur gefüllte Felder ersetzen; die
+    // Eingabe des Users wird nie geleert.
     function applyDraft(draft) {
         if ((draft.title ?? "").trim().length > 0)
             titleField.text = draft.title.trim()
-        projectField.editText = draft.project ?? ""
-        tagsField.text = (draft.tags ?? []).join(" ")
-        setDueValue(draft.due ?? "")
-        priorityCombo.currentIndex = Math.max(0, ["", "H", "M", "L"].indexOf(draft.priority ?? ""))
-        setRecurValue(draft.recur ?? "")
-        notesArea.text = draft.notes ?? ""
+        if ((draft.project ?? "").trim().length > 0)
+            projectField.editText = draft.project.trim()
+        if ((draft.tags ?? []).length > 0)
+            tagsField.text = draft.tags.join(" ")
+        if ((draft.due ?? "").trim().length > 0)
+            setDueValue(draft.due)
+        const priorityIndex = ["", "H", "M", "L"].indexOf((draft.priority ?? "").trim())
+        if (priorityIndex > 0)
+            priorityCombo.currentIndex = priorityIndex
+        if ((draft.recur ?? "").trim().length > 0)
+            setRecurValue(draft.recur)
+        if ((draft.notes ?? "").trim().length > 0)
+            notesArea.text = draft.notes
         updatePreview()
     }
 
