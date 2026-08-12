@@ -14,7 +14,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   untouched), and the availability probe launches the binary once with
   `--help`, so a binary that cannot resolve its libraries reports the
   dictation chain as unavailable instead of failing after the user has
-  already spoken.
+  already spoken. The probe run is bounded by a two-second deadline — a
+  binary that hangs (stuck GPU initialization, dead network mount) is
+  terminated and counts as unavailable instead of freezing the app.
 
 ### Added
 

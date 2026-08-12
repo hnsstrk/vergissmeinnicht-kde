@@ -91,8 +91,9 @@ Oberfläche auf jeder Plattform.
   Programm einmal (`--help`): Ein Programm, das seine Bibliotheken nicht
   findet, gilt als nicht verfügbar. Zusätzlich braucht das Diktat
   `pw-record` aus PipeWire; fehlt ein Glied dieser Kette, bleibt das
-  Mikrofon versteckt, statt erst bei der Aufnahme zu scheitern. Aufnahmen und Transkripte liegen im XDG-Laufzeitverzeichnis
-  und werden nach Gebrauch gelöscht. Der Kontextumfang bestimmt, wie viele
+  Mikrofon versteckt, statt erst bei der Aufnahme zu scheitern.
+  Aufnahmen und Transkripte liegen im XDG-Laufzeitverzeichnis und werden
+  nach Gebrauch gelöscht. Der Kontextumfang bestimmt, wie viele
   Aufgabendaten die KI beim Interpretieren sieht: nur Projekt- und
   Schlagwortnamen (Standard), zusätzlich Titel offener Aufgaben oder alle
   nicht gelöschten Aufgaben kompakt — Gelöschtes wird nie übertragen.

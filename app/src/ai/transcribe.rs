@@ -52,6 +52,16 @@ const WHISPER_MODELL_VORGABE: &str = "small";
 /// Erwartung.
 const SIGNAL_FRIST: Duration = Duration::from_secs(2);
 
+/// Frist der Startprobe (`--help` endet am Referenz-Build in unter 100 ms).
+/// Wer sie reißt — hängende GPU-Initialisierung, Binär auf totem
+/// Netzlaufwerk —, gilt als nicht startfähig: Die Sonde läuft auf dem
+/// Qt-Thread, ein unbegrenztes Warten fröre die App ein.
+const STARTPROBE_FRIST: Duration = Duration::from_secs(2);
+
+/// Nachfrist je Signal beim Abräumen einer hängenden Startprobe — kurz
+/// gehalten, weil auch sie den Qt-Thread blockiert.
+const STARTPROBE_NACHFRIST: Duration = Duration::from_millis(500);
+
 /// Verfügbares Spracherkennungs-Backend (Konfigurationsfeld
 /// `ai_stt_backend`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -264,7 +274,9 @@ fn ist_ausfuehrbar(pfad: &Path) -> bool {
 /// Startprobe für das whisper.cpp-Programm: einmal `--help`, mit demselben
 /// Bibliothekspfad wie der echte Lauf. `--help` lädt kein Modell und endet
 /// sofort — ein Ladefehler des dynamischen Linkers (Exit 127) fällt genau
-/// hier auf statt erst nach dem Diktat.
+/// hier auf statt erst nach dem Diktat. Statt eines blockierenden
+/// `status()` wird gegen [`STARTPROBE_FRIST`] gepollt: Ein hängendes
+/// `--help` darf die App nicht einfrieren.
 fn startet(programm: &Path) -> bool {
     let mut cmd = Command::new(programm);
     cmd.arg("--help")
@@ -272,7 +284,32 @@ fn startet(programm: &Path) -> bool {
         .stdout(Stdio::null())
         .stderr(Stdio::null());
     mit_bibliothekspfad(&mut cmd, programm);
-    cmd.status().map(|status| status.success()).unwrap_or(false)
+    let Ok(mut kind) = cmd.spawn() else {
+        return false;
+    };
+    match warte_auf_ende(&mut kind, STARTPROBE_FRIST) {
+        // `try_wait` hat den Prozess bereits abgeräumt; `wait` liefert nur
+        // noch den gemerkten Status.
+        Ok(true) => kind.wait().map(|status| status.success()).unwrap_or(false),
+        // Frist gerissen oder Warten fehlgeschlagen: aufräumen und als
+        // „startet nicht" werten. Ein hängendes `--help`, das die App
+        // überlebt, wäre nur eine Verlagerung des Problems — anders als bei
+        // `pw-record` steht hier keine Datei auf dem Spiel, also nach dem
+        // SIGTERM notfalls das Beil. Die Fehlermeldung von `sende_signal`
+        // ist auf `pw-record` zugeschnitten und wird deshalb verworfen.
+        _ => {
+            let _ = sende_signal(&kind, libc::SIGTERM);
+            if !warte_auf_ende(&mut kind, STARTPROBE_NACHFRIST).unwrap_or(false) {
+                let _ = kind.kill();
+                // Bewusst befristet statt `wait()`: Ein Prozess in
+                // ununterbrechbarem Systemaufruf (totes Netzlaufwerk)
+                // überlebt selbst SIGKILL — dann bleibt nur, ihn dem System
+                // zu überlassen, statt den Qt-Thread weiter zu blockieren.
+                let _ = warte_auf_ende(&mut kind, STARTPROBE_NACHFRIST);
+            }
+            false
+        }
+    }
 }
 
 /// Wert für `LD_LIBRARY_PATH` des Kindprozesses: das Verzeichnis des
@@ -819,6 +856,41 @@ mod tests {
         assert!(startet(&heil));
         // Gar nicht vorhanden: ebenfalls kein Start — und keine Panik.
         assert!(!startet(&ordner.path().join("fehlt")));
+    }
+
+    #[test]
+    fn startprobe_bricht_haengendes_programm_fristgerecht_ab() {
+        // Nacharbeit zu #37: Ein `--help`, das hängt (GPU-Initialisierung,
+        // totes Netzlaufwerk), darf die Sonde — und damit den Qt-Thread —
+        // nur bis zur Frist aufhalten und keinen verwaisten Prozess
+        // hinterlassen. Das Skript meldet seine PID, bevor es sich in den
+        // Schlaf exec-t; dieselbe PID muss nach der Probe abgeräumt sein.
+        use std::os::unix::fs::PermissionsExt;
+        let ordner = tempfile::tempdir().unwrap();
+        let pidfile = ordner.path().join("pid");
+        let skript = ordner.path().join("haenger");
+        std::fs::write(
+            &skript,
+            format!("#!/bin/sh\necho $$ > {}\nexec sleep 60\n", pidfile.display()),
+        )
+        .unwrap();
+        std::fs::set_permissions(&skript, std::fs::Permissions::from_mode(0o755)).unwrap();
+        let start = Instant::now();
+        assert!(!startet(&skript), "Hänger muss als „startet nicht“ gelten");
+        let dauer = start.elapsed();
+        assert!(
+            dauer >= STARTPROBE_FRIST,
+            "vor der Frist darf nicht aufgegeben werden ({dauer:?})"
+        );
+        assert!(
+            dauer < STARTPROBE_FRIST + Duration::from_secs(2),
+            "die Frist muss greifen, nicht das Skriptende ({dauer:?})"
+        );
+        let pid = std::fs::read_to_string(&pidfile).expect("Skript muss gelaufen sein");
+        assert!(
+            !Path::new(&format!("/proc/{}", pid.trim())).exists(),
+            "der hängende Prozess muss abgeräumt sein"
+        );
     }
 
     #[test]
