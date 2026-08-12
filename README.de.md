@@ -50,12 +50,17 @@ Oberfläche auf jeder Plattform.
   die strukturierten Felder aus der validierten Antwort — ungültige
   Fälligkeits-/Wiederholungs-/Prioritätswerte werden verworfen, neue
   Projektnamen sind erlaubt, und angelegt wird erst über den normalen
-  Hinzufügen-Knopf. Mit vollständiger Diktier-Kette (siehe KI-Assistent
-  unten) erscheint daneben ein Mikrofonknopf: Der erste Klick nimmt auf
-  (der Knopf pulsiert), der zweite beendet und transkribiert — das
-  Transkript landet im Titelfeld und läuft automatisch in die
-  KI-Interpretation weiter. Aufnahme und Transkription lassen sich
-  jederzeit verwerfen; Fehler erscheinen im Statusbereich des Dialogs.
+  Hinzufügen-Knopf. Mit
+  vollständiger Diktier-Kette (siehe KI-Assistent unten) — sie ist vom
+  konfigurierten Modell unabhängig, Diktieren funktioniert also auch auf
+  Maschinen, die kein Sprachmodell stemmen — nimmt der Mikrofonknopf
+  daneben beim ersten Klick auf (der Knopf pulsiert), der zweite beendet
+  und transkribiert — das Transkript landet im Titelfeld und läuft
+  automatisch in die KI-Interpretation weiter. Was von den beiden
+  Strängen nicht eingerichtet ist, erscheint als gesperrter Knopf mit dem
+  Grund im Tooltip, statt versteckt zu werden. Aufnahme und Transkription
+  lassen sich jederzeit verwerfen; Fehler erscheinen im Statusbereich des
+  Dialogs.
 - **Detail-Editor** — Titel, Projekt, Tags, Fällig, Geplant ab, Warten bis,
   Priorität, Wiederholung, Notizen, Abhängigkeits-Editor, Reaktivieren
   erledigter Aufgaben.
@@ -100,7 +105,8 @@ Oberfläche auf jeder Plattform.
   Programm einmal (`--help`): Ein Programm, das seine Bibliotheken nicht
   findet, gilt als nicht verfügbar. Zusätzlich braucht das Diktat
   `pw-record` aus PipeWire; fehlt ein Glied dieser Kette, bleibt das
-  Mikrofon versteckt, statt erst bei der Aufnahme zu scheitern.
+  Mikrofon sichtbar, aber gesperrt — sein Tooltip nennt das fehlende
+  Glied —, statt erst bei der Aufnahme zu scheitern.
   Aufnahmen und Transkripte liegen im XDG-Laufzeitverzeichnis und werden
   nach Gebrauch gelöscht. Der Kontextumfang bestimmt, wie viele
   Aufgabendaten die KI beim Interpretieren sieht: nur Projekt- und

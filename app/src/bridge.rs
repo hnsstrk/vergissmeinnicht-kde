@@ -143,6 +143,10 @@ mod qobject {
         // KI-Einstellungen; `dictationText` trägt das Transkript des jüngsten
         // abgeschlossenen Diktats.
         #[qproperty(bool, dictation_available, cxx_name = "dictationAvailable")]
+        // Grund der gescheiterten Diktier-Sonde (#41) im Wortlaut von
+        // `ai::transcribe::Fehlend` — leer, wenn die Kette steht. Speist
+        // den Tooltip des sichtbaren, aber gesperrten Mikrofons.
+        #[qproperty(QString, dictation_unavailable_reason, cxx_name = "dictationUnavailableReason")]
         #[qproperty(QString, dictation_text, cxx_name = "dictationText")]
         // Diktier-Strang als eigener Zustandsautomat (AI-B2, #14):
         // 0 = Ruhe, 1 = Aufnahme läuft, 2 = Transkription läuft. Bewusst
@@ -534,6 +538,7 @@ pub struct AppContainerRust {
     ai_probe_detail: QString,
     ai_draft_json: QString,
     dictation_available: bool,
+    dictation_unavailable_reason: QString,
     dictation_text: QString,
     dictation_state: i32,
     /// Laufende Diktat-Aufnahme (AI-A5). Der Kindprozess-Handle liegt hier,
@@ -592,6 +597,7 @@ impl Default for AppContainerRust {
             ai_probe_detail: QString::default(),
             ai_draft_json: QString::default(),
             dictation_available: false,
+            dictation_unavailable_reason: QString::default(),
             dictation_text: QString::default(),
             dictation_state: 0,
             dictation_recording: None,
@@ -611,10 +617,11 @@ impl cxx_qt::Initialize for qobject::AppContainer {
         // KI-Bedienelemente versteckt.
         let ai_configured = compute_ai_configured(&self.rust().state.settings);
         self.as_mut().set_ai_configured(ai_configured);
-        // Diktier-Sonde (AI-A5): fehlt irgendein Teil der Kette, bleibt das
-        // Mikrofon versteckt statt kaputt zu sein (Spec §7).
-        let dictation = compute_dictation_available(&self.rust().state.settings);
+        // Diktier-Sonde (AI-A5, #41): fehlt irgendein Teil der Kette, ist
+        // das Mikrofon sichtbar, aber gesperrt — der Grund steht im Tooltip.
+        let (dictation, grund) = compute_dictation_probe(&self.rust().state.settings);
         self.as_mut().set_dictation_available(dictation);
+        self.as_mut().set_dictation_unavailable_reason(grund);
         self.as_mut().publish();
     }
 }
@@ -638,10 +645,17 @@ fn compute_ai_configured(settings: &Settings) -> bool {
 
 /// Diktat gilt als verfügbar, wenn die ganze Kette steht (AI-A5):
 /// `pw-record` plus das konfigurierte Spracherkennungs-Backend samt
-/// Modelldatei. Speist die Bridge-Eigenschaft `dictationAvailable`; die
-/// Prüfung selbst liegt Qt-frei in `ai::transcribe`.
-fn compute_dictation_available(settings: &Settings) -> bool {
-    ai::transcribe::verfuegbarkeit(settings).is_ok()
+/// Modelldatei. Speist die Bridge-Eigenschaften `dictationAvailable` und
+/// `dictationUnavailableReason` (#41) aus EINER Sonde — die Startprobe des
+/// whisper.cpp-Backends ist die teuerste Stufe und soll nicht doppelt
+/// laufen. Der Grund kommt fertig formuliert aus der `Display`-
+/// Implementierung von [`ai::transcribe::Fehlend`]; die Prüfung selbst
+/// liegt Qt-frei in `ai::transcribe`.
+fn compute_dictation_probe(settings: &Settings) -> (bool, QString) {
+    match ai::transcribe::verfuegbarkeit(settings) {
+        Ok(()) => (true, QString::default()),
+        Err(fehlend) => (false, QString::from(fehlend.to_string().as_str())),
+    }
 }
 
 fn opt_string(q: &QString) -> Option<String> {
@@ -1748,10 +1762,11 @@ impl qobject::AppContainer {
         self.rust().ai_llm.invalidiere();
         let configured = compute_ai_configured(&self.rust().state.settings);
         self.as_mut().set_ai_configured(configured);
-        // Diktier-Sonde erneut (AI-A5): Backend-Wechsel oder geänderte Pfade
-        // schlagen sofort aufs Mikrofon durch, ohne Neustart.
-        let dictation = compute_dictation_available(&self.rust().state.settings);
+        // Diktier-Sonde erneut (AI-A5, #41): Backend-Wechsel oder geänderte
+        // Pfade schlagen sofort aufs Mikrofon durch, ohne Neustart.
+        let (dictation, grund) = compute_dictation_probe(&self.rust().state.settings);
         self.as_mut().set_dictation_available(dictation);
+        self.as_mut().set_dictation_unavailable_reason(grund);
     }
 
     fn ai_settings_json(&self) -> QString {
@@ -1838,9 +1853,13 @@ impl qobject::AppContainer {
         // Worker ist der Bump folgenlos.
         self.rust().dictation_generationen.verwerfen();
         if let Err(fehlend) = ai::transcribe::verfuegbarkeit(&self.rust().state.settings) {
+            let grund = QString::from(fehlend.to_string().as_str());
             self.as_mut().set_dictation_available(false);
+            // Grund-Eigenschaft im Gleichschritt mit `dictationAvailable`
+            // (#41) — der gesperrte Knopf zeigt sonst einen alten Text.
             self.as_mut()
-                .set_ai_error(QString::from(fehlend.to_string().as_str()));
+                .set_dictation_unavailable_reason(grund.clone());
+            self.as_mut().set_ai_error(grund);
             return false;
         }
         match ai::transcribe::Aufnahme::starte() {

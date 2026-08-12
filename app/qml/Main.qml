@@ -602,6 +602,12 @@ Kirigami.ApplicationWindow {
             // hergestellt werden.
             check(typeof app.dictationAvailable === "boolean",
                   "dictationAvailable ist gesetzt")
+            // #41: Grund-Eigenschaft und Sonde laufen im Gleichschritt —
+            // leer bei stehender Kette, sonst der Fehlend-Wortlaut.
+            check(app.dictationAvailable
+                  ? app.dictationUnavailableReason.length === 0
+                  : app.dictationUnavailableReason.length > 0,
+                  "dictationUnavailableReason passt zur Sonde (#41)")
             app.cancelAiRequest()
             check(!app.aiBusy && app.aiError.length === 0,
                   "cancelAiRequest ohne laufende Anfrage ist folgenlos")
@@ -971,6 +977,15 @@ Kirigami.ApplicationWindow {
                                s.ai_whisper_model, s.ai_whisper_cpp_binary, s.ai_whisper_cpp_model,
                                s.ai_context_level)
             check(!app.aiConfigured, "aiConfigured false ohne Modell (live)")
+            // #41: Ohne KI-Konfiguration bleibt die Bedienzeile sichtbar,
+            // der KI-Knopf ist gesperrt statt versteckt (Titel gesetzt,
+            // damit allein die fehlende Konfiguration sperrt).
+            quickCaptureDialog.openCapture()
+            quickCaptureDialog.applyDraft({title: "Sichtbarkeitsprobe"})
+            let ui41 = quickCaptureDialog.testUiStates()
+            check(ui41.rowVisible, "KI-Zeile ohne KI-Konfiguration sichtbar (#41)")
+            check(!ui41.interpretEnabled, "KI-Knopf ohne Konfiguration gesperrt (#41)")
+            quickCaptureDialog.close()
             app.saveAiSettings(s.ai_provider, s.ai_base_url, s.ai_model, s.ai_stt_backend,
                                s.ai_whisper_model, s.ai_whisper_cpp_binary, s.ai_whisper_cpp_model,
                                s.ai_context_level)
@@ -995,9 +1010,11 @@ Kirigami.ApplicationWindow {
             check(previewC.indexOf("Aktuelles Datum:") > previewC.indexOf("Alle Aufgaben (kompakt):"),
                   "Datum steht hinter der Aufgabenliste (Präfix-Cache)")
             speichernMitStufe("taxonomy")
-            // AI-A5: Diktier-Sonde. Fehlt irgendein Teil der Kette, bleibt
-            // das Mikrofon versteckt — unabhängig davon, was auf der
-            // Maschine installiert ist. Danach der gespeicherte Stand zurück.
+            // AI-A5, #41: Diktier-Sonde. Fehlt irgendein Teil der Kette,
+            // ist das Mikrofon gesperrt (nicht mehr versteckt) und der
+            // Grund steht in dictationUnavailableReason — unabhängig davon,
+            // was auf der Maschine installiert ist. Danach der gespeicherte
+            // Stand zurück.
             function speichernMitDiktat(backend, binary, modell) {
                 app.saveAiSettings(s.ai_provider, s.ai_base_url, s.ai_model, backend,
                                    s.ai_whisper_model, binary, modell, s.ai_context_level)
@@ -1005,10 +1022,19 @@ Kirigami.ApplicationWindow {
             speichernMitDiktat("whisperx", s.ai_whisper_cpp_binary, s.ai_whisper_cpp_model)
             check(!app.dictationAvailable,
                   "dictationAvailable false bei unbekanntem STT-Backend")
+            check(app.dictationUnavailableReason.indexOf("whisperx") !== -1,
+                  "Sonden-Grund nennt das unbekannte Backend (#41)")
+            quickCaptureDialog.openCapture()
+            ui41 = quickCaptureDialog.testUiStates()
+            check(ui41.micVisible && !ui41.micEnabled,
+                  "Mikrofon sichtbar, aber gesperrt ohne Diktier-Kette (#41)")
+            quickCaptureDialog.close()
             speichernMitDiktat("whisper-cpp", "/gibt/es/nicht/whisper-cli",
                                "/gibt/es/nicht/ggml-large-v3.bin")
             check(!app.dictationAvailable,
                   "dictationAvailable false ohne whisper-cli-Programm")
+            check(app.dictationUnavailableReason.indexOf("/gibt/es/nicht/whisper-cli") !== -1,
+                  "Sonden-Grund nennt das fehlende Whisper-Programm (#41)")
             // Ticket #37: existiert und ist ausführbar, startet aber nicht
             // sauber — /bin/false steht stellvertretend für einen GPU-Build
             // ohne auffindbare Bibliotheken. Als „Modelldatei" genügt jede
@@ -1016,8 +1042,15 @@ Kirigami.ApplicationWindow {
             speichernMitDiktat("whisper-cpp", "/bin/false", "/etc/os-release")
             check(!app.dictationAvailable,
                   "dictationAvailable false bei nicht startfähigem whisper-cli")
+            check(app.dictationUnavailableReason.indexOf("startet nicht") !== -1,
+                  "Sonden-Grund nennt die gescheiterte Startprobe (#41)")
             speichernMitDiktat(s.ai_stt_backend, s.ai_whisper_cpp_binary,
                                s.ai_whisper_cpp_model)
+            // #41: Wiederherstellen führt Sonde und Grund wieder zusammen.
+            check(app.dictationAvailable
+                  ? app.dictationUnavailableReason.length === 0
+                  : app.dictationUnavailableReason.length > 0,
+                  "Sonden-Grund nach Wiederherstellen konsistent (#41)")
             // Diktat verwerfen ohne laufende Aufnahme ist folgenlos — seit
             // dem Diktat-Fluss (Schritt 8) darf dictationText hier das
             // letzte Transkript tragen; folgenlos heißt: unverändert.

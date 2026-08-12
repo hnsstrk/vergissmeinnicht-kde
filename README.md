@@ -50,12 +50,16 @@ platform.
   free-form title text to the model and fills the structured fields from the
   validated response — invalid due/recurrence/priority values are dropped,
   new project names are allowed, and nothing is created until the regular
-  Add button confirms. With a complete dictation chain (see AI assistant
-  below) a microphone button appears next to it: the first click records
-  (the button pulses), the second stops and transcribes, and the transcript
-  lands in the title field and automatically continues into the AI
-  interpretation. Recording and transcription can be discarded at any
-  point; errors show up in the dialog's own status area.
+  Add button confirms. With a complete
+  dictation chain (see AI assistant below) — which is independent of the
+  configured model, so dictation works on machines too weak to run one —
+  the microphone button next to it records on the first click (the button
+  pulses), stops and transcribes on the second, and the transcript lands
+  in the title field and automatically continues into the AI
+  interpretation. Whatever part of the two strands is not set up shows as
+  a disabled button with the reason in its tooltip instead of being
+  hidden. Recording and transcription can be discarded at any point;
+  errors show up in the dialog's own status area.
 
   ![Vergissmeinnicht — quick capture](docs/screenshots/quick-capture.png)
 - **Detail editor** — title, project, tags, due, scheduled, wait, priority,
@@ -101,8 +105,8 @@ platform.
   the availability probe launches the binary once (`--help`), so a binary
   that cannot resolve its libraries counts as unavailable. Dictation
   additionally needs PipeWire's `pw-record`; if any part of that chain is
-  missing, the app keeps the microphone hidden instead of failing at
-  record time.
+  missing, the microphone stays visible but disabled and its tooltip
+  names the missing part, instead of failing at record time.
   Recordings and transcripts live in the XDG runtime directory and are
   deleted after use. A context-scope setting controls how much task data the AI
   sees when interpreting input: project and tag names only (default),

@@ -45,6 +45,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   it. OpenRouter's `/v1/models` answers without an API key (measured:
   HTTP 200, 410 models), so the correct list appears right after the
   switch, before a key is entered.
+- Dictation is no longer hidden when no AI model is configured (#41): the
+  Quick Capture button row no longer sits behind `aiConfigured` as a
+  whole. The microphone follows the dictation probe, the AI button the
+  model configuration, and whichever strand is not set up shows as a
+  disabled button instead of disappearing — the microphone's tooltip
+  carries the probe's precise reason (new bridge property
+  `dictationUnavailableReason`, previously those messages were computed
+  but unreachable), the AI button's tooltip a fixed sentence. Disabled
+  controls receive no hover events in Qt Quick, so the tooltips hang on a
+  wrapping item with a `HoverHandler`.
 
 - The whisper.cpp dictation backend now works with a GPU build's plain
   binary path (#37): the binary's directory is prepended to the child
