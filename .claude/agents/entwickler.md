@@ -35,6 +35,18 @@ of Done. Verstöße dagegen sind Fehler, keine Stilfragen.
   Nenne gemessene Zahlen (Testanzahl, Flow-Checks) nur, wenn du sie im selben
   Lauf gesehen hast — nie geschätzt.
 
+## Vor jedem Messlauf
+
+- **Neu bauen, sonst misst du falsch:** Das QML steckt im QRC **im Binary**;
+  `cargo build` zieht QML-Änderungen nicht zuverlässig nach. Immer erst
+  `touch app/qml/Main.qml && cargo build`, dann messen.
+- **Beide XDG-Variablen umleiten** — `XDG_DATA_HOME` **und**
+  `XDG_CONFIG_HOME`. Sonst bricht der Wächter den Lauf mit `TESTGUARD-FAIL`
+  ab, und das zu Recht: Testläufe haben die echte Konfiguration des Nutzers
+  zerstört.
+- **Eigene Dateinamen im Scratchpad** (`run-flow-<kürzel>.sh`) — mehrere
+  Agenten teilen ihn und überschreiben sich sonst gegenseitig die Logs.
+
 ## Fallstricke, die im Projekt schon Zeit gekostet haben
 
 - `i18n("…%1…", x)` — **niemals** `.arg()`-Verkettung, sonst
