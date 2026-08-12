@@ -15,6 +15,7 @@ fn main() {
             "qml/SettingsDialog.qml",
             "qml/GeneralSettingsPage.qml",
             "qml/SyncSettingsPage.qml",
+            "qml/DictationSettingsPage.qml",
             "qml/AiSettingsPage.qml",
             "qml/MaintenanceSettingsPage.qml",
             "qml/VmComboBoxDelegate.qml",

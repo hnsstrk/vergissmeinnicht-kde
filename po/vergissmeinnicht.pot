@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-12 19:39+0200\n"
+"POT-Creation-Date: 2026-08-12 20:58+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -36,179 +36,159 @@ msgstr ""
 msgid "MIT-Lizenz"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:20 app/qml/SettingsDialog.qml:48
+#: app/qml/AiSettingsPage.qml:21 app/qml/SettingsDialog.qml:57
 msgid "KI-Assistent"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:109
+#: app/qml/AiSettingsPage.qml:124
 msgid "KI-Backend"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:114
+#: app/qml/AiSettingsPage.qml:129
 msgid "OpenAI-kompatibler Endpunkt"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:115
+#: app/qml/AiSettingsPage.qml:130
 msgid ""
 "Vorgabe ist Ollama auf dieser Maschine — dabei verlassen keine Daten den "
 "Rechner. Der API-Key wird im Passwortspeicher des Systems (KWallet/Secret "
 "Service) abgelegt."
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:120
+#: app/qml/AiSettingsPage.qml:135
 msgid "Provider"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:122
+#: app/qml/AiSettingsPage.qml:137
 msgid "Ollama (lokal)"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:122
+#: app/qml/AiSettingsPage.qml:137
 msgid "OpenRouter (Cloud)"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:122
+#: app/qml/AiSettingsPage.qml:137
 msgid "Benutzerdefiniert"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:134
+#: app/qml/AiSettingsPage.qml:161
 msgid "Basis-URL (inklusive /v1)"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:142
+#: app/qml/AiSettingsPage.qml:178
 msgid "Kontextumfang der Interpretation"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:144
+#: app/qml/AiSettingsPage.qml:180
 msgid "Nur Projekt- und Schlagwortnamen"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:145
+#: app/qml/AiSettingsPage.qml:181
 msgid "Zusätzlich Titel offener Aufgaben"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:146
+#: app/qml/AiSettingsPage.qml:182
 msgid "Alle Aufgaben (kompakt)"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:150
+#: app/qml/AiSettingsPage.qml:186
 msgid ""
 "Die KI erhält Freitext, Datum, Projekt- und Schlagwortnamen sowie die Titel "
 "aller offenen Aufgaben."
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:152
+#: app/qml/AiSettingsPage.qml:188
 msgid ""
 "Die KI erhält Freitext, Datum, Projekt- und Schlagwortnamen sowie alle nicht "
 "gelöschten Aufgaben (Titel, Projekt, Schlagworte, Fälligkeit, Erledigt-"
 "Markierung)."
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:154
+#: app/qml/AiSettingsPage.qml:190
 msgid ""
 "Die KI erhält nur Freitext, Datum sowie vorhandene Projekt- und "
 "Schlagwortnamen — keine Aufgabentitel."
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:164
+#: app/qml/AiSettingsPage.qml:200
 msgid "Hinweis zum Datenschutz"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:166
+#: app/qml/AiSettingsPage.qml:202
 msgid ""
 "Die Basis-URL zeigt nicht auf localhost — Aufgabendaten werden an diesen "
 "Endpunkt übertragen. Beim gewählten Kontextumfang gehören dazu auch Titel "
 "und Metadaten Ihrer Aufgaben."
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:167
+#: app/qml/AiSettingsPage.qml:203
 msgid ""
 "Die Basis-URL zeigt nicht auf localhost — Aufgabendaten werden an diesen "
 "Endpunkt übertragen."
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:173
+#: app/qml/AiSettingsPage.qml:209
 msgid "Modell"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:185
+#: app/qml/AiSettingsPage.qml:221
 msgid "Erreichbarkeit"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:188
+#: app/qml/AiSettingsPage.qml:224
 msgid "Prüfe Erreichbarkeit …"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:190
+#: app/qml/AiSettingsPage.qml:226
 msgid "Backend erreichbar — 1 Modell gefunden."
 msgid_plural "Backend erreichbar — %1 Modelle gefunden."
 msgstr[0] ""
 msgstr[1] ""
 
-#: app/qml/AiSettingsPage.qml:194
+#: app/qml/AiSettingsPage.qml:230
 msgid "Backend nicht erreichbar: %1"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:209
+#: app/qml/AiSettingsPage.qml:245
 msgid "Modelle laden"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:210
+#: app/qml/AiSettingsPage.qml:246
 msgid ""
 "Speichert die Einstellungen und holt die Modellliste des Endpunkts. Ist das "
 "Backend nicht erreichbar, bleibt die manuelle Eingabe möglich."
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:221
+#: app/qml/AiSettingsPage.qml:257
 msgid "API-Key (nur für Cloud-Endpunkte)"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:226
-msgid "Spracheingabe (Diktat)"
-msgstr ""
-
-#: app/qml/AiSettingsPage.qml:232
-msgid "Spracherkennungs-Backend"
-msgstr ""
-
-#: app/qml/AiSettingsPage.qml:240
-msgid "Whisper-Modell"
-msgstr ""
-
-#: app/qml/AiSettingsPage.qml:247
-msgid "whisper-cli-Programm (Pfad)"
-msgstr ""
-
-#: app/qml/AiSettingsPage.qml:253
-msgid "GGML-Modelldatei (Pfad)"
-msgstr ""
-
-#: app/qml/AiSettingsPage.qml:262
+#: app/qml/AiSettingsPage.qml:266
 msgid "Speichern und testen"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:263
+#: app/qml/AiSettingsPage.qml:267
 msgid ""
 "Speichert alle KI-Einstellungen und prüft die Verbindung über die "
 "Modellliste."
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:279 app/qml/DetailDialog.qml:210
-#: app/qml/SyncSettingsPage.qml:109
+#: app/qml/AiSettingsPage.qml:283 app/qml/DetailDialog.qml:210
+#: app/qml/DictationSettingsPage.qml:82 app/qml/SyncSettingsPage.qml:109
 msgid "Status"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:284
+#: app/qml/AiSettingsPage.qml:288
 msgid "Prüfe Verbindung …"
 msgstr ""
 
-#: app/qml/AiSettingsPage.qml:286
+#: app/qml/AiSettingsPage.qml:290
 msgid "Gespeichert — Verbindung erfolgreich, 1 Modell verfügbar."
 msgid_plural "Gespeichert — Verbindung erfolgreich, %1 Modelle verfügbar."
 msgstr[0] ""
 msgstr[1] ""
 
-#: app/qml/AiSettingsPage.qml:290 app/qml/SyncSettingsPage.qml:119
+#: app/qml/AiSettingsPage.qml:294 app/qml/SyncSettingsPage.qml:119
 msgid "Gespeichert."
 msgstr ""
 
@@ -216,19 +196,19 @@ msgstr ""
 msgid "Aufgabe bearbeiten"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:86
+#: app/qml/DetailDialog.qml:86 app/qml/DictationSettingsPage.qml:65
 msgid "Speichern"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:91 app/qml/QuickCaptureDialog.qml:226
+#: app/qml/DetailDialog.qml:91 app/qml/QuickCaptureDialog.qml:239
 msgid "Abbrechen"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:109 app/qml/QuickCaptureDialog.qml:253
+#: app/qml/DetailDialog.qml:109 app/qml/QuickCaptureDialog.qml:266
 msgid "Titel"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:117 app/qml/QuickCaptureDialog.qml:424
+#: app/qml/DetailDialog.qml:117 app/qml/QuickCaptureDialog.qml:437
 #: app/qml/TasksPage.qml:229
 msgid "Projekt"
 msgstr ""
@@ -241,11 +221,11 @@ msgstr ""
 msgid "z. B. arbeit dringend"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:134 app/qml/QuickCaptureDialog.qml:439
+#: app/qml/DetailDialog.qml:134 app/qml/QuickCaptureDialog.qml:452
 msgid "Fällig"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:140 app/qml/QuickCaptureDialog.qml:447
+#: app/qml/DetailDialog.qml:140 app/qml/QuickCaptureDialog.qml:460
 msgid "Fällig am"
 msgstr ""
 
@@ -275,63 +255,63 @@ msgstr ""
 msgid "Ablaufdatum"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:185 app/qml/QuickCaptureDialog.qml:468
+#: app/qml/DetailDialog.qml:185 app/qml/QuickCaptureDialog.qml:481
 #: app/qml/TasksPage.qml:476
 msgid "Priorität"
 msgstr ""
 
 #: app/qml/DetailDialog.qml:186 app/qml/DetailDialog.qml:193
-#: app/qml/QuickCaptureDialog.qml:469 app/qml/QuickCaptureDialog.qml:476
+#: app/qml/QuickCaptureDialog.qml:482 app/qml/QuickCaptureDialog.qml:489
 #: app/qml/TasksPage.qml:482 app/qml/TasksPage.qml:492
 msgid "Keine"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:186 app/qml/QuickCaptureDialog.qml:469
+#: app/qml/DetailDialog.qml:186 app/qml/QuickCaptureDialog.qml:482
 msgid "Hoch (H)"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:186 app/qml/QuickCaptureDialog.qml:469
+#: app/qml/DetailDialog.qml:186 app/qml/QuickCaptureDialog.qml:482
 msgid "Mittel (M)"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:186 app/qml/QuickCaptureDialog.qml:469
+#: app/qml/DetailDialog.qml:186 app/qml/QuickCaptureDialog.qml:482
 msgid "Niedrig (L)"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:192 app/qml/QuickCaptureDialog.qml:475
+#: app/qml/DetailDialog.qml:192 app/qml/QuickCaptureDialog.qml:488
 msgid "Wiederholung"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:193 app/qml/QuickCaptureDialog.qml:476
+#: app/qml/DetailDialog.qml:193 app/qml/QuickCaptureDialog.qml:489
 msgid "Täglich"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:193 app/qml/QuickCaptureDialog.qml:476
+#: app/qml/DetailDialog.qml:193 app/qml/QuickCaptureDialog.qml:489
 msgid "Wöchentlich"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:193 app/qml/QuickCaptureDialog.qml:476
+#: app/qml/DetailDialog.qml:193 app/qml/QuickCaptureDialog.qml:489
 msgid "Monatlich"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:193 app/qml/QuickCaptureDialog.qml:476
+#: app/qml/DetailDialog.qml:193 app/qml/QuickCaptureDialog.qml:489
 msgid "Jährlich"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:193 app/qml/QuickCaptureDialog.qml:440
-#: app/qml/QuickCaptureDialog.qml:476
+#: app/qml/DetailDialog.qml:193 app/qml/QuickCaptureDialog.qml:453
+#: app/qml/QuickCaptureDialog.qml:489
 msgid "Benutzerdefiniert …"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:199 app/qml/QuickCaptureDialog.qml:482
+#: app/qml/DetailDialog.qml:199 app/qml/QuickCaptureDialog.qml:495
 msgid "Intervall (Nd / Nw / Nm / Ny)"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:200 app/qml/QuickCaptureDialog.qml:483
+#: app/qml/DetailDialog.qml:200 app/qml/QuickCaptureDialog.qml:496
 msgid "z. B. 3d oder 2w"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:202 app/qml/QuickCaptureDialog.qml:485
+#: app/qml/DetailDialog.qml:202 app/qml/QuickCaptureDialog.qml:498
 msgid "Nicht erkanntes Intervall"
 msgstr ""
 
@@ -390,7 +370,7 @@ msgstr ""
 msgid "Aufgabe wählen …"
 msgstr ""
 
-#: app/qml/DetailDialog.qml:303 app/qml/QuickCaptureDialog.qml:493
+#: app/qml/DetailDialog.qml:303 app/qml/QuickCaptureDialog.qml:506
 msgid "Notizen"
 msgstr ""
 
@@ -414,6 +394,44 @@ msgstr ""
 msgid "Zuletzt geändert"
 msgstr ""
 
+#: app/qml/DictationSettingsPage.qml:16 app/qml/SettingsDialog.qml:50
+msgid "Diktat"
+msgstr ""
+
+#: app/qml/DictationSettingsPage.qml:30
+msgid "Spracheingabe (Diktat)"
+msgstr ""
+
+#: app/qml/DictationSettingsPage.qml:36
+msgid "Spracherkennungs-Backend"
+msgstr ""
+
+#: app/qml/DictationSettingsPage.qml:44
+msgid "Whisper-Modell"
+msgstr ""
+
+#: app/qml/DictationSettingsPage.qml:51
+msgid "whisper-cli-Programm (Pfad)"
+msgstr ""
+
+#: app/qml/DictationSettingsPage.qml:57
+msgid "GGML-Modelldatei (Pfad)"
+msgstr ""
+
+#: app/qml/DictationSettingsPage.qml:66
+msgid ""
+"Speichert die Diktat-Einstellungen und prüft die Diktier-Kette (Aufnahme und "
+"Spracherkennung)."
+msgstr ""
+
+#: app/qml/DictationSettingsPage.qml:84
+msgid "Gespeichert — Diktat ist einsatzbereit."
+msgstr ""
+
+#: app/qml/DictationSettingsPage.qml:85
+msgid "Gespeichert. %1"
+msgstr ""
+
 #: app/qml/GeneralSettingsPage.qml:16 app/qml/SettingsDialog.qml:34
 msgid "Allgemein"
 msgstr ""
@@ -428,7 +446,7 @@ msgid "Eingang"
 msgstr ""
 
 #: app/qml/GeneralSettingsPage.qml:25 app/qml/Main.qml:42
-#: app/qml/QuickCaptureDialog.qml:440 app/qml/Sidebar.qml:58
+#: app/qml/QuickCaptureDialog.qml:453 app/qml/Sidebar.qml:58
 #: app/qml/TasksPage.qml:487
 msgid "Heute"
 msgstr ""
@@ -673,7 +691,7 @@ msgstr ""
 msgid "Nicht blockiert"
 msgstr ""
 
-#: app/qml/MaintenanceSettingsPage.qml:20 app/qml/SettingsDialog.qml:55
+#: app/qml/MaintenanceSettingsPage.qml:20 app/qml/SettingsDialog.qml:64
 msgid "Wartung"
 msgstr ""
 
@@ -840,122 +858,122 @@ msgstr ""
 msgid "Wiederherstellen"
 msgstr ""
 
-#: app/qml/QuickCaptureDialog.qml:220
+#: app/qml/QuickCaptureDialog.qml:233
 msgid "Hinzufügen"
 msgstr ""
 
-#: app/qml/QuickCaptureDialog.qml:254
+#: app/qml/QuickCaptureDialog.qml:267
 msgid "z. B. Bericht schreiben +arbeit project:Büro due:tomorrow"
 msgstr ""
 
-#: app/qml/QuickCaptureDialog.qml:287
+#: app/qml/QuickCaptureDialog.qml:300
 msgid "Aufnahme läuft — Klick aufs Mikrofon beendet sie."
 msgstr ""
 
-#: app/qml/QuickCaptureDialog.qml:289
+#: app/qml/QuickCaptureDialog.qml:302
 msgid "Die Aufnahme wird transkribiert …"
 msgstr ""
 
-#: app/qml/QuickCaptureDialog.qml:291
+#: app/qml/QuickCaptureDialog.qml:304
 msgid "Die KI liest den Titel …"
 msgstr ""
 
-#: app/qml/QuickCaptureDialog.qml:293
+#: app/qml/QuickCaptureDialog.qml:306
 msgid "Freitext genügt — die KI füllt die Felder."
 msgstr ""
 
-#: app/qml/QuickCaptureDialog.qml:295
+#: app/qml/QuickCaptureDialog.qml:308
 msgid ""
 "Diktieren ist bereit — die KI-Interpretation braucht ein konfiguriertes "
 "Modell."
 msgstr ""
 
-#: app/qml/QuickCaptureDialog.qml:296
+#: app/qml/QuickCaptureDialog.qml:309
 msgid ""
 "KI und Diktat sind nicht eingerichtet — die gesperrten Knöpfe nennen den "
 "Grund."
 msgstr ""
 
-#: app/qml/QuickCaptureDialog.qml:310
+#: app/qml/QuickCaptureDialog.qml:323
 msgid "Diktat verwerfen"
 msgstr ""
 
-#: app/qml/QuickCaptureDialog.qml:340
+#: app/qml/QuickCaptureDialog.qml:353
 msgid "Aufnahme beenden und übernehmen"
 msgstr ""
 
-#: app/qml/QuickCaptureDialog.qml:341
+#: app/qml/QuickCaptureDialog.qml:354
 msgid "Diktieren"
 msgstr ""
 
-#: app/qml/QuickCaptureDialog.qml:379
+#: app/qml/QuickCaptureDialog.qml:392
 msgid "Mit KI interpretieren"
 msgstr ""
 
-#: app/qml/QuickCaptureDialog.qml:387
+#: app/qml/QuickCaptureDialog.qml:400
 msgid "Strg+J"
 msgstr ""
 
-#: app/qml/QuickCaptureDialog.qml:396
+#: app/qml/QuickCaptureDialog.qml:409
 msgid ""
 "KI nicht eingerichtet — in den KI-Einstellungen fehlen Adresse oder Modell."
 msgstr ""
 
-#: app/qml/QuickCaptureDialog.qml:409
+#: app/qml/QuickCaptureDialog.qml:422
 msgid "Erkannt"
 msgstr ""
 
-#: app/qml/QuickCaptureDialog.qml:413
+#: app/qml/QuickCaptureDialog.qml:426
 msgid "Projekt: %1"
 msgstr ""
 
-#: app/qml/QuickCaptureDialog.qml:415
+#: app/qml/QuickCaptureDialog.qml:428
 msgid "Fällig: %1"
 msgstr ""
 
-#: app/qml/QuickCaptureDialog.qml:415
+#: app/qml/QuickCaptureDialog.qml:428
 msgid "Fällig (nicht erkannt): %1"
 msgstr ""
 
-#: app/qml/QuickCaptureDialog.qml:416
+#: app/qml/QuickCaptureDialog.qml:429
 msgid "Priorität: %1"
 msgstr ""
 
-#: app/qml/QuickCaptureDialog.qml:432 app/qml/Sidebar.qml:159
+#: app/qml/QuickCaptureDialog.qml:445 app/qml/Sidebar.qml:159
 msgid "Tags"
 msgstr ""
 
-#: app/qml/QuickCaptureDialog.qml:433
+#: app/qml/QuickCaptureDialog.qml:446
 msgid "durch Leerzeichen getrennt"
 msgstr ""
 
-#: app/qml/QuickCaptureDialog.qml:440
+#: app/qml/QuickCaptureDialog.qml:453
 msgid "Keine Angabe"
 msgstr ""
 
-#: app/qml/QuickCaptureDialog.qml:440 app/qml/TasksPage.qml:420
+#: app/qml/QuickCaptureDialog.qml:453 app/qml/TasksPage.qml:420
 #: app/qml/TasksPage.qml:488
 msgid "Morgen"
 msgstr ""
 
-#: app/qml/QuickCaptureDialog.qml:440 app/qml/TasksPage.qml:428
+#: app/qml/QuickCaptureDialog.qml:453 app/qml/TasksPage.qml:428
 #: app/qml/TasksPage.qml:490
 msgid "+1 Woche"
 msgstr ""
 
-#: app/qml/QuickCaptureDialog.qml:440
+#: app/qml/QuickCaptureDialog.qml:453
 msgid "Datum wählen …"
 msgstr ""
 
-#: app/qml/QuickCaptureDialog.qml:457
+#: app/qml/QuickCaptureDialog.qml:470
 msgid "Fälligkeits-Ausdruck"
 msgstr ""
 
-#: app/qml/QuickCaptureDialog.qml:458
+#: app/qml/QuickCaptureDialog.qml:471
 msgid "z. B. +3d, eow oder 2026-12-31"
 msgstr ""
 
-#: app/qml/QuickCaptureDialog.qml:462
+#: app/qml/QuickCaptureDialog.qml:475
 msgid "Nicht erkannter Ausdruck"
 msgstr ""
 

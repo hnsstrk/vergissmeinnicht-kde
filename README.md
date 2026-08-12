@@ -80,9 +80,9 @@ platform.
   the detail dialog (add/remove `depends` relations with title lookup).
 - **Notifications** — opt-in summary at launch when overdue tasks exist
   (freedesktop notifications).
-- **Categorized settings** — General, Synchronization, AI assistant and
-  Maintenance as separate pages in a settings window with a category
-  sidebar.
+- **Categorized settings** — General, Synchronization, Dictation, AI
+  assistant and Maintenance as separate pages in a settings window with a
+  category sidebar.
 
   ![Vergissmeinnicht — settings](docs/screenshots/settings.png)
 - **AI assistant (opt-in)** — configured under Settings → AI Assistant:
@@ -94,22 +94,8 @@ platform.
   when the backend is offline; switching the provider or editing the
   base URL discards the stale list and reachability state and quietly
   refetches from the new endpoint — without sending the stored API key,
-  which belongs to the saved endpoint), the API key in the Secret
-  Service, and
-  the speech-to-text backend for dictation — either `openai-whisper` (the
-  `whisper` CLI from `PATH`, CPU, model name configurable) or
-  `whisper.cpp` (a `whisper-cli` binary plus a GGML model file, both given
-  as paths; this is the way to use a GPU build). For `whisper.cpp` the
-  binary's own directory is prepended to the child process's
-  `LD_LIBRARY_PATH` — ROCm/HIP builds keep `libwhisper.so` next to the
-  binary, so the plain binary path works without a wrapper script — and
-  the availability probe launches the binary once (`--help`), so a binary
-  that cannot resolve its libraries counts as unavailable. Dictation
-  additionally needs PipeWire's `pw-record`; if any part of that chain is
-  missing, the microphone stays visible but disabled and its tooltip
-  names the missing part, instead of failing at record time.
-  Recordings and transcripts live in the XDG runtime directory and are
-  deleted after use. A context-scope setting controls how much task data the AI
+  which belongs to the saved endpoint) and the API key in the Secret
+  Service. A context-scope setting controls how much task data the AI
   sees when interpreting input: project and tag names only (default),
   plus open task titles, or all non-deleted tasks compactly — deleted
   tasks are never sent. "Save and test" verifies the connection via the
@@ -127,6 +113,23 @@ platform.
   endpoint (`think: false` only exists on Ollama's native `/api/chat`, and
   `reasoning_effort` only ever switches it *on*), so the model choice is
   the lever. The request timeout is 300 s to accommodate slow backends.
+- **Dictation** — its own settings category since #47, so it is usable
+  without configuring the AI assistant: the speech-to-text backend is
+  either `openai-whisper` (the `whisper` CLI from `PATH`, CPU, model name
+  configurable) or `whisper.cpp` (a `whisper-cli` binary plus a GGML
+  model file, both given as paths; this is the way to use a GPU build).
+  For `whisper.cpp` the binary's own directory is prepended to the child
+  process's `LD_LIBRARY_PATH` — ROCm/HIP builds keep `libwhisper.so`
+  next to the binary, so the plain binary path works without a wrapper
+  script — and the availability probe launches the binary once
+  (`--help`), so a binary that cannot resolve its libraries counts as
+  unavailable. Dictation additionally needs PipeWire's `pw-record`; if
+  any part of that chain is missing, the microphone stays visible but
+  disabled and its tooltip names the missing part, instead of failing at
+  record time. Recordings and transcripts live in the XDG runtime
+  directory and are deleted after use.
+
+  ![Vergissmeinnicht — dictation settings](docs/screenshots/settings-dictation.png)
 - **Localization** — German (source) and English via ki18n/gettext, with
   manual override in the settings.
 - **Sync** against any [taskchampion-sync-server](https://github.com/GothenburgBitFactory/taskchampion-sync-server)

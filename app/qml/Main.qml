@@ -984,9 +984,7 @@ Kirigami.ApplicationWindow {
             const s = JSON.parse(app.aiSettingsJson())
             check(s.ai_model.length > 0, "aiSettingsJson liefert konfiguriertes Modell")
             // aiConfigured folgt dem Speichern live (kein Neustart nötig).
-            app.saveAiSettings(s.ai_provider, s.ai_base_url, "", s.ai_stt_backend,
-                               s.ai_whisper_model, s.ai_whisper_cpp_binary, s.ai_whisper_cpp_model,
-                               s.ai_context_level)
+            app.saveAiSettings(s.ai_provider, s.ai_base_url, "", s.ai_context_level)
             check(!app.aiConfigured, "aiConfigured false ohne Modell (live)")
             // #41: Ohne KI-Konfiguration bleibt die Bedienzeile sichtbar,
             // der KI-Knopf ist gesperrt statt versteckt (Titel gesetzt,
@@ -997,17 +995,13 @@ Kirigami.ApplicationWindow {
             check(ui41.rowVisible, "KI-Zeile ohne KI-Konfiguration sichtbar (#41)")
             check(!ui41.interpretEnabled, "KI-Knopf ohne Konfiguration gesperrt (#41)")
             quickCaptureDialog.close()
-            app.saveAiSettings(s.ai_provider, s.ai_base_url, s.ai_model, s.ai_stt_backend,
-                               s.ai_whisper_model, s.ai_whisper_cpp_binary, s.ai_whisper_cpp_model,
-                               s.ai_context_level)
+            app.saveAiSettings(s.ai_provider, s.ai_base_url, s.ai_model, s.ai_context_level)
             check(app.aiConfigured, "aiConfigured true nach Wiederherstellen (live)")
             // AI-B1b (#31): Kontextstufe erreicht den Prompt-Pfad — die
             // Preview baut den Prompt über denselben Code wie startAiInterpret.
             check(s.ai_context_level === "taxonomy", "ai_context_level Default taxonomy")
             function speichernMitStufe(stufe) {
-                app.saveAiSettings(s.ai_provider, s.ai_base_url, s.ai_model, s.ai_stt_backend,
-                                   s.ai_whisper_model, s.ai_whisper_cpp_binary,
-                                   s.ai_whisper_cpp_model, stufe)
+                app.saveAiSettings(s.ai_provider, s.ai_base_url, s.ai_model, stufe)
             }
             const previewA = app.aiCapturePromptPreview("x")
             check(previewA.indexOf("Aufgaben (") === -1, "Stufe A ohne Aufgabenliste")
@@ -1027,12 +1021,16 @@ Kirigami.ApplicationWindow {
             // was auf der Maschine installiert ist. Danach der gespeicherte
             // Stand zurück.
             function speichernMitDiktat(backend, binary, modell) {
-                app.saveAiSettings(s.ai_provider, s.ai_base_url, s.ai_model, backend,
-                                   s.ai_whisper_model, binary, modell, s.ai_context_level)
+                // Seit #47 der eigene Speicherweg der Diktat-Seite.
+                app.saveDictationSettings(backend, s.ai_whisper_model, binary, modell)
             }
             speichernMitDiktat("whisperx", s.ai_whisper_cpp_binary, s.ai_whisper_cpp_model)
             check(!app.dictationAvailable,
                   "dictationAvailable false bei unbekanntem STT-Backend")
+            // #47: Der Diktat-Speicherweg lässt den KI-Zugang unberührt —
+            // eine kaputte Diktier-Kette darf aiConfigured nicht kippen.
+            check(app.aiConfigured,
+                  "saveDictationSettings lässt aiConfigured unberührt (#47)")
             check(app.dictationUnavailableReason.indexOf("whisperx") !== -1,
                   "Sonden-Grund nennt das unbekannte Backend (#41)")
             quickCaptureDialog.openCapture()
@@ -1057,6 +1055,10 @@ Kirigami.ApplicationWindow {
                   "Sonden-Grund nennt die gescheiterte Startprobe (#41)")
             speichernMitDiktat(s.ai_stt_backend, s.ai_whisper_cpp_binary,
                                s.ai_whisper_cpp_model)
+            // Gegenrichtung (#47): Der Diktat-Speicherweg mit gültigen
+            // Werten ändert am KI-Zugang ebenfalls nichts.
+            check(app.aiConfigured,
+                  "aiConfigured nach Diktat-Wiederherstellen unverändert (#47)")
             // #41: Wiederherstellen führt Sonde und Grund wieder zusammen.
             check(app.dictationAvailable
                   ? app.dictationUnavailableReason.length === 0
@@ -1136,9 +1138,7 @@ Kirigami.ApplicationWindow {
             comboDictationWaiter.settingsVorher = s
             // Modell wegkonfigurieren: Die Diktier-Sonde liest Basis-URL und
             // Modell nie — das Diktat bleibt verfügbar, die KI nicht.
-            app.saveAiSettings(s.ai_provider, s.ai_base_url, "", s.ai_stt_backend,
-                               s.ai_whisper_model, s.ai_whisper_cpp_binary,
-                               s.ai_whisper_cpp_model, s.ai_context_level)
+            app.saveAiSettings(s.ai_provider, s.ai_base_url, "", s.ai_context_level)
             check(!app.aiConfigured && app.dictationAvailable,
                   "Kombination hergestellt: Diktat verfügbar, KI unkonfiguriert (#41)")
             quickCaptureDialog.openCapture()
@@ -1184,9 +1184,7 @@ Kirigami.ApplicationWindow {
                   "stiller Abbruch der Interpretation: aiBusy bleibt frei (#41)")
             quickCaptureDialog.close()
             const s = settingsVorher
-            app.saveAiSettings(s.ai_provider, s.ai_base_url, s.ai_model, s.ai_stt_backend,
-                               s.ai_whisper_model, s.ai_whisper_cpp_binary,
-                               s.ai_whisper_cpp_model, s.ai_context_level)
+            app.saveAiSettings(s.ai_provider, s.ai_base_url, s.ai_model, s.ai_context_level)
             check(app.aiConfigured, "Modell nach Kombinationsfall wiederhergestellt (#41)")
             hoverTipTimer.baseFailures = failures
             hoverTipTimer.start()
@@ -1214,9 +1212,8 @@ Kirigami.ApplicationWindow {
             hoverTipWaiter.settingsVorher = s
             // Diktier-Kette kaputt konfigurieren (wie Schritt 10) — das
             // Mikrofon ist dann sichtbar, aber gesperrt.
-            app.saveAiSettings(s.ai_provider, s.ai_base_url, s.ai_model, "whisperx",
-                               s.ai_whisper_model, s.ai_whisper_cpp_binary,
-                               s.ai_whisper_cpp_model, s.ai_context_level)
+            app.saveDictationSettings("whisperx", s.ai_whisper_model,
+                                      s.ai_whisper_cpp_binary, s.ai_whisper_cpp_model)
             check(!app.dictationAvailable,
                   "Diktat gesperrt für den Tooltip-Nachweis (#41)")
             quickCaptureDialog.openCapture()
@@ -1267,9 +1264,8 @@ Kirigami.ApplicationWindow {
             app.testMove(1, 1)
             quickCaptureDialog.close()
             const s = settingsVorher
-            app.saveAiSettings(s.ai_provider, s.ai_base_url, s.ai_model, s.ai_stt_backend,
-                               s.ai_whisper_model, s.ai_whisper_cpp_binary,
-                               s.ai_whisper_cpp_model, s.ai_context_level)
+            app.saveDictationSettings(s.ai_stt_backend, s.ai_whisper_model,
+                                      s.ai_whisper_cpp_binary, s.ai_whisper_cpp_model)
             // Weiter zum UI-6-Teil (leiser Abruf + Auto-Abruf beim Öffnen).
             aiProbeSilentTimer.baseFailures = failures
             aiProbeSilentTimer.start()
@@ -1288,8 +1284,7 @@ Kirigami.ApplicationWindow {
             const s = JSON.parse(app.aiSettingsJson())
             aiProbeSilentWaiter.settingsVorher = s
             app.saveAiSettings(s.ai_provider, "http://unerreichbar.invalid/v1", s.ai_model,
-                               s.ai_stt_backend, s.ai_whisper_model, s.ai_whisper_cpp_binary,
-                               s.ai_whisper_cpp_model, s.ai_context_level)
+                               s.ai_context_level)
             app.startAiListModelsAuto()
             aiProbeSilentWaiter.baseFailures = baseFailures
             aiProbeSilentWaiter.start()
@@ -1323,9 +1318,7 @@ Kirigami.ApplicationWindow {
                   "Modellliste bleibt bei Fehlschlag unangetastet")
             // Basis-URL wiederherstellen, dann der Seitenöffnungs-Test.
             const s = settingsVorher
-            app.saveAiSettings(s.ai_provider, s.ai_base_url, s.ai_model, s.ai_stt_backend,
-                               s.ai_whisper_model, s.ai_whisper_cpp_binary,
-                               s.ai_whisper_cpp_model, s.ai_context_level)
+            app.saveAiSettings(s.ai_provider, s.ai_base_url, s.ai_model, s.ai_context_level)
             aiPageOpenTimer.baseFailures = failures
             aiPageOpenTimer.start()
         }
@@ -1521,6 +1514,12 @@ Kirigami.ApplicationWindow {
                 // Fenster, damit die Aufräumen-Karte samt Knopf sichtbar ist.
                 settingsDialog.openSettings("maintenance")
                 settingsDialog.configViewItem.height = 760
+                testHoverTimer.start()
+                break
+            case "settings-dictation":
+                // Diktat-Seite direkt öffnen (Screenshot #47) — die Seite
+                // ist kurz, die Standardhöhe genügt.
+                settingsDialog.openSettings("dictation")
                 testHoverTimer.start()
                 break
             case "settings-ai-combo":

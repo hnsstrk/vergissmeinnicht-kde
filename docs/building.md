@@ -174,7 +174,9 @@ XDG_DATA_HOME=/tmp/vmn-demo XDG_CONFIG_HOME=/tmp/vmn-demo-cfg \
 ```
 
 Dialog names come from `testDialogTimer` in `app/qml/Main.qml` — note
-`quickcapture`, not `quick-capture`.
+`quickcapture`, not `quick-capture`. The dictation page (its own category
+since #47) is grabbed the same way with
+`--test-dialog=settings-dictation --test-grab=docs/screenshots/settings-dictation.png`.
 
 One caveat for the AI page: the committed `settings-ai.png` shows a green
 reachability line ("Backend reachable — 1 model found."), and that line does

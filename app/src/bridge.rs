@@ -367,20 +367,30 @@ mod qobject {
         #[qinvokable]
         fn ai_api_key(self: &AppContainer) -> QString;
         /// KI-Einstellungen speichern (AI-A4): persistiert Provider,
-        /// Basis-URL, Modell, STT-Felder und Kontextstufe (AI-B1b),
-        /// verwirft den gecachten Llm-Client und aktualisiert
-        /// `aiConfigured` live.
+        /// Basis-URL, Modell und Kontextstufe (AI-B1b), verwirft den
+        /// gecachten Llm-Client und aktualisiert `aiConfigured` live.
+        /// Die Diktat-Felder speichert seit der Kategorien-Trennung (#47)
+        /// `saveDictationSettings`.
         #[qinvokable]
         fn save_ai_settings(
             self: Pin<&mut AppContainer>,
             provider: &QString,
             base_url: &QString,
             model: &QString,
+            context_level: &QString,
+        );
+        /// Diktat-Einstellungen speichern (#47): persistiert Backend und
+        /// Whisper-Felder und lässt die Diktier-Sonde neu laufen —
+        /// `dictationAvailable`/`dictationUnavailableReason` folgen sofort.
+        /// KI-Zugang (`aiConfigured`, Llm-Client) bleibt unberührt: die
+        /// Sonde liest weder Basis-URL noch Modell.
+        #[qinvokable]
+        fn save_dictation_settings(
+            self: Pin<&mut AppContainer>,
             stt_backend: &QString,
             whisper_model: &QString,
             whisper_cpp_binary: &QString,
             whisper_cpp_model: &QString,
-            context_level: &QString,
         );
         /// Aktuelle KI-Einstellungen als JSON (Feldnamen wie `config.rs`) —
         /// befüllt die Einstellungsseite beim Öffnen.
@@ -1734,16 +1744,13 @@ impl qobject::AppContainer {
     /// gecachten Llm-Client (deckt Provider-, URL- und Modellwechsel ab —
     /// der nächste Zugriff baut ohnehin lazy neu) und publiziert
     /// `aiConfigured` sofort, damit die KI-Bedienelemente ohne Neustart
-    /// erscheinen bzw. verschwinden.
+    /// erscheinen bzw. verschwinden. Die Diktier-Sonde läuft hier NICHT:
+    /// sie liest keines dieser Felder (#47).
     fn save_ai_settings(
         mut self: Pin<&mut Self>,
         provider: &QString,
         base_url: &QString,
         model: &QString,
-        stt_backend: &QString,
-        whisper_model: &QString,
-        whisper_cpp_binary: &QString,
-        whisper_cpp_model: &QString,
         context_level: &QString,
     ) {
         {
@@ -1752,18 +1759,35 @@ impl qobject::AppContainer {
             s.ai_provider = provider.to_string().trim().to_string();
             s.ai_base_url = base_url.to_string().trim().to_string();
             s.ai_model = model.to_string().trim().to_string();
-            s.ai_stt_backend = stt_backend.to_string().trim().to_string();
-            s.ai_whisper_model = whisper_model.to_string().trim().to_string();
-            s.ai_whisper_cpp_binary = whisper_cpp_binary.to_string().trim().to_string();
-            s.ai_whisper_cpp_model = whisper_cpp_model.to_string().trim().to_string();
             s.ai_context_level = context_level.to_string().trim().to_string();
             let _ = s.save();
         }
         self.rust().ai_llm.invalidiere();
         let configured = compute_ai_configured(&self.rust().state.settings);
         self.as_mut().set_ai_configured(configured);
-        // Diktier-Sonde erneut (AI-A5, #41): Backend-Wechsel oder geänderte
-        // Pfade schlagen sofort aufs Mikrofon durch, ohne Neustart.
+    }
+
+    /// Diktat-Einstellungen persistieren (#47, herausgelöst aus
+    /// `save_ai_settings`). Lässt nur die Diktier-Sonde neu laufen
+    /// (AI-A5, #41): Backend-Wechsel oder geänderte Pfade schlagen sofort
+    /// aufs Mikrofon durch, ohne Neustart. Llm-Client und `aiConfigured`
+    /// bleiben unangetastet — kein Feld hier fließt in beide ein.
+    fn save_dictation_settings(
+        mut self: Pin<&mut Self>,
+        stt_backend: &QString,
+        whisper_model: &QString,
+        whisper_cpp_binary: &QString,
+        whisper_cpp_model: &QString,
+    ) {
+        {
+            let state = &mut self.as_mut().rust_mut().state;
+            let s = &mut state.settings;
+            s.ai_stt_backend = stt_backend.to_string().trim().to_string();
+            s.ai_whisper_model = whisper_model.to_string().trim().to_string();
+            s.ai_whisper_cpp_binary = whisper_cpp_binary.to_string().trim().to_string();
+            s.ai_whisper_cpp_model = whisper_cpp_model.to_string().trim().to_string();
+            let _ = s.save();
+        }
         let (dictation, grund) = compute_dictation_probe(&self.rust().state.settings);
         self.as_mut().set_dictation_available(dictation);
         self.as_mut().set_dictation_unavailable_reason(grund);

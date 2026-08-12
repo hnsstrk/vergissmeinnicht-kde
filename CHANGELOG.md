@@ -78,6 +78,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Dictation got its own settings category (#47): the speech-input section
+  (speech recognition backend, whisper model or the two whisper.cpp
+  paths) moved unchanged from the AI assistant page to a new "Dictation"
+  page, so dictation is configurable without scrolling past an API key —
+  the two strands were already independent in the backend (the dictation
+  probe never reads base URL or model). The sidebar order is General ·
+  Synchronization · Dictation · AI Assistant · Maintenance. The new page
+  saves through its own `saveDictationSettings` invokable, which reruns
+  only the dictation probe and leaves the AI access (`aiConfigured`,
+  cached LLM client) untouched; its status line reports the probe result
+  after saving. `saveAiSettings` in turn dropped the four dictation
+  parameters. The flow proves that neither save path disturbs the other
+  strand's state.
+
 - Stage 1 release package (AI-B4, #16): the screenshot demo dataset
   (`core/examples/seed_demo.rs`) can now also write a demo AI
   configuration (`--ai-config <config-home>`) — English UI, Ollama base

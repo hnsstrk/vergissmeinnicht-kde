@@ -79,7 +79,7 @@ Oberfläche auf jeder Plattform.
   Detail-Dialog (`depends`-Relationen hinzufügen/entfernen, mit Titel-Auflösung).
 - **Benachrichtigungen** — Opt-in-Zusammenfassung beim Start, wenn
   überfällige Aufgaben vorliegen.
-- **Einstellungen in Kategorien** — Allgemein, Synchronisation,
+- **Einstellungen in Kategorien** — Allgemein, Synchronisation, Diktat,
   KI-Assistent und Wartung als eigene Seiten in einem Einstellungsfenster
   mit Kategorien-Seitenleiste.
 
@@ -94,22 +94,8 @@ Oberfläche auf jeder Plattform.
   Provider-Wechsel oder eine geänderte Basis-URL verwirft die veraltete
   Liste samt Erreichbarkeitsanzeige und lädt still gegen den neuen
   Endpunkt nach — ohne den gespeicherten API-Schlüssel mitzusenden, der
-  zum gespeicherten Endpunkt gehört), API-Key
-  im Secret Service und das Spracherkennungs-Backend fürs Diktat — entweder
-  `openai-whisper` (das `whisper`-Programm aus dem `PATH`, CPU, Modellname
-  einstellbar) oder `whisper.cpp` (ein `whisper-cli`-Programm plus
-  GGML-Modelldatei, beides als Pfad; so lässt sich ein GPU-Build nutzen).
-  Bei `whisper.cpp` wird das Verzeichnis des Programms dem
-  `LD_LIBRARY_PATH` des Kindprozesses vorangestellt — ROCm-/HIP-Builds
-  legen `libwhisper.so` neben das Programm, der bloße Binärpfad genügt
-  also ohne Wrapper-Skript — und die Verfügbarkeitssonde startet das
-  Programm einmal (`--help`): Ein Programm, das seine Bibliotheken nicht
-  findet, gilt als nicht verfügbar. Zusätzlich braucht das Diktat
-  `pw-record` aus PipeWire; fehlt ein Glied dieser Kette, bleibt das
-  Mikrofon sichtbar, aber gesperrt — sein Tooltip nennt das fehlende
-  Glied —, statt erst bei der Aufnahme zu scheitern.
-  Aufnahmen und Transkripte liegen im XDG-Laufzeitverzeichnis und werden
-  nach Gebrauch gelöscht. Der Kontextumfang bestimmt, wie viele
+  zum gespeicherten Endpunkt gehört) und API-Key
+  im Secret Service. Der Kontextumfang bestimmt, wie viele
   Aufgabendaten die KI beim Interpretieren sieht: nur Projekt- und
   Schlagwortnamen (Standard), zusätzlich Titel offener Aufgaben oder alle
   nicht gelöschten Aufgaben kompakt — Gelöschtes wird nie übertragen.
@@ -129,6 +115,24 @@ Oberfläche auf jeder Plattform.
   nur in Ollamas eigener `/api/chat`, und `reasoning_effort` schaltet es in
   jeder Stufe *ein*) — der Hebel ist also die Modellwahl. Der Anfrage-
   Timeout liegt bei 300 s, damit auch langsame Backends durchkommen.
+- **Diktat** — seit #47 eine eigene Einstellungskategorie und damit ohne
+  KI-Assistent-Konfiguration nutzbar: Das Spracherkennungs-Backend ist
+  entweder `openai-whisper` (das `whisper`-Programm aus dem `PATH`, CPU,
+  Modellname einstellbar) oder `whisper.cpp` (ein `whisper-cli`-Programm
+  plus GGML-Modelldatei, beides als Pfad; so lässt sich ein GPU-Build
+  nutzen). Bei `whisper.cpp` wird das Verzeichnis des Programms dem
+  `LD_LIBRARY_PATH` des Kindprozesses vorangestellt — ROCm-/HIP-Builds
+  legen `libwhisper.so` neben das Programm, der bloße Binärpfad genügt
+  also ohne Wrapper-Skript — und die Verfügbarkeitssonde startet das
+  Programm einmal (`--help`): Ein Programm, das seine Bibliotheken nicht
+  findet, gilt als nicht verfügbar. Zusätzlich braucht das Diktat
+  `pw-record` aus PipeWire; fehlt ein Glied dieser Kette, bleibt das
+  Mikrofon sichtbar, aber gesperrt — sein Tooltip nennt das fehlende
+  Glied —, statt erst bei der Aufnahme zu scheitern.
+  Aufnahmen und Transkripte liegen im XDG-Laufzeitverzeichnis und werden
+  nach Gebrauch gelöscht.
+
+  ![Vergissmeinnicht — Diktat-Einstellungen](docs/screenshots/settings-dictation.png)
 - **Lokalisierung** — Deutsch (Quellsprache) und Englisch über
   ki18n/gettext, mit manueller Umschaltung in den Einstellungen.
 - **Synchronisierung** gegen einen beliebigen

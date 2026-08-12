@@ -5,7 +5,8 @@ import org.kde.kirigamiaddons.formcard as FormCard
 
 // Kategorie „KI-Assistent" der Einstellungen (AI-A4, #12): Provider-Preset,
 // Basis-URL, Modellauswahl aus der Modellliste des Endpunkts, API-Key
-// (Secret Service) und Spracheingabe-Backend. Gespeichert wird über
+// (Secret Service) und Kontextumfang. Das Spracheingabe-Backend hat seit
+// #47 seine eigene Kategorie (DictationSettingsPage). Gespeichert wird über
 // „Speichern und testen" bzw. „Modelle laden" — beide persistieren erst,
 // weil der Llm-Client aus den gespeicherten Einstellungen gebaut wird.
 FormCard.FormCardPage {
@@ -59,10 +60,6 @@ FormCard.FormCardPage {
         app.saveAiSettings(providerCombo.keys[providerCombo.currentIndex],
                            baseUrlField.text,
                            modelCombo.editText,
-                           sttCombo.keys[sttCombo.currentIndex],
-                           whisperModelField.text,
-                           whisperCppBinaryField.text,
-                           whisperCppModelField.text,
                            contextCombo.keys[contextCombo.currentIndex])
         app.setAiApiKey(keyField.text)
         // Nach dem Speichern gilt der Listenzustand für diese URL — ein
@@ -98,10 +95,6 @@ FormCard.FormCardPage {
         page.geltendeUrl = s.ai_base_url
         modelCombo.editText = s.ai_model
         keyField.text = app.aiApiKey()
-        sttCombo.currentIndex = Math.max(0, sttCombo.keys.indexOf(s.ai_stt_backend))
-        whisperModelField.text = s.ai_whisper_model
-        whisperCppBinaryField.text = s.ai_whisper_cpp_binary
-        whisperCppModelField.text = s.ai_whisper_cpp_model
         contextCombo.currentIndex = Math.max(0, contextCombo.keys.indexOf(s.ai_context_level))
         // Automatischer Modelllisten-Abruf beim Öffnen der Seite (UI-6,
         // #33): einmal pro Seitenaufbau, nur mit konfigurierter Basis-URL.
@@ -262,38 +255,6 @@ FormCard.FormCardPage {
         FormCard.FormPasswordFieldDelegate {
             id: keyField
             label: i18n("API-Key (nur für Cloud-Endpunkte)")
-        }
-    }
-
-    FormCard.FormHeader {
-        title: i18n("Spracheingabe (Diktat)")
-    }
-
-    FormCard.FormCard {
-        VmComboBoxDelegate {
-            id: sttCombo
-            text: i18n("Spracherkennungs-Backend")
-            readonly property var keys: ["openai-whisper", "whisper-cpp"]
-            model: ["openai-whisper (CPU)", "whisper.cpp"]
-        }
-
-        FormCard.FormTextFieldDelegate {
-            id: whisperModelField
-            visible: sttCombo.currentIndex === 0
-            label: i18n("Whisper-Modell")
-            placeholderText: "small"
-        }
-
-        FormCard.FormTextFieldDelegate {
-            id: whisperCppBinaryField
-            visible: sttCombo.currentIndex === 1
-            label: i18n("whisper-cli-Programm (Pfad)")
-        }
-
-        FormCard.FormTextFieldDelegate {
-            id: whisperCppModelField
-            visible: sttCombo.currentIndex === 1
-            label: i18n("GGML-Modelldatei (Pfad)")
         }
     }
 

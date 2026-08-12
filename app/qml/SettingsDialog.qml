@@ -3,7 +3,7 @@ import org.kde.kirigami as Kirigami
 import org.kde.kirigamiaddons.settings as KirigamiSettings
 
 // Einstellungen in Kategorien (UI-4, #30): ConfigurationView mit Seitenleiste
-// — Allgemein / Synchronisation / KI-Assistent / Wartung. Die Seiten liegen
+// — Allgemein / Synchronisation / Diktat / KI-Assistent / Wartung. Die Seiten liegen
 // in eigenen QML-Dateien (…SettingsPage.qml); `window` und `appContainer`
 // setzt Main.qml. CategorizedSettings ist seit Addons 1.3 deprecated und
 // wird bewusst nicht verwendet.
@@ -42,6 +42,15 @@ KirigamiSettings.ConfigurationView {
             icon.name: "state-sync"
             page: () => Qt.createComponent("de.hnsstrk.vergissmeinnicht", "SyncSettingsPage")
             initialProperties: () => ({ app: dialog.appContainer, besitzer: dialog })
+        },
+        KirigamiSettings.ConfigurationModule {
+            // Diktat vor dem KI-Assistenten (#47): wer nur diktieren will,
+            // soll nicht an API-Schlüssel und Endpunkt vorbeimüssen.
+            moduleId: "dictation"
+            text: i18n("Diktat")
+            icon.name: "audio-input-microphone"
+            page: () => Qt.createComponent("de.hnsstrk.vergissmeinnicht", "DictationSettingsPage")
+            initialProperties: () => ({ app: dialog.appContainer })
         },
         KirigamiSettings.ConfigurationModule {
             moduleId: "ai"
