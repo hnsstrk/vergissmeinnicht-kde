@@ -40,7 +40,25 @@ fn verweigere_testlauf_auf_echten_daten() {
     }
 }
 
+/// Vollständige Versionsangabe inkl. Build-Kennung aus build.rs (#54),
+/// z. B. "0.4.0 (54d2572, 2026-08-12)"; ohne Git-Bau nur "0.4.0".
+fn versions_string() -> String {
+    let build = env!("VM_BUILD_INFO");
+    if build.is_empty() {
+        env!("CARGO_PKG_VERSION").to_string()
+    } else {
+        format!("{} ({build})", env!("CARGO_PKG_VERSION"))
+    }
+}
+
 fn main() {
+    // --version druckt die Kennung ohne Qt-Start — install-local.sh meldet
+    // damit am Ende, welcher Stand tatsächlich installiert wurde (#54).
+    if std::env::args().skip(1).any(|a| a == "--version") {
+        println!("vergissmeinnicht {}", versions_string());
+        return;
+    }
+
     verweigere_testlauf_auf_echten_daten();
 
     // KDE-nativer Look für QtQuick Controls, sofern der User nichts anderes erzwingt.

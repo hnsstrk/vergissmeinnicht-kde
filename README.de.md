@@ -238,6 +238,12 @@ cargo build
 scripts/install-local.sh
 ```
 
+Jeder Git-Bau gibt sich zu erkennen: `vergissmeinnicht --version` und der
+Über-Dialog zeigen Kurz-Commit und Commit-Datum neben der Version
+(z. B. `0.4.0 (54d2572, 2026-08-12)`), und `install-local.sh` meldet die
+Kennung des gerade installierten Stands. Tarball-Bauten ohne
+Git-Verzeichnis zeigen nur die Version.
+
 Testsuite:
 
 ```sh

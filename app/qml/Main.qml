@@ -282,6 +282,11 @@ Kirigami.ApplicationWindow {
             function uuids() { return Array.from(app.visibleUuids(0, 9999)) }
             function taskOf(u) { return JSON.parse(app.taskJson(u)) }
 
+            // 0. Build-Kennung (#54): Invokable erreichbar und liefert einen
+            //    String (im Git-Bau nicht leer; Tarball-Bau darf leer sein).
+            check(typeof app.buildInfo === "function" && typeof app.buildInfo() === "string",
+                  "buildInfo liefert Build-Kennung (#54)")
+
             // 1. Quick Capture mit Token-Syntax
             check(app.quickCaptureCommit("Flow-Testaufgabe +flowtest project:flowdemo due:tomorrow priority:H"),
                   "quickCaptureCommit")
@@ -1668,5 +1673,6 @@ Kirigami.ApplicationWindow {
 
     AboutDialog {
         id: aboutDialog
+        appContainer: app
     }
 }

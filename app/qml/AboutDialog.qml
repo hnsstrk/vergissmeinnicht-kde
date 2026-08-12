@@ -6,6 +6,9 @@ import org.kde.kirigami as Kirigami
 Kirigami.Dialog {
     id: dialog
 
+    // Bridge-Zugriff für die Build-Kennung (#54); von Main.qml gesetzt.
+    property var appContainer: null
+
     title: i18n("Über Vergissmeinnicht")
     standardButtons: Kirigami.Dialog.Close
     preferredWidth: Kirigami.Units.gridUnit * 22
@@ -29,7 +32,13 @@ Kirigami.Dialog {
         }
 
         QQC2.Label {
-            text: i18n("Version %1", Qt.application.version.length > 0 ? Qt.application.version : "0.1.0")
+            // Build-Kennung (Kurz-Commit, Baudatum) neben der Version, damit
+            // Entwicklungsstände unterscheidbar sind (#54); leer im Tarball-Bau.
+            readonly property string versionText: Qt.application.version.length > 0 ? Qt.application.version : "0.1.0"
+            readonly property string buildText: dialog.appContainer ? dialog.appContainer.buildInfo() : ""
+            text: buildText.length > 0
+                  ? i18n("Version %1 (%2)", versionText, buildText)
+                  : i18n("Version %1", versionText)
             opacity: 0.7
             Layout.alignment: Qt.AlignHCenter
         }

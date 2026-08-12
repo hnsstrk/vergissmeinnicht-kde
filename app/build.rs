@@ -1,6 +1,48 @@
 use cxx_qt_build::{CxxQtBuilder, QmlModule};
+use std::process::Command;
+
+/// Build-Kennung (#54): Kurz-Commit und Commit-Datum, z. B. "54d2572, 2026-08-12".
+/// Ohne Git-Verzeichnis (Tarball-Bau) bleibt sie leer — der Über-Dialog zeigt
+/// dann nur die Version statt einer leeren Klammer.
+///
+/// Zielkonflikt Cache vs. Aktualität: build.rs soll nicht bei jedem Bau neu
+/// laufen, die Kennung aber auch nicht veralten. Auflösung: Als Datum dient das
+/// Commit-Datum statt der Uhr — die Kennung ist damit eine reine Funktion des
+/// Git-Stands — und neu gebaut wird genau dann, wenn sich dieser Stand ändert:
+/// `HEAD` (Branch-Wechsel, Detach) und `logs/HEAD` (Reflog; wächst bei jedem
+/// Commit, Amend, Rebase, Reset) sind als rerun-Anker registriert.
+/// Unkommittierte Änderungen ändern die Kennung bewusst nicht.
+fn build_kennung() -> String {
+    let git = |args: &[&str]| -> Option<String> {
+        let out = Command::new("git").args(args).output().ok()?;
+        if !out.status.success() {
+            return None;
+        }
+        Some(String::from_utf8(out.stdout).ok()?.trim().to_string())
+    };
+
+    // rerun-Anker zuerst: `--git-path` löst auch Worktrees korrekt auf.
+    for anker in ["HEAD", "logs/HEAD"] {
+        if let Some(pfad) = git(&["rev-parse", "--git-path", anker]) {
+            if std::path::Path::new(&pfad).exists() {
+                println!("cargo:rerun-if-changed={pfad}");
+            }
+        }
+    }
+
+    match (
+        git(&["rev-parse", "--short=7", "HEAD"]),
+        git(&["show", "-s", "--format=%cs", "HEAD"]),
+    ) {
+        (Some(commit), Some(datum)) => format!("{commit}, {datum}"),
+        _ => String::new(),
+    }
+}
 
 fn main() {
+    // Kompilierzeit-Konstante für Über-Dialog und --version (#54).
+    println!("cargo:rustc-env=VM_BUILD_INFO={}", build_kennung());
+
     // Jede neue QML-Datei und jede neue Bridge-Rust-Datei muss hier registriert
     // werden — Pendant zur xcodeproj-Pflege der macOS-Version.
     let builder = CxxQtBuilder::new_qml_module(

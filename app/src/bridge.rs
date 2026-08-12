@@ -207,6 +207,11 @@ mod qobject {
         fn set_sidebar_width_setting(self: Pin<&mut AppContainer>, width: i32);
         #[qinvokable]
         fn set_collapsed_sections_setting(self: Pin<&mut AppContainer>, json: &QString);
+        /// Build-Kennung aus build.rs ("Kurz-Commit, Commit-Datum"); leer im
+        /// Bau ohne Git-Verzeichnis (Tarball) — dann zeigt der Über-Dialog
+        /// nur die Version (#54).
+        #[qinvokable]
+        fn build_info(self: &AppContainer) -> QString;
 
         // ── Task-Detail ─────────────────────────────────────────────────────
         #[qinvokable]
@@ -955,6 +960,12 @@ impl qobject::AppContainer {
 
     fn language_setting(&self) -> QString {
         QString::from(self.state.settings.language.as_str())
+    }
+
+    /// Build-Kennung für den Über-Dialog — zur Kompilierzeit von build.rs
+    /// erzeugt (#54).
+    fn build_info(&self) -> QString {
+        QString::from(env!("VM_BUILD_INFO"))
     }
 
     /// Vom Resize-Griff der Sidebar persistierte Breite (px); 0 = Theme-Standard.

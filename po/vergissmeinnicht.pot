@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-12 20:58+0200\n"
+"POT-Creation-Date: 2026-08-12 21:19+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,21 +18,25 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
 
-#: app/qml/AboutDialog.qml:9 app/qml/TasksPage.qml:308
+#: app/qml/AboutDialog.qml:12 app/qml/TasksPage.qml:308
 msgid "Über Vergissmeinnicht"
 msgstr ""
 
-#: app/qml/AboutDialog.qml:32
+#: app/qml/AboutDialog.qml:40
+msgid "Version %1 (%2)"
+msgstr ""
+
+#: app/qml/AboutDialog.qml:41
 msgid "Version %1"
 msgstr ""
 
-#: app/qml/AboutDialog.qml:42
+#: app/qml/AboutDialog.qml:51
 msgid ""
 "Nativer KDE-Client für Taskwarrior 3.x auf Basis von TaskChampion.\n"
 "Kirigami-Oberfläche, Rust-Kern via cxx-qt."
 msgstr ""
 
-#: app/qml/AboutDialog.qml:51
+#: app/qml/AboutDialog.qml:60
 msgid "MIT-Lizenz"
 msgstr ""
 

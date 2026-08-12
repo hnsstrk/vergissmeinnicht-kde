@@ -92,6 +92,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   parameters. The flow proves that neither save path disturbs the other
   strand's state.
 
+- The version is now 0.4.0, and every build identifies itself (#54).
+  The About dialog shows the short git commit and its commit date next
+  to the version (e.g. `0.4.0 (54d2572, 2026-08-12)`), so development
+  installs made on the same day are distinguishable. The identifier is
+  generated at compile time in `app/build.rs`; builds from a tarball
+  without a git directory fall back to the plain version. A new
+  `--version` flag prints the same identifier without starting Qt, and
+  `scripts/install-local.sh` now reports what it just installed by
+  asking the installed binary.
+
 - Stage 1 release package (AI-B4, #16): the screenshot demo dataset
   (`core/examples/seed_demo.rs`) can now also write a demo AI
   configuration (`--ai-config <config-home>`) — English UI, Ollama base

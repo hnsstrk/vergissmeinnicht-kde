@@ -45,4 +45,7 @@ done
 command -v update-desktop-database >/dev/null && update-desktop-database "$PREFIX/share/applications" || true
 command -v gtk-update-icon-cache >/dev/null && gtk-update-icon-cache -q "$PREFIX/share/icons/hicolor" || true
 
+# Das installierte Binary selbst befragen (#54): so stimmt die Meldung auch
+# mit --skip-build, wenn ein älterer Bau installiert wurde.
+echo "==> Installiert: $("$PREFIX/bin/vergissmeinnicht" --version)"
 echo "==> Fertig. Start: vergissmeinnicht (oder über den Anwendungsstarter)"

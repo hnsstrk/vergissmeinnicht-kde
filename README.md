@@ -234,6 +234,12 @@ cargo build
 scripts/install-local.sh
 ```
 
+Every git build identifies itself: `vergissmeinnicht --version` and the
+About dialog show the short commit and its date next to the version
+(e.g. `0.4.0 (54d2572, 2026-08-12)`), and `install-local.sh` reports the
+identifier of what it just installed. Tarball builds without a git
+directory show the plain version.
+
 Run the test suite:
 
 ```sh
