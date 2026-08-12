@@ -23,6 +23,7 @@
 //! Transkript des Backends räumt [`Aufraeumer`] weg, auch im Fehlerfall.
 
 use crate::config::Settings;
+use std::ffi::{OsStr, OsString};
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -85,6 +86,11 @@ pub enum Fehlend {
     /// Whisper-Programm fehlt (PATH-Name beim openai-whisper-Backend,
     /// konfigurierter Pfad bei whisper.cpp).
     Whisperprogramm(String),
+    /// Das whisper.cpp-Programm existiert, startet aber nicht — typisch ein
+    /// GPU-Build, dessen Bibliotheken der dynamische Linker nicht findet
+    /// (Ticket #37). Ohne diese Prüfung fiele der Fehler erst nach dem
+    /// Sprechen auf, wenn die Aufnahme schon verloren ist.
+    WhisperprogrammStartetNicht(String),
     /// GGML-Modelldatei des whisper.cpp-Backends fehlt.
     Modelldatei(String),
     /// Das Laufzeitverzeichnis für Aufnahmen und Transkripte lässt sich
@@ -103,6 +109,13 @@ impl std::fmt::Display for Fehlend {
             }
             Fehlend::Whisperprogramm(pfad) => {
                 write!(f, "Diktat nicht möglich: Whisper-Programm „{pfad}“ nicht gefunden")
+            }
+            Fehlend::WhisperprogrammStartetNicht(pfad) => {
+                write!(
+                    f,
+                    "Diktat nicht möglich: Whisper-Programm „{pfad}“ startet nicht \
+                     (fehlen die Bibliotheken neben dem Programm?)"
+                )
             }
             Fehlend::Modelldatei(pfad) => {
                 write!(f, "Diktat nicht möglich: Modelldatei „{pfad}“ nicht gefunden")
@@ -150,12 +163,18 @@ impl std::fmt::Display for TranskriptFehler {
 
 /// Startsonde (Spec §4.1): Ist die ganze Kette da? Speist die
 /// Bridge-Eigenschaft `dictationAvailable`. Datei- und PATH-Prüfung plus ein
-/// Schreibtest auf das Laufzeitverzeichnis, kein Prozessstart — läuft billig
-/// genug für den Qt-Thread.
+/// Schreibtest auf das Laufzeitverzeichnis; beim whisper.cpp-Backend
+/// zusätzlich eine Startprobe (`--help`, lädt kein Modell — gemessen am
+/// 12.08.2026: 88 ms am GPU-Build der Referenzmaschine). Läuft billig genug
+/// für den Qt-Thread.
 pub fn verfuegbarkeit(settings: &Settings) -> Result<(), Fehlend> {
-    verfuegbarkeit_mit(settings, &im_pfad_ausfuehrbar, &|pfad| ist_ausfuehrbar(pfad), &|| {
-        laufzeit_beschreibbar(&laufzeit_verzeichnis())
-    })
+    verfuegbarkeit_mit(
+        settings,
+        &im_pfad_ausfuehrbar,
+        &|pfad| ist_ausfuehrbar(pfad),
+        &|| laufzeit_beschreibbar(&laufzeit_verzeichnis()),
+        &startet,
+    )
 }
 
 /// Prüflogik mit austauschbarer Umgebung — so testen die Negativfälle ohne
@@ -165,6 +184,7 @@ fn verfuegbarkeit_mit(
     im_pfad: &dyn Fn(&str) -> bool,
     ausfuehrbar: &dyn Fn(&Path) -> bool,
     laufzeit_schreibbar: &dyn Fn() -> bool,
+    startfaehig: &dyn Fn(&Path) -> bool,
 ) -> Result<(), Fehlend> {
     if !im_pfad(PW_RECORD) {
         return Err(Fehlend::Aufnahmeprogramm);
@@ -188,6 +208,12 @@ fn verfuegbarkeit_mit(
             // falsche Kriterium.
             if modell.is_empty() || !Path::new(modell).is_file() {
                 return Err(Fehlend::Modelldatei(modell.to_string()));
+            }
+            // Existenz reicht nicht: Ein GPU-Build findet seine Bibliotheken
+            // nur mit Bibliothekspfad (Ticket #37). Die teuerste Prüfung
+            // kommt zuletzt, damit die billigen Fälle zuerst greifen.
+            if !startfaehig(Path::new(programm)) {
+                return Err(Fehlend::WhisperprogrammStartetNicht(programm.to_string()));
             }
         }
     }
@@ -233,6 +259,47 @@ fn ist_ausfuehrbar(pfad: &Path) -> bool {
     std::fs::metadata(pfad)
         .map(|m| m.is_file() && m.permissions().mode() & 0o111 != 0)
         .unwrap_or(false)
+}
+
+/// Startprobe für das whisper.cpp-Programm: einmal `--help`, mit demselben
+/// Bibliothekspfad wie der echte Lauf. `--help` lädt kein Modell und endet
+/// sofort — ein Ladefehler des dynamischen Linkers (Exit 127) fällt genau
+/// hier auf statt erst nach dem Diktat.
+fn startet(programm: &Path) -> bool {
+    let mut cmd = Command::new(programm);
+    cmd.arg("--help")
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null());
+    mit_bibliothekspfad(&mut cmd, programm);
+    cmd.status().map(|status| status.success()).unwrap_or(false)
+}
+
+/// Wert für `LD_LIBRARY_PATH` des Kindprozesses: das Verzeichnis des
+/// Programms vorneweg, dahinter der bisherige Wert. ROCm-/HIP-Builds von
+/// whisper.cpp legen `libwhisper.so.1` und `libggml*.so` neben das Programm
+/// (Ticket #37). `None`, wenn das Programm kein nutzbares Verzeichnis trägt
+/// (bloßer Name ohne Pfad) — dann bleibt die Umgebung unverändert.
+fn bibliothekspfad(programm: &Path, bisher: Option<&OsStr>) -> Option<OsString> {
+    let verzeichnis = programm.parent()?;
+    if verzeichnis.as_os_str().is_empty() {
+        return None;
+    }
+    let mut pfade = vec![verzeichnis.to_path_buf()];
+    if let Some(bisher) = bisher {
+        pfade.extend(std::env::split_paths(bisher));
+    }
+    std::env::join_paths(pfade).ok()
+}
+
+/// Hängt den Bibliothekspfad an den Kindprozess. Nur das Kind bekommt den
+/// Wert — `std::env::set_var` wäre falsch, es veränderte die App selbst.
+fn mit_bibliothekspfad(cmd: &mut Command, programm: &Path) {
+    if let Some(wert) =
+        bibliothekspfad(programm, std::env::var_os("LD_LIBRARY_PATH").as_deref())
+    {
+        cmd.env("LD_LIBRARY_PATH", wert);
+    }
 }
 
 // ─── Aufnahme ───────────────────────────────────────────────────────────────
@@ -460,7 +527,12 @@ fn kommando(backend: SttBackend, settings: &Settings, wav: &Path) -> Command {
             cmd
         }
         SttBackend::WhisperCpp => {
-            let mut cmd = Command::new(settings.ai_whisper_cpp_binary.trim());
+            let programm = settings.ai_whisper_cpp_binary.trim();
+            let mut cmd = Command::new(programm);
+            // GPU-Builds tragen ihre Bibliotheken neben dem Programm — der
+            // Kindprozess bekommt das Verzeichnis vorne in den
+            // Bibliothekspfad, die App selbst bleibt unangetastet.
+            mit_bibliothekspfad(&mut cmd, Path::new(programm));
             cmd.arg("-m")
                 .arg(settings.ai_whisper_cpp_model.trim())
                 .arg("-f")
@@ -618,14 +690,15 @@ mod tests {
 
     /// Prüfung mit vollständig vorhandener Umgebung — die Positivkontrolle,
     /// gegen die die Negativfälle abheben. Das Laufzeitverzeichnis gilt hier
-    /// als beschreibbar; seinen Negativfall prüft `sonde_ohne_schreibbares_…`.
+    /// als beschreibbar, das Programm als startfähig; deren Negativfälle
+    /// prüfen `sonde_ohne_schreibbares_…` und `sonde_bei_nicht_startfaehigem_…`.
     fn sonde(settings: &Settings, vorhanden: &[&str]) -> Result<(), Fehlend> {
         let namen: Vec<String> = vorhanden.iter().map(|s| s.to_string()).collect();
         let im_pfad = |name: &str| namen.iter().any(|n| n == name);
         let ausfuehrbar = |pfad: &Path| {
             namen.iter().any(|n| n.as_str() == pfad.to_string_lossy())
         };
-        verfuegbarkeit_mit(settings, &im_pfad, &ausfuehrbar, &|| true)
+        verfuegbarkeit_mit(settings, &im_pfad, &ausfuehrbar, &|| true, &|_| true)
     }
 
     #[test]
@@ -707,8 +780,45 @@ mod tests {
             &|_| true,
             &|_| true,
             &|| false,
+            &|_| true,
         );
         assert!(matches!(ergebnis, Err(Fehlend::Laufzeitverzeichnis(_))));
+    }
+
+    #[test]
+    fn sonde_bei_nicht_startfaehigem_programm() {
+        // Der Kern von Ticket #37: Programm und Modell existieren, aber das
+        // Programm startet nicht (GPU-Build ohne auffindbare Bibliotheken).
+        // Die Sonde muss das Mikrofon verstecken, bevor gesprochen wird.
+        let mut s = einstellungen("whisper-cpp");
+        s.ai_whisper_cpp_binary = "/opt/whisper.cpp/whisper-cli".into();
+        let modell = modelldatei();
+        s.ai_whisper_cpp_model = modell.path().to_string_lossy().into_owned();
+        let ergebnis = verfuegbarkeit_mit(&s, &|_| true, &|_| true, &|| true, &|_| false);
+        assert_eq!(
+            ergebnis,
+            Err(Fehlend::WhisperprogrammStartetNicht("/opt/whisper.cpp/whisper-cli".into()))
+        );
+    }
+
+    #[test]
+    fn startprobe_unterscheidet_ladefehler_von_startbarem_programm() {
+        // Stellvertreter statt echtem Whisper: Ein Skript, das wie der
+        // dynamische Linker mit 127 endet, und eines, das sauber durchläuft.
+        use std::os::unix::fs::PermissionsExt;
+        let ordner = tempfile::tempdir().unwrap();
+        let schreibe = |name: &str, inhalt: &str| {
+            let pfad = ordner.path().join(name);
+            std::fs::write(&pfad, inhalt).unwrap();
+            std::fs::set_permissions(&pfad, std::fs::Permissions::from_mode(0o755)).unwrap();
+            pfad
+        };
+        let kaputt = schreibe("ladefehler", "#!/bin/sh\nexit 127\n");
+        let heil = schreibe("startbar", "#!/bin/sh\nexit 0\n");
+        assert!(!startet(&kaputt), "Ladefehler muss als „startet nicht“ gelten");
+        assert!(startet(&heil));
+        // Gar nicht vorhanden: ebenfalls kein Start — und keine Panik.
+        assert!(!startet(&ordner.path().join("fehlt")));
     }
 
     #[test]
@@ -789,6 +899,38 @@ mod tests {
             "/opt/whisper.cpp/whisper-cli -m /opt/whisper.cpp/ggml-large-v3.bin \
              -f /run/vmn/diktat-1.wav -l de --output-json -of /run/vmn/diktat-1 --no-prints"
         );
+        // Der Kindprozess bekommt das Programmverzeichnis vorne im
+        // Bibliothekspfad (Ticket #37) — die App-Umgebung bleibt unberührt.
+        let ld = cmd
+            .get_envs()
+            .find(|(name, _)| *name == OsStr::new("LD_LIBRARY_PATH"))
+            .and_then(|(_, wert)| wert.map(|w| w.to_string_lossy().into_owned()))
+            .expect("LD_LIBRARY_PATH muss für den Kindprozess gesetzt sein");
+        assert!(
+            ld.starts_with("/opt/whisper.cpp"),
+            "Programmverzeichnis muss vorne stehen: {ld}"
+        );
+    }
+
+    #[test]
+    fn bibliothekspfad_stellt_programmverzeichnis_voran() {
+        // Ohne bisherigen Wert: nur das Programmverzeichnis.
+        assert_eq!(
+            bibliothekspfad(Path::new("/opt/w/bin/whisper-cli"), None),
+            Some(OsString::from("/opt/w/bin"))
+        );
+        // Mit bisherigem Wert: Programmverzeichnis zuerst, der Rest dahinter
+        // — vorhandene Systempfade bleiben erreichbar.
+        assert_eq!(
+            bibliothekspfad(
+                Path::new("/opt/w/bin/whisper-cli"),
+                Some(OsStr::new("/usr/lib:/opt/rocm/lib"))
+            ),
+            Some(OsString::from("/opt/w/bin:/usr/lib:/opt/rocm/lib"))
+        );
+        // Bloßer Programmname ohne Verzeichnis: Umgebung bleibt unverändert
+        // — es gibt kein Verzeichnis, das man voranstellen könnte.
+        assert_eq!(bibliothekspfad(Path::new("whisper-cli"), None), None);
     }
 
     #[test]
@@ -916,6 +1058,42 @@ mod tests {
         }
         drop(aufnahme);
         assert!(!wav.exists(), "die Aufnahme muss nach Gebrauch verschwinden");
+    }
+
+    /// GPU-Beleg für Ticket #37: Ein whisper.cpp-Build, dessen Bibliotheken
+    /// neben dem Programm liegen (ROCm/HIP), funktioniert allein über den
+    /// Binärpfad — kein Wrapper-Skript, kein `LD_LIBRARY_PATH` in der Shell.
+    /// Pfade kommen über die Umgebung, damit der Test keine Installation
+    /// voraussetzt:
+    ///   VMN_TEST_WHISPER_CPP_BINARY=…/build/bin/whisper-cli \
+    ///   VMN_TEST_WHISPER_CPP_MODEL=…/models/ggml-….bin \
+    ///   cargo test -p vergissmeinnicht-app -- --ignored diktat_whisper_cpp
+    #[test]
+    #[ignore]
+    fn diktat_whisper_cpp_gpu_build_ohne_wrapper() {
+        let programm = std::env::var("VMN_TEST_WHISPER_CPP_BINARY")
+            .expect("VMN_TEST_WHISPER_CPP_BINARY muss auf whisper-cli zeigen");
+        let modell = std::env::var("VMN_TEST_WHISPER_CPP_MODEL")
+            .expect("VMN_TEST_WHISPER_CPP_MODEL muss auf eine GGML-Datei zeigen");
+        let s = Settings {
+            ai_stt_backend: "whisper-cpp".into(),
+            ai_whisper_cpp_binary: programm,
+            ai_whisper_cpp_model: modell,
+            ..Settings::default()
+        };
+        verfuegbarkeit(&s).expect("Sonde muss den GPU-Build als verfügbar melden");
+        let mut aufnahme = Aufnahme::starte().expect("pw-record muss startbar sein");
+        let wav = aufnahme.wav().to_path_buf();
+        std::thread::sleep(Duration::from_secs(2));
+        aufnahme.stoppe().expect("SIGINT muss reichen");
+        let ergebnis = transkribiere(&s, &wav);
+        println!("Transkript: {ergebnis:?}");
+        match ergebnis {
+            // Stille Aufnahme ⇒ `Leer` ist ein Erfolg: geprüft wird, dass das
+            // Backend startet und durchläuft, nicht der Wortlaut.
+            Ok(_) | Err(TranskriptFehler::Leer) => {}
+            Err(e) => panic!("unerwarteter Fehler: {e}"),
+        }
     }
 
     #[test]

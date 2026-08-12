@@ -84,9 +84,14 @@ Oberfläche auf jeder Plattform.
   `openai-whisper` (das `whisper`-Programm aus dem `PATH`, CPU, Modellname
   einstellbar) oder `whisper.cpp` (ein `whisper-cli`-Programm plus
   GGML-Modelldatei, beides als Pfad; so lässt sich ein GPU-Build nutzen).
-  Zusätzlich braucht das Diktat `pw-record` aus PipeWire; fehlt ein Glied
-  dieser Kette, bleibt das Mikrofon versteckt, statt erst bei der Aufnahme
-  zu scheitern. Aufnahmen und Transkripte liegen im XDG-Laufzeitverzeichnis
+  Bei `whisper.cpp` wird das Verzeichnis des Programms dem
+  `LD_LIBRARY_PATH` des Kindprozesses vorangestellt — ROCm-/HIP-Builds
+  legen `libwhisper.so` neben das Programm, der bloße Binärpfad genügt
+  also ohne Wrapper-Skript — und die Verfügbarkeitssonde startet das
+  Programm einmal (`--help`): Ein Programm, das seine Bibliotheken nicht
+  findet, gilt als nicht verfügbar. Zusätzlich braucht das Diktat
+  `pw-record` aus PipeWire; fehlt ein Glied dieser Kette, bleibt das
+  Mikrofon versteckt, statt erst bei der Aufnahme zu scheitern. Aufnahmen und Transkripte liegen im XDG-Laufzeitverzeichnis
   und werden nach Gebrauch gelöscht. Der Kontextumfang bestimmt, wie viele
   Aufgabendaten die KI beim Interpretieren sieht: nur Projekt- und
   Schlagwortnamen (Standard), zusätzlich Titel offener Aufgaben oder alle

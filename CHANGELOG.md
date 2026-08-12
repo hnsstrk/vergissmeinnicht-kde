@@ -5,6 +5,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- The whisper.cpp dictation backend now works with a GPU build's plain
+  binary path (#37): the binary's directory is prepended to the child
+  process's `LD_LIBRARY_PATH` (ROCm/HIP builds keep `libwhisper.so` and
+  `libggml*.so` next to the binary; the app's own environment is left
+  untouched), and the availability probe launches the binary once with
+  `--help`, so a binary that cannot resolve its libraries reports the
+  dictation chain as unavailable instead of failing after the user has
+  already spoken.
+
 ### Added
 
 - Dictation infrastructure (AI-A5, #13): recording through PipeWire's

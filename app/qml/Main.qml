@@ -822,6 +822,13 @@ Kirigami.ApplicationWindow {
                                "/gibt/es/nicht/ggml-large-v3.bin")
             check(!app.dictationAvailable,
                   "dictationAvailable false ohne whisper-cli-Programm")
+            // Ticket #37: existiert und ist ausführbar, startet aber nicht
+            // sauber — /bin/false steht stellvertretend für einen GPU-Build
+            // ohne auffindbare Bibliotheken. Als „Modelldatei" genügt jede
+            // existierende Datei; geprüft wird nur die Startprobe.
+            speichernMitDiktat("whisper-cpp", "/bin/false", "/etc/os-release")
+            check(!app.dictationAvailable,
+                  "dictationAvailable false bei nicht startfähigem whisper-cli")
             speichernMitDiktat(s.ai_stt_backend, s.ai_whisper_cpp_binary,
                                s.ai_whisper_cpp_model)
             // Diktat verwerfen ohne laufende Aufnahme ist folgenlos.

@@ -85,9 +85,15 @@ platform.
   the speech-to-text backend for dictation — either `openai-whisper` (the
   `whisper` CLI from `PATH`, CPU, model name configurable) or
   `whisper.cpp` (a `whisper-cli` binary plus a GGML model file, both given
-  as paths; this is the way to use a GPU build). Dictation additionally
-  needs PipeWire's `pw-record`; if any part of that chain is missing, the
-  app keeps the microphone hidden instead of failing at record time.
+  as paths; this is the way to use a GPU build). For `whisper.cpp` the
+  binary's own directory is prepended to the child process's
+  `LD_LIBRARY_PATH` — ROCm/HIP builds keep `libwhisper.so` next to the
+  binary, so the plain binary path works without a wrapper script — and
+  the availability probe launches the binary once (`--help`), so a binary
+  that cannot resolve its libraries counts as unavailable. Dictation
+  additionally needs PipeWire's `pw-record`; if any part of that chain is
+  missing, the app keeps the microphone hidden instead of failing at
+  record time.
   Recordings and transcripts live in the XDG runtime directory and are
   deleted after use. A context-scope setting controls how much task data the AI
   sees when interpreting input: project and tag names only (default),
