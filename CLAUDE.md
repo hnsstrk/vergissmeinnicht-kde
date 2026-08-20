@@ -37,10 +37,12 @@ deliberately identical between the ports so fixes can travel.
 - `cargo test --workspace` green; `cargo clippy --workspace --all-targets
   -- -D warnings` clean (`--all-targets` covers test and example code).
 - Functional changes: extend the `--test-flow` checks in `app/qml/Main.qml`
-  when they touch bridge invokables, and run the flow against a disposable
-  `XDG_DATA_HOME`. Grep the flow log for `I18N_ARGUMENT_MISSING` and
-  `kf.i18n:.*instead of` — ki18n reports missing `%1` arguments only at
-  runtime (`i18n("…%1…", x)`, never `.arg()` chaining!).
+  when they touch bridge invokables — never delete existing checks when
+  resolving a conflict there — and run the flow against disposable
+  `XDG_DATA_HOME`/`XDG_CONFIG_HOME`. Grep the flow log for
+  `I18N_ARGUMENT_MISSING` and `kf.i18n:.*instead of` — ki18n reports missing
+  `%1` arguments only at runtime (`i18n("…%1…", x)`, never `.arg()`
+  chaining!).
 - Visible window changes: refresh `docs/screenshots/` via
   `--test-dialog=… --test-grab=…` with the seeded demo dataset
   (`core/examples/seed_demo.rs`) and English locale.
@@ -79,3 +81,58 @@ The repo has headless hooks (they also work while the session is locked):
 `--test-dialog=<name>`, `--test-grab=<png>` (synchronous
 `QQuickWindow::grabWindow`). Qt on Arch logs to journald when stderr is not
 a console — use `QT_FORCE_STDERR_LOGGING=1` when hunting QML errors.
+
+Before every measured run:
+
+- **Rebuild, or you measure the wrong binary.** The QML lives in the QRC
+  inside the binary, and `cargo build` does not reliably pick up QML edits:
+  `touch app/qml/Main.qml && cargo build`, then measure.
+- **Redirect both XDG variables** — `XDG_DATA_HOME` **and**
+  `XDG_CONFIG_HOME`. Otherwise the guard aborts the run with
+  `TESTGUARD-FAIL`, and rightly so: test runs have destroyed the user's real
+  config. Ready-made command lines are in `docs/building.md`.
+
+For screenshots, the valid dialog names are listed in the `testDialogTimer`
+in `app/qml/Main.qml`; the committed images live in `docs/screenshots/`. The
+recipe for English screenshots with the demo dataset is in
+`docs/building.md`.
+
+## Patterns to reuse
+
+Reach for an existing pattern before inventing one:
+
+- Threading and long-running work: `start_sync` in `app/src/bridge.rs`.
+- Synchronous parse/preview calls from QML: `quick_capture_preview_json`
+  (same file).
+- Batch mutations: `bulk_apply`.
+- New settings: `config.rs` + `secrets.rs` + the matching page under
+  `app/qml/*SettingsPage.qml`.
+
+## Known pitfalls
+
+- Dialogs on settings pages need `parent: page.QQC2.Overlay.overlay`,
+  otherwise they open behind the window (`MaintenanceSettingsPage.qml`).
+- ComboBox popups need a height cap — use `VmComboBoxDelegate`; without it
+  a long model covers the entire settings page.
+- Never `git add -A` after `msgmerge`: it stages the `po/en.po~` backup.
+
+## UI text and interaction
+
+- Source language is German; English is written in `po/en.po`.
+- Say what happens, not what the software can do. No advertising, no
+  exclamation marks. Technical terms only where the context carries them.
+- KDE convention for actions: infinitive; ellipsis only when a further
+  dialog follows.
+- For interaction, Plasma conventions and the KDE HIG beat the more
+  original solution — familiarity is a usability gain. Deviate only with a
+  reason.
+
+## Questions about third-party APIs
+
+The installed source beats any web page. Look there first and note the
+version — the answer only holds for that version.
+
+- Kirigami: `/usr/lib/qt6/qml/org/kde/kirigami/`; Kirigami Addons:
+  `/usr/lib/qt6/qml/org/kde/kirigamiaddons/`.
+- cxx-qt and taskchampion: `~/.cargo/registry/src/…`.
+- KDE beyond that: api.kde.org and invent.kde.org.
