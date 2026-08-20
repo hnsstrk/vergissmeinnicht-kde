@@ -8,11 +8,11 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-    # Arch-Container: gleiche Qt/KF6-Versionen wie die Zielplattform (Rolling
-    # Release, aktuelles Kirigami). Ubuntu-LTS-Pakete sind für Kirigami 6 zu alt.
+    # Arch container: same Qt/KF6 versions as the target platform (rolling
+    # release, current Kirigami). Ubuntu LTS packages are too old for Kirigami 6.
     container: archlinux:latest
     steps:
-      - name: Systempakete installieren
+      - name: Install system packages
         run: |
           pacman -Syu --noconfirm \
             base-devel git rust clang \
@@ -23,7 +23,7 @@ jobs:
 
       - uses: actions/checkout@v5
 
-      - name: Cargo-Cache
+      - name: Cargo cache
         uses: actions/cache@v4
         with:
           path: |
@@ -39,31 +39,37 @@ jobs:
         run: cargo test --workspace
 
       - name: Clippy
-        # Das Arch-rust-Paket bringt clippy bereits mit. --all-targets lintet
-        # auch Test- und Beispielcode (#36) — ohne das erreichen Verstöße im
-        # Testcode erst das Review statt die CI.
+        # The Arch rust package already ships clippy. --all-targets also lints
+        # test and example code (#36) — without it, violations in test code reach
+        # the review instead of the CI.
         run: cargo clippy --workspace --all-targets -- -D warnings
 
-      - name: Übersetzungen validieren
+      - name: Validate translations
         run: |
           for po in po/*.po; do msgfmt --check -o /dev/null "$po"; done
 
-      - name: Desktop-Datei validieren
+      - name: Validate desktop file
         run: |
           pacman -S --noconfirm desktop-file-utils appstream
           desktop-file-validate data/de.hnsstrk.vergissmeinnicht.desktop
           appstreamcli validate --no-net data/de.hnsstrk.vergissmeinnicht.metainfo.xml
 
-      - name: Flow-Test (i18n-Argument-Check, KI über Mock)
-        # ki18n meldet fehlende %1-Argumente nur zur Laufzeit — der Flow-Test
-        # macht sie im Log sichtbar (I18N_ARGUMENT_MISSING / "instead of").
-        # Der KI-Teil (Abschnitte ab 8) läuft nur mit konfiguriertem Modell:
-        # Wegwerf-config.json plus VMN_AI_MOCK-Konserve, sonst endet der Flow
-        # nach dem Gerüst-Abschnitt (#36). Der Teil mit echter Aufnahme
-        # überspringt sich im Container weiterhin per FLOW-INFO (kein
-        # pw-record installiert); der Diktat→Entwurf-Fluss (AI-B2, #14)
-        # läuft dagegen mit — VMN_STT_MOCK liefert das Konserven-Transkript
-        # ohne Mikrofon und ohne Whisper.
+      - name: Flow test (i18n argument check, AI via mock)
+        # ki18n reports missing %1 arguments only at runtime — the flow test makes
+        # them visible in the log (I18N_ARGUMENT_MISSING / "instead of").
+        # The AI part (sections from 8 onwards) runs only with a configured model:
+        # throwaway config.json plus VMN_AI_MOCK canned data, otherwise the flow
+        # ends after the scaffolding section (#36). The part with a real recording
+        # still skips itself in the container via FLOW-INFO (no pw-record
+        # installed); the dictation-to-draft flow (AI-B2, #14) does run — VMN_STT_MOCK
+        # supplies the canned transcript without a microphone and without Whisper.
+        #
+        # The grep patterns below match German program output verbatim
+        # (app/qml/Main.qml) — they are mechanics, not display. Translating them
+        # would make the comparison find nothing. VMN_STT_MOCK is different: the
+        # flow only compares it against itself, so the wording is free — it stays
+        # German because the source language is, and because docs/building.md
+        # quotes the same value.
         run: |
           export XDG_DATA_HOME=/tmp/vmn-flow XDG_CONFIG_HOME=/tmp/vmn-flow-cfg
           export QT_QPA_PLATFORM=offscreen QT_FORCE_STDERR_LOGGING=1
@@ -75,17 +81,19 @@ jobs:
           timeout 120 ./target/debug/vergissmeinnicht --test-flow > /tmp/flow.log 2>&1 || true
           grep -q "FLOW-ENDE: alles grün" /tmp/flow.log || { cat /tmp/flow.log; exit 1; }
           if grep -q "FLOW-INFO KI-Worker-Teil übersprungen" /tmp/flow.log; then
-            echo "::error::KI-Teil des Flows lief nicht (Mock-Konfiguration greift nicht)"; exit 1
+            echo "::error::AI part of the flow did not run (mock configuration does not take effect)"; exit 1
           fi
           if grep -q "FLOW-INFO Diktat-Fluss übersprungen" /tmp/flow.log; then
-            echo "::error::Diktat-Fluss lief nicht (VMN_STT_MOCK greift nicht)"; exit 1
+            echo "::error::Dictation flow did not run (VMN_STT_MOCK does not take effect)"; exit 1
           fi
-          echo "Flow-Prüfungen: $(grep -c 'FLOW-OK' /tmp/flow.log || true)"
+          echo "Flow checks: $(grep -c 'FLOW-OK' /tmp/flow.log || true)"
           if grep -E "I18N_ARGUMENT_MISSING|kf.i18n:.*instead of" /tmp/flow.log; then
-            echo "::error::i18n-Argumentfehler im Flow-Log"; exit 1
+            echo "::error::i18n argument error in the flow log"; exit 1
           fi
 
-      - name: Interaktionstest (synthetische Events)
+      - name: Interaction test (synthetic events)
+        # "INPUT-ENDE: alles grün" is German program output (app/qml/TasksPage.qml)
+        # — mechanics, not display. Do not translate without changing the source.
         run: |
           export XDG_DATA_HOME=/tmp/vmn-input XDG_CONFIG_HOME=/tmp/vmn-input-cfg
           export QT_QPA_PLATFORM=offscreen QT_FORCE_STDERR_LOGGING=1

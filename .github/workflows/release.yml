@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     container: archlinux:latest
     steps:
-      - name: Systempakete installieren
+      - name: Install system packages
         run: |
           pacman -Syu --noconfirm \
             base-devel git rust clang \
@@ -27,10 +27,10 @@ jobs:
       - name: Tests
         run: cargo test --workspace
 
-      - name: Release-Build
+      - name: Release build
         run: cargo build --release
 
-      - name: Artefakt packen
+      - name: Package artifact
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
           mkdir -p dist/vergissmeinnicht-$VERSION
@@ -39,7 +39,7 @@ jobs:
           tar -C dist -czf vergissmeinnicht-$VERSION-linux-x86_64.tar.gz vergissmeinnicht-$VERSION
           sha256sum vergissmeinnicht-$VERSION-linux-x86_64.tar.gz > vergissmeinnicht-$VERSION-linux-x86_64.tar.gz.sha256
 
-      - name: Release-Notes aus CHANGELOG extrahieren
+      - name: Extract release notes from CHANGELOG
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
           awk -v ver="$VERSION" '
@@ -49,7 +49,7 @@ jobs:
           ' CHANGELOG.md > release-notes.md
           cat .github/release-footer.md >> release-notes.md 2>/dev/null || true
 
-      - name: GitHub-Release erstellen
+      - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
           body_path: release-notes.md

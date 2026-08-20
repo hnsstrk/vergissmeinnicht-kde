@@ -1149,7 +1149,7 @@ msgstr "Template (CLI-managed)"
 
 #: app/qml/TasksPage.qml:81
 msgid "Suchen — auch projekt:, tag:, status: …"
-msgstr "Search — also projekt:, tag:, status: …"
+msgstr "Search — also project:, tag:, status: …"
 
 #: app/qml/TasksPage.qml:121
 msgid "Erneut laden"
@@ -1250,7 +1250,7 @@ msgstr "No tasks"
 #: app/qml/TasksPage.qml:352
 msgid ""
 "Suchbegriffe anpassen oder Operatoren wie projekt:, tag:, status: verwenden."
-msgstr "Adjust the search terms or use operators like projekt:, tag:, status:."
+msgstr "Adjust the search terms or use operators like project:, tag:, status:."
 
 #: app/qml/TasksPage.qml:353
 msgid "Alle offenen Aufgaben haben ein Projekt oder Tags."
